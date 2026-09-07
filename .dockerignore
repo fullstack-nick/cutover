@@ -1,0 +1,9 @@
+.git
+.local
+**/node_modules
+**/test-results
+**/playwright-report
+**/target/*
+!apps/**/target/*-exec.jar
+.idea
+.vscode

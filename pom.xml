@@ -15,6 +15,7 @@
     <rabbitmq.image>rabbitmq:4.3.5-management</rabbitmq.image>
   </properties>
   <modules>
+    <module>tools/schema-codegen</module>
     <module>platform/service-starter</module>
     <module>platform/test-support</module>
     <module>tools/compatibility-checks</module>
@@ -27,6 +28,7 @@
     <dependency><groupId>com.networknt</groupId><artifactId>json-schema-validator</artifactId><version>${networknt.version}</version></dependency>
   </dependencies></dependencyManagement>
   <build><pluginManagement><plugins>
+    <plugin><groupId>dev.cutover</groupId><artifactId>schema-codegen-maven-plugin</artifactId><version>${project.version}</version><executions><execution><goals><goal>generate</goal></goals></execution></executions><configuration><postgresImage>${postgres.image}</postgresImage></configuration></plugin>
     <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId><configuration><layers><enabled>true</enabled></layers></configuration></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><configuration><argLine>-Xmx640m</argLine><forkCount>1</forkCount><reuseForks>true</reuseForks><systemPropertyVariables><cutover.postgres.image>${postgres.image}</cutover.postgres.image><cutover.rabbitmq.image>${rabbitmq.image}</cutover.rabbitmq.image><org.jooq.no-logo>true</org.jooq.no-logo><org.jooq.no-tips>true</org.jooq.no-tips></systemPropertyVariables></configuration></plugin>
     <plugin><groupId>org.jooq</groupId><artifactId>jooq-codegen-maven</artifactId><version>${jooq.version}</version></plugin>

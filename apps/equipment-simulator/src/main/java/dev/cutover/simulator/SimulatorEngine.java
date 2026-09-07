@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import tools.jackson.databind.JsonNode;
+import static dev.cutover.generated.equipment_simulator.Tables.SIMULATOR_COMMANDS;
 
 public final class SimulatorEngine {
     private final DSLContext database;
@@ -30,7 +31,7 @@ public final class SimulatorEngine {
         String hash = JsonSupport.hash(command);
         var fault = database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
-            if (sql.fetchExists(DSL.table("simulator_commands"), DSL.field("command_id").eq(id))) return null;
+            if (sql.fetchExists(SIMULATOR_COMMANDS, SIMULATOR_COMMANDS.COMMAND_ID.eq(id))) return null;
             var selected = sql.fetchOne("SELECT * FROM simulation_faults WHERE remaining>0 AND (command_selector IS NULL OR command_selector= ?) ORDER BY created_at,fault_id LIMIT 1 FOR UPDATE SKIP LOCKED", id);
             if (selected != null) sql.execute("UPDATE simulation_faults SET remaining=remaining-1 WHERE fault_id= ?", selected.get("fault_id"));
             return selected;

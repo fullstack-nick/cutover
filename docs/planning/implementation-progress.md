@@ -4,10 +4,10 @@ Implementation goal started 7 September 2026. The implementation plan and all 54
 
 | Phase | Status | Evidence / next work |
 | --- | --- | --- |
-| 0. Setup and compatibility | In progress | Cutover and MIT confirmed. Initialize Git, acquire checksum-verified tools, lock dependencies, and run the compatibility smoke gate. |
-| 1. Walking legacy system | Component checks pass; process demo next | Stored reservation/priority routines, trigger-created tasks, polling coordinator, adapter gate/journal, and independent physical ledger. Twenty tests pass; process/network verification is still required. |
-| 2. Reproducible packaging | In progress | Build executable jars/images and scoped development infrastructure; verify actual authenticated HTTP and mutual TLS. |
-| 3. Local platform | Pending | kind/Calico, identity, policies, persistence, console proxy, and telemetry. |
+| 0. Setup and compatibility | Backend setup verified; platform compatibility next | Git/public remote, tool checksums, backend dependency lock and compatibility tests pass. Kubernetes/telemetry smoke gates belong to the next phase. |
+| 1. Walking legacy system | Baseline verified | Stored routines, trigger-created tasks, polling scheduler, adapter journal and independent ledger pass component and real process checks. |
+| 2. Reproducible packaging | Baseline verified | Clean Maven verification, reproducible generated SQL types, local images, JWT/mTLS workflow and process restart checks pass. |
+| 3. Local platform | In progress | Build dedicated kind/Calico, policies, persistence, console identity flow and telemetry. |
 | 4. Reliability boundary | Pending | Transactional messages, bounded admission/retries, fault tests, and durable uncertainty handling. |
 | 5. Extraction and shadow | Pending | Independent execution tasks and at least 1,000 identical-input comparisons. |
 | 6. Cutover and rollback | Pending | Durable drain sessions, fencing, restart/reversal tests, and compatible image rollback. |
@@ -36,3 +36,11 @@ Record each milestone's command, result, tested commit, and evidence path here. 
 The connected workflow tests use real owner databases, routines, constraints, task polling, command state machines, and physical ledgers. Their transport ports are deterministic in-process test adapters. Actual HTTP, JWT identity, mutual TLS, container restarts, and network-policy evidence are the next gates and are not implied by these results.
 
 Corrections found by these checks included explicit timestamp casts in plain SQL, unambiguous bind-marker spacing around PostgreSQL operators, and using the injected clock for initial command deadlines. The tests retain the database assertions that exposed them.
+
+### Reproducible process baseline — 7 September 2026
+
+`./mvnw.cmd -B -ntp clean verify` passed all 20 tests with no failures, errors, or skips in 2 minutes 37 seconds at 20:02 Europe/Berlin. Every app generated its SQL types against disposable PostgreSQL using its actual Flyway migrations. Repeating generation and packaging produced identical SHA-256 hashes for all 98 generated Java files. Representative runtime queries now consume those generated types.
+
+`./scripts/dev.ps1 -Action Start -SkipBuild` and `node tools/scenario-driver/baseline.mjs` passed on the rebuilt images. The six process checks establish real Keycloak authentication, HTTP intake/idempotency, service-to-service HTTP, simulator mutual TLS, site and signature rejection, authenticated runtime DDL denial (including Keycloak), one physical/inventory effect after a lost response, and blocked accepted work surviving restart of core, adapter and simulator. Evidence is recorded in ignored run `baseline-1788804441006`, with exact image IDs, jar hashes, and source revision `0ca4677` plus the then-uncommitted packaging changes. These results are development-profile milestone evidence, not final A01–A54 acceptance.
+
+Startup tests found three configuration defects: an unquoted comma in a YAML tmpfs option, a Windows-reserved simulator port, and a missing `/identity` path in the advertised issuer. They also exposed Docker's internal-network-only port-publication behavior. All were corrected and the complete process suite rerun. See ADR 0002 and the development-baseline runbook.

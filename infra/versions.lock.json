@@ -1,0 +1,12 @@
+{
+  "lockedAt": "2026-09-07",
+  "maven": { "version": "3.9.16", "sha256": "5af3b743dd8b876b5c45da33b676251e5f1687712644abb4ee519ca56e1d89ce" },
+  "kind": { "version": "0.33.0", "windowsAmd64Sha256": "4b22adaa135368c5a465d56bbd8e520cbea87272a06ca00b6078e7b81515c9fc" },
+  "images": {
+    "javaRuntime": { "version": "21.0.12+8", "reference": "eclipse-temurin:21-jre-jammy@sha256:eebd356ad7358b7094758e5787a6726f332917cfd56feab6457c56dab895cdbf" },
+    "postgres": { "version": "18.6", "reference": "postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af" },
+    "rabbitmq": { "version": "4.3.5", "reference": "rabbitmq:4.3.5-management@sha256:ffd1b50c522ad20172ffd6716a2f41db375c7269560c8f3fb9a694e210ef0852" },
+    "keycloak": { "version": "26.7.3", "reference": "quay.io/keycloak/keycloak:26.7.3@sha256:ff4257d0d64efbe99ed1ddfaf07765cc3c36dc7518bf8324d41961327f441c54" },
+    "proxy": { "version": "1.30.0-alpine", "reference": "nginxinc/nginx-unprivileged:1.30.0-alpine@sha256:808f7846d21a9c94cf53833e8807a00a33fd0b65cc47fb05b79efe366c2d201f" }
+  }
+}

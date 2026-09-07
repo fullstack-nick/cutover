@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import tools.jackson.databind.JsonNode;
+import static dev.cutover.generated.legacy_core.Tables.*;
 
 public final class OrderService {
     private final DSLContext database;
@@ -39,8 +40,8 @@ public final class OrderService {
                 var quota=sql.fetchOne("SELECT * FROM admission WHERE singleton FOR UPDATE");
                 if(quota.get("active_requests",Integer.class)>=800 || quota.get("unpublished_events",Integer.class)>=8000 || quota.get("unpublished_bytes",Long.class)>=53687091)
                     throw new Problem(503,"ADMISSION_CAPACITY","Accepted work is near the configured capacity; retry after backlog recovery.");
-                if(!sql.fetchOne("SELECT EXISTS(SELECT 1 FROM stores WHERE site_id= ? AND store_id= ?)",site,request.storeId()).get(0,Boolean.class)) throw Problem.invalid("Unknown store for this site.");
-                for(Line line:request.lines()) if(!sql.fetchOne("SELECT EXISTS(SELECT 1 FROM products WHERE site_id= ? AND sku= ?)",site,line.sku()).get(0,Boolean.class)) throw Problem.invalid("Unknown SKU for this site.");
+                if(!sql.fetchExists(STORES, STORES.SITE_ID.eq(site).and(STORES.STORE_ID.eq(request.storeId())))) throw Problem.invalid("Unknown store for this site.");
+                for(Line line:request.lines()) if(!sql.fetchExists(PRODUCTS, PRODUCTS.SITE_ID.eq(site).and(PRODUCTS.SKU.eq(line.sku())))) throw Problem.invalid("Unknown SKU for this site.");
                 UUID id=UUID.randomUUID();
                 sql.execute("UPDATE admission SET active_requests=active_requests+1 WHERE singleton");
                 sql.execute("INSERT INTO orders(order_id,site_id,source_system,external_ref,payload_hash,store_id,priority,state,created_at) VALUES (?,?,?,?,?,?,?,'ACCEPTED',?::timestamptz)",id,site,request.sourceSystem(),request.externalOrderRef(),JsonSupport.hash(request),request.storeId(),request.priority(),java.time.OffsetDateTime.ofInstant(clock.instant(),java.time.ZoneOffset.UTC));
@@ -92,7 +93,8 @@ public final class OrderService {
     }
     public JsonNode list(String site,UUID cursor,int limit) {
         if(limit<1 || limit>100) throw Problem.invalid("Page size must be between 1 and 100.");
-        var rows=database.fetch("SELECT order_id FROM orders WHERE site_id= ? AND (?::uuid IS NULL OR order_id> ?::uuid) ORDER BY order_id LIMIT ?",site,cursor,cursor,limit);
+        var rows=database.select(ORDERS.ORDER_ID).from(ORDERS).where(ORDERS.SITE_ID.eq(site))
+                .and(cursor == null ? DSL.noCondition() : ORDERS.ORDER_ID.gt(cursor)).orderBy(ORDERS.ORDER_ID).limit(limit).fetch();
         var items=JsonSupport.MAPPER.createArrayNode();for(UUID id:rows.getValues("order_id",UUID.class)) items.add(get(site,id));
         var page=JsonSupport.MAPPER.createObjectNode();page.set("items",items);
         if(rows.size()==limit)page.put("nextCursor",rows.getLast().get("order_id").toString());else page.putNull("nextCursor");
