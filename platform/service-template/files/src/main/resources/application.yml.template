@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: __SERVICE__
+  datasource:
+    url: ${CUTOVER_DATABASE_URL}
+    username: ${CUTOVER_DATABASE_USER}
+    password: ${CUTOVER_DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 8
+      connection-timeout: 3000
+  flyway:
+    locations: classpath:db/platform,classpath:db/__SERVICE__
+    enabled: ${CUTOVER_MIGRATIONS_ENABLED:false}
+  jooq:
+    sql-dialect: POSTGRES
+  rabbitmq:
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    connection-timeout: 3s
+    requested-heartbeat: 10s
+management:
+  server:
+    port: ${CUTOVER_MANAGEMENT_PORT:9091}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,db
+logging:
+  structured:
+    format:
+      console: ecs
+server:
+  port: ${CUTOVER_HTTP_PORT:8080}
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+  tomcat:
+    threads:
+      max: 32
+    max-connections: 200
+cutover:
+  messaging-enabled: ${CUTOVER_MESSAGING_ENABLED:true}
+  service-name: __SERVICE__
+  workers-enabled: ${CUTOVER_WORKERS_ENABLED:true}
+  security:
+    issuer: ${CUTOVER_ISSUER:http://localhost:8780/identity/realms/cutover}
+    jwks-uri: ${CUTOVER_JWKS_URI}
+    audience: cutover-__PACKAGE__
+  adapter:
+    url: ${CUTOVER_ADAPTER_URL}
+  clients:
+    token-uri: ${CUTOVER_TOKEN_URI}
+    secret: ${CUTOVER_CLIENT_SECRET}

@@ -23,6 +23,7 @@
     <module>apps/equipment-simulator</module>
     <module>apps/equipment-adapter</module>
     <module>apps/legacy-core</module>
+    <module>apps/execution-service</module>
   </modules>
   <dependencyManagement><dependencies>
     <dependency><groupId>dev.cutover</groupId><artifactId>service-starter</artifactId><version>${project.version}</version></dependency>
