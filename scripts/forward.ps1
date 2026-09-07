@@ -1,18 +1,19 @@
 [CmdletBinding()]
-param([ValidateSet('Start','Stop')][string]$Action='Start',[ValidateSet('console','grafana','prometheus','tempo')][string]$Target='console')
+param([ValidateSet('Start','Stop')][string]$Action='Start',[ValidateSet('console','grafana','prometheus','tempo','core-api','adapter-api')][string]$Target='console')
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $config=Join-Path $root '.local/kubeconfig'
 $directory=Join-Path $root '.local/processes'
 New-Item -ItemType Directory -Force -Path $directory | Out-Null
 $record=Join-Path $directory "$Target-forward.json"
-$settings=@{console=@('cutover-apps','proxy',8780,8080);grafana=@('cutover-observability','grafana',8783,3000);prometheus=@('cutover-observability','prometheus',8781,9090);tempo=@('cutover-observability','tempo',8782,3200)}[$Target]
-$healthPath=@{console='/';grafana='/api/health';prometheus='/-/ready';tempo='/ready'}[$Target]
+$settings=@{console=@('cutover-apps','proxy',8780,8080);grafana=@('cutover-observability','grafana',8783,3000);prometheus=@('cutover-observability','prometheus',8781,9090);tempo=@('cutover-observability','tempo',8782,3200);'core-api'=@('cutover-apps','legacy-core',8784,8080);'adapter-api'=@('cutover-apps','equipment-adapter',8785,8080)}[$Target]
+$healthPath=@{console='/';grafana='/api/health';prometheus='/-/ready';tempo='/ready';'core-api'='/internal/v1/sites/site-a/test-controls';'adapter-api'='/internal/v1/sites/site-a/test-controls'}[$Target]
+$expectedHealth=if($Target.EndsWith('-api')){401}else{200}
 function Test-Forward {
     try {
         $response=Invoke-WebRequest -Uri "http://127.0.0.1:$($settings[2])$healthPath" -TimeoutSec 3 -UseBasicParsing
-        return $response.StatusCode -eq 200
-    } catch { return $false }
+        return $response.StatusCode -eq $expectedHealth
+    } catch { return $_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq $expectedHealth }
 }
 if(Test-Path -LiteralPath $record){
     $saved=Get-Content -LiteralPath $record -Raw | ConvertFrom-Json

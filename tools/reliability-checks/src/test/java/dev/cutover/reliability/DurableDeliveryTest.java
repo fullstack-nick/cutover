@@ -71,6 +71,46 @@ class DurableDeliveryTest {
     String state(UUID id) { return db.sql().fetchOne("SELECT state FROM inbox WHERE event_id=?", id).get(0, String.class); }
     static final class Crash extends Error {}
 
+    @Test void processFaultCommitsItsOneShotConsumptionBeforeTerminating() {
+        var controls=new dev.cutover.platform.control.RuntimeControls(db.sql());
+        for (String checkpoint:java.util.List.of("AFTER_BUSINESS_COMMIT","AFTER_BROKER_CONFIRM","AFTER_EFFECT_BEFORE_ACK")) {
+            var hooks=new dev.cutover.platform.control.ProcessFaults(db.sql(),clock,code->{assertThat(code).isEqualTo(73);throw new Crash();});
+            UUID id=append(UUID.randomUUID(),1);
+            if (checkpoint.equals("AFTER_EFFECT_BEFORE_ACK")) { relay(DeliveryHooks.NONE).poll(16); rabbit.consume(queue,inbox,16); }
+            var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",controls.status("site-a").path("version").asLong(),"checkpoint",checkpoint,"eventId",id,"reason","Verify the one-shot durable process crash boundary."));
+            var armed=controls.arm("scenario","site-a",checkpoint,request);
+            assertThat(controls.arm("scenario","site-a",checkpoint,request)).isEqualTo(armed);
+            assertThatThrownBy(()->hooks.reached(checkpoint,id)).isInstanceOf(Crash.class);
+            assertThat(db.sql().fetchOne("SELECT remaining FROM process_faults WHERE fault_id=?",UUID.fromString(armed.path("faultId").asString())).get(0,Integer.class)).isZero();
+            var restarted=new dev.cutover.platform.control.ProcessFaults(db.sql(),clock,code->{throw new AssertionError("A consumed fault fired twice");});
+            restarted.reached(checkpoint,id);
+        }
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM audit WHERE action='process-fault-fired'").get(0,Integer.class)).isEqualTo(3);
+    }
+
+    @Test void processControlsAreVersionedAndCannotAffectAnotherSite() {
+        var controls=new dev.cutover.platform.control.RuntimeControls(db.sql());
+        var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",0,"relayPaused",true,"reason","Pause event publication to inspect durable intake."));
+        var response=controls.change("scenario","site-a","pause",request);
+        assertThat(controls.change("scenario","site-a","pause",request)).isEqualTo(response);
+        assertThatThrownBy(()->controls.change("scenario","site-a","stale",request)).isInstanceOf(Problem.class);
+        assertThatThrownBy(()->controls.change("scenario","site-b","other-site",request)).isInstanceOf(Problem.class).satisfies(e->assertThat(((Problem)e).status()).isEqualTo(404));
+        append(UUID.randomUUID(),1); assertThat(relay(DeliveryHooks.NONE).poll(16)).isZero();
+        controls.change("scenario","site-a","resume",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"relayPaused",false,"reason","Resume the inspected publisher without changing data.")));
+        assertThat(relay(DeliveryHooks.NONE).poll(16)).isEqualTo(1);
+        assertThat(count("audit")).isEqualTo(2);
+    }
+
+    @Test void brokerFailureBacksOffAcrossDifferentAggregateStreams() {
+        append(UUID.randomUUID(),1); append(UUID.randomUUID(),1);
+        var attempts=new java.util.concurrent.atomic.AtomicInteger();
+        var failing=new OutboxRelay(db.sql(),(exchange,type,id,body)->{attempts.incrementAndGet();throw DeliveryFailure.pending("BROKER_UNAVAILABLE");},clock,DeliveryHooks.NONE);
+        failing.poll(16); for(int i=0;i<30;i++) failing.poll(16);
+        assertThat(attempts.get()).isEqualTo(1);
+        clock.advance(Duration.ofSeconds(2)); failing.poll(16);
+        assertThat(attempts.get()).isEqualTo(2);
+    }
+
     @Test void committedWorkSurvivesCrashBeforePublish() {
         UUID event = append(UUID.randomUUID(), 1);
         assertThatThrownBy(() -> relay((checkpoint, id) -> { if (checkpoint.equals("AFTER_BUSINESS_COMMIT")) throw new Crash(); }).poll(16)).isInstanceOf(Crash.class);
@@ -236,9 +276,10 @@ class DurableDeliveryTest {
         baseline.clean();baseline.migrate();
         UUID id=UUID.randomUUID();db.sql().execute("INSERT INTO effects(event_id,aggregate_id,version,value) VALUES (?,?,1,7)",id,id);
         var upgrade=Flyway.configure().dataSource(db.dataSource()).locations("classpath:db/platform","classpath:db/reliability").load();
-        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(upgrade.migrate().migrationsExecuted).isGreaterThanOrEqualTo(1);
         assertThat(db.sql().fetchOne("SELECT value FROM effects WHERE event_id=?",id).get(0,Integer.class)).isEqualTo(7);
         assertThat(db.sql().fetchOne("SELECT active_messages FROM message_storage").get(0,Integer.class)).isZero();
-        assertThat(db.sql().fetchOne("SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1").get(0,String.class)).isEqualTo("101");
+        assertThat(db.sql().fetch("SELECT version FROM flyway_schema_history WHERE success").getValues(0,String.class)).contains("101","102");
+        assertThat(db.sql().fetchOne("SELECT relay_paused OR consumer_paused FROM service_control").get(0,Boolean.class)).isFalse();
     }
 }

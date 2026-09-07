@@ -26,7 +26,7 @@ public final class MessageRuntime implements AutoCloseable {
     public void start() {
         workers.scheduleWithFixedDelay(new Guard("relay", () -> relay.poll(16)), 100, 50, TimeUnit.MILLISECONDS);
         workers.scheduleWithFixedDelay(new Guard("consumer", () -> {
-            if (!database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0, Boolean.class)) rabbit.consume(queue, inbox, 16);
+            if (!database.fetchOne("SELECT workers_paused OR consumer_paused FROM service_control WHERE singleton").get(0, Boolean.class)) rabbit.consume(queue, inbox, 16);
         }), 100, 50, TimeUnit.MILLISECONDS);
         workers.scheduleWithFixedDelay(new Guard("inbox-retry", () -> inbox.retry(16)), 250, 150, TimeUnit.MILLISECONDS);
     }

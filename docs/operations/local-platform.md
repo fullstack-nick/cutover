@@ -26,6 +26,12 @@ The current console shows overview, orders, reservation detail, command evidence
 
 The messaging smoke waits for the retained source streams to apply in their receiving owners, submits an order, and checks inboxes, inventory and the physical ledger. `node tools/scenario-driver/messaging-smoke.mjs --broker-outage` also briefly scales only the labelled Cutover RabbitMQ StatefulSet to zero and restores it, preserving its PVC. It requires the legacy milestone's otherwise-settled data; do not run it during another fault experiment. Retry exhaustion remains visible and requires an audited supervisor replay after the underlying cause is corrected.
 
+The next fault checks are `node tools/scenario-driver/process-crash-smoke.mjs` and `node tools/scenario-driver/equipment-recovery-smoke.mjs`. Run them sequentially on settled demonstration data. They deliberately halt/restart owned application processes or the simulator, preserve data, and retain raw evidence locally. The recovery check uses the pinned Playwright browser for real PKCE logins as fictional operator/supervisor accounts; passwords and tokens stay out of reports. It verifies direct API denial and audited recovery, although the recovery console screen is still pending.
+
+These drivers start authenticated internal forwards through `forward.ps1 -Target core-api` (8784) or `-Target adapter-api` (8785). Starting a forward grants no API role. Only the scenario-driver client with test-control role can arm internal process faults; business recovery requires a supervisor instead. Both forwards remain loopback-only and can be stopped with `-Action Stop`. Ordinary console proxy paths never expose fault controls. See [the internal API](../../contracts/openapi/internal.v1.json) and [equipment protocol](../../contracts/openapi/simulator.v1.json).
+
+After rebuilding the simulator image, `node scripts/update-simulator.mjs` applies its additive migrations and recreates only the owned simulator service. It verifies that world identity, journal generation and physical high-water were preserved. Follow it with `./scripts/deploy.ps1` to refresh the discovered EndpointSlice and policy. Application deployments alone do not update the independent simulator.
+
 Optional diagnostics are manually started and loopback-only:
 
 ```powershell

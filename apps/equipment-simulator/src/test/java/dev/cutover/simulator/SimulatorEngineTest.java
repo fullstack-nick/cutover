@@ -69,4 +69,29 @@ class SimulatorEngineTest {
         assertThatThrownBy(()->engine.accept(id,correct)).isInstanceOf(Problem.class);
         assertThat(fixture.sql().fetchOne("SELECT count(*) FROM simulator_commands").get(0,Integer.class)).isZero();
     }
+    @Test void executionHoldSurvivesEngineRestartAndRetainsAtomicLoadLedger() {
+        UUID id=UUID.randomUUID(); engine.fault("HOLD_EXECUTING",id,1,10000); engine.accept(id,command(id,"ambient-a")); advance();
+        assertThat(engine.status(id).path("state").asString()).isEqualTo("EXECUTING");
+        assertThat(fixture.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isZero();
+        assertThat(fixture.sql().fetchOne("SELECT version FROM loads").get(0,Long.class)).isZero();
+        new SimulatorEngine(fixture.sql(),Clock.offset(NOW,java.time.Duration.ofSeconds(5))).advance();
+        assertThat(engine.status(id).path("state").asString()).isEqualTo("EXECUTING");
+        new SimulatorEngine(fixture.sql(),Clock.offset(NOW,java.time.Duration.ofSeconds(12))).advance();
+        assertThat(engine.status(id).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(fixture.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isEqualTo(1);
+        assertThat(fixture.sql().fetchOne("SELECT version FROM loads").get(0,Long.class)).isEqualTo(1);
+    }
+    @Test void faultsAreObservableAndClearableWithoutChangingTheWorldOrCommandHistory() {
+        UUID id=UUID.randomUUID(); var world=engine.equipment();
+        UUID fault=engine.fault("WORLD_MISMATCH",id,2,0);
+        assertThat(engine.absence(id).path("worldId")).isNotEqualTo(world.path("worldId"));
+        assertThat(engine.faults().get(0).path("remaining").asInt()).isEqualTo(1);
+        engine=new SimulatorEngine(fixture.sql(),NOW); engine.clearFault(fault);
+        assertThat(engine.absence(id).path("worldId")).isEqualTo(world.path("worldId"));
+        assertThat(engine.faults().get(0).path("clearedAt").isNull()).isFalse();
+        engine.fault("DELAY_RESPONSE",id,1,5000);
+        assertThat(engine.accept(id,command(id,"ambient-a")).result().path("state").asString()).isEqualTo("ACCEPTED");
+        advance(); assertThat(engine.status(id).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(engine.equipment().path("worldId")).isEqualTo(world.path("worldId"));
+    }
 }

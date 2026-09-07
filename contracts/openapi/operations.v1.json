@@ -362,402 +362,154 @@
           }
         }
       }
+    },
+    "/api/v1/sites/{siteId}/commands": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listRecoveryCommands",
+        "summary": "Read up to 100 site-scoped uncertain or quarantined commands, oldest first",
+        "responses": {
+          "200": {
+            "description": "Observed recovery queue"
+          },
+          "400": {
+            "$ref": "#/components/responses/problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/commands/{id}/reconciliation": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "investigateCommand",
+        "summary": "Supervisor records a versioned status investigation using the original command ID",
+        "description": "Requires the supervisor role and a reason. A successful response records a request; it is not physical retry authority or proof of completion. A live lease, terminal state or changed version returns 409.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reconciliation-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Investigation request recorded; repeats with the same key return the same response"
+          },
+          "400": {
+            "$ref": "#/components/responses/problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
       "equipment-command": {
-        "type": "object",
-        "properties": {
-          "commandId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "allocationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "movementId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "siteId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "loadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "worldId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "journalGeneration": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "expectedLoadVersion": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "source": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "destination": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "zoneId": {
-            "type": "string",
-            "enum": [
-              "ambient",
-              "chilled",
-              "returns"
-            ]
-          },
-          "laneId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "quantity": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10000
-          }
-        },
-        "required": [
-          "commandId",
-          "allocationId",
-          "movementId",
-          "siteId",
-          "loadId",
-          "worldId",
-          "journalGeneration",
-          "expectedLoadVersion",
-          "source",
-          "destination",
-          "zoneId",
-          "laneId",
-          "quantity"
-        ],
-        "additionalProperties": false
+        "$ref": "../schemas/equipment-command.v1.json"
       },
       "event-envelope": {
-        "type": "object",
-        "properties": {
-          "eventId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "eventType": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 80
-          },
-          "schemaVersion": {
-            "const": 1
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "siteId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "source": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 60
-          },
-          "aggregateType": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 60
-          },
-          "aggregateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "aggregateVersion": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "correlationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "causationId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "traceparent": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "maxLength": 128
-          },
-          "payload": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "eventId",
-          "eventType",
-          "schemaVersion",
-          "occurredAt",
-          "siteId",
-          "source",
-          "aggregateType",
-          "aggregateId",
-          "aggregateVersion",
-          "correlationId",
-          "causationId",
-          "traceparent",
-          "payload"
-        ],
-        "additionalProperties": true
+        "$ref": "../schemas/event-envelope.v1.json"
       },
       "migration-request": {
-        "type": "object",
-        "properties": {
-          "reason": {
-            "type": "string",
-            "minLength": 8,
-            "maxLength": 500
-          },
-          "expectedVersion": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "targetOwner": {
-            "enum": [
-              "legacy-core",
-              "execution-service"
-            ]
-          }
-        },
-        "required": [
-          "reason",
-          "expectedVersion",
-          "targetOwner"
-        ],
-        "additionalProperties": false
+        "$ref": "../schemas/migration-request.v1.json"
       },
       "movement": {
-        "type": "object",
-        "properties": {
-          "movementId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "reservationId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "siteId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "product": {
-            "enum": [
-              "fulfilment",
-              "returns"
-            ]
-          },
-          "zoneId": {
-            "type": "string",
-            "enum": [
-              "ambient",
-              "chilled",
-              "returns"
-            ]
-          },
-          "loadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "source": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "destination": {
-            "enum": [
-              "outbound-staging",
-              "reusable",
-              "cleaning",
-              "damaged"
-            ]
-          },
-          "quantity": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10000
-          },
-          "priority": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9
-          },
-          "eligibleAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "movementId",
-          "reservationId",
-          "siteId",
-          "product",
-          "zoneId",
-          "loadId",
-          "source",
-          "destination",
-          "quantity",
-          "priority",
-          "eligibleAt"
-        ],
-        "additionalProperties": true
+        "$ref": "../schemas/movement.v1.json"
       },
       "order-request": {
-        "type": "object",
-        "properties": {
-          "sourceSystem": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "externalOrderRef": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "storeId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "priority": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9
-          },
-          "lines": {
-            "type": "array",
-            "minItems": 1,
-            "maxItems": 10,
-            "items": {
-              "type": "object",
-              "properties": {
-                "sku": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 40
-                },
-                "quantity": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 1000
-                }
-              },
-              "required": [
-                "sku",
-                "quantity"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "sourceSystem",
-          "externalOrderRef",
-          "storeId",
-          "priority",
-          "lines"
-        ],
-        "additionalProperties": false
+        "$ref": "../schemas/order-request.v1.json"
       },
       "receipt-request": {
-        "type": "object",
-        "properties": {
-          "sourceSystem": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "externalReceiptRef": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "counts": {
-            "type": "object",
-            "properties": {
-              "REUSABLE": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 10000
-              },
-              "NEEDS_CLEANING": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 10000
-              },
-              "DAMAGED": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 10000
-              }
-            },
-            "required": [
-              "REUSABLE",
-              "NEEDS_CLEANING",
-              "DAMAGED"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "sourceSystem",
-          "externalReceiptRef",
-          "counts"
-        ],
-        "additionalProperties": false
+        "$ref": "../schemas/receipt-request.v1.json"
       },
       "reconciliation-request": {
-        "type": "object",
-        "properties": {
-          "reason": {
-            "type": "string",
-            "minLength": 8,
-            "maxLength": 500
-          },
-          "expectedVersion": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "reason",
-          "expectedVersion"
-        ],
-        "additionalProperties": false
+        "$ref": "../schemas/reconciliation-request.v1.json"
       },
       "problem": {
         "type": "object",
@@ -802,566 +554,19 @@
         }
       },
       "order-view": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "siteId": {
-            "type": "string"
-          },
-          "externalOrderRef": {
-            "type": "string"
-          },
-          "storeId": {
-            "type": "string"
-          },
-          "priority": {
-            "type": "integer"
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "ACCEPTED",
-              "RESERVED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "COMPLETED_WITH_SHORTAGE",
-              "SHORTAGE",
-              "CANCELLED"
-            ]
-          },
-          "version": {
-            "type": "integer"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "observedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lines": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "sku": {
-                  "type": "string"
-                },
-                "requested": {
-                  "type": "integer"
-                },
-                "reserved": {
-                  "type": "integer"
-                },
-                "shortage": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "sku",
-                "requested",
-                "reserved",
-                "shortage"
-              ],
-              "additionalProperties": true
-            }
-          },
-          "movements": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "movementId": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "state": {
-                  "type": "string"
-                },
-                "movement": {
-                  "type": "object",
-                  "properties": {
-                    "zoneId": {
-                      "type": "string"
-                    },
-                    "quantity": {
-                      "type": "integer"
-                    },
-                    "destination": {
-                      "type": "string"
-                    },
-                    "source": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "zoneId",
-                    "quantity",
-                    "destination",
-                    "source"
-                  ],
-                  "additionalProperties": true
-                }
-              },
-              "required": [
-                "movementId",
-                "state",
-                "movement"
-              ],
-              "additionalProperties": true
-            }
-          }
-        },
-        "required": [
-          "id",
-          "siteId",
-          "externalOrderRef",
-          "storeId",
-          "priority",
-          "state",
-          "version",
-          "createdAt",
-          "completedAt",
-          "observedAt",
-          "lines",
-          "movements"
-        ],
-        "additionalProperties": true
+        "$ref": "../schemas/order-view.v1.json"
       },
       "order-page": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "siteId": {
-                  "type": "string"
-                },
-                "externalOrderRef": {
-                  "type": "string"
-                },
-                "storeId": {
-                  "type": "string"
-                },
-                "priority": {
-                  "type": "integer"
-                },
-                "state": {
-                  "type": "string",
-                  "enum": [
-                    "ACCEPTED",
-                    "RESERVED",
-                    "IN_PROGRESS",
-                    "COMPLETED",
-                    "COMPLETED_WITH_SHORTAGE",
-                    "SHORTAGE",
-                    "CANCELLED"
-                  ]
-                },
-                "version": {
-                  "type": "integer"
-                },
-                "createdAt": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "completedAt": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
-                "observedAt": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "lines": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "sku": {
-                        "type": "string"
-                      },
-                      "requested": {
-                        "type": "integer"
-                      },
-                      "reserved": {
-                        "type": "integer"
-                      },
-                      "shortage": {
-                        "type": "integer"
-                      }
-                    },
-                    "required": [
-                      "sku",
-                      "requested",
-                      "reserved",
-                      "shortage"
-                    ],
-                    "additionalProperties": true
-                  }
-                },
-                "movements": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "movementId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "state": {
-                        "type": "string"
-                      },
-                      "movement": {
-                        "type": "object",
-                        "properties": {
-                          "zoneId": {
-                            "type": "string"
-                          },
-                          "quantity": {
-                            "type": "integer"
-                          },
-                          "destination": {
-                            "type": "string"
-                          },
-                          "source": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "zoneId",
-                          "quantity",
-                          "destination",
-                          "source"
-                        ],
-                        "additionalProperties": true
-                      }
-                    },
-                    "required": [
-                      "movementId",
-                      "state",
-                      "movement"
-                    ],
-                    "additionalProperties": true
-                  }
-                }
-              },
-              "required": [
-                "id",
-                "siteId",
-                "externalOrderRef",
-                "storeId",
-                "priority",
-                "state",
-                "version",
-                "createdAt",
-                "completedAt",
-                "observedAt",
-                "lines",
-                "movements"
-              ],
-              "additionalProperties": true
-            }
-          },
-          "nextCursor": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "observedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "items",
-          "nextCursor",
-          "observedAt"
-        ],
-        "additionalProperties": true
+        "$ref": "../schemas/order-page.v1.json"
       },
       "task-list": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "movementId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "orderId": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "zoneId": {
-              "type": "string"
-            },
-            "state": {
-              "type": "string"
-            },
-            "owner": {
-              "type": "string"
-            },
-            "epoch": {
-              "type": [
-                "integer",
-                "null"
-              ]
-            },
-            "version": {
-              "type": "integer"
-            },
-            "lastError": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "eligibleAt": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          "required": [
-            "id",
-            "movementId",
-            "orderId",
-            "zoneId",
-            "state",
-            "owner",
-            "epoch",
-            "version",
-            "lastError",
-            "eligibleAt"
-          ],
-          "additionalProperties": true
-        }
+        "$ref": "../schemas/task-list.v1.json"
       },
       "equipment-view": {
-        "type": "object",
-        "properties": {
-          "worldId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "journalGeneration": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "completeHistory": {
-            "type": "boolean"
-          },
-          "observedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "journalHighWater": {
-            "type": "integer"
-          },
-          "stale": {
-            "type": "boolean"
-          },
-          "worldMismatch": {
-            "type": "boolean"
-          },
-          "lanes": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "siteId": {
-                  "type": "string"
-                },
-                "laneId": {
-                  "type": "string"
-                },
-                "zoneId": {
-                  "type": "string"
-                },
-                "blocked": {
-                  "type": "boolean"
-                },
-                "version": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "siteId",
-                "laneId",
-                "zoneId",
-                "blocked",
-                "version"
-              ],
-              "additionalProperties": true
-            }
-          }
-        },
-        "required": [
-          "stale",
-          "lanes"
-        ],
-        "additionalProperties": true
+        "$ref": "../schemas/equipment-view.v1.json"
       },
       "command-view": {
-        "type": "object",
-        "properties": {
-          "commandId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "allocationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "movementId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "siteId": {
-            "type": "string"
-          },
-          "owner": {
-            "type": "string"
-          },
-          "epoch": {
-            "type": "integer"
-          },
-          "state": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer"
-          },
-          "attempts": {
-            "type": "integer"
-          },
-          "failureAttempts": {
-            "type": "integer"
-          },
-          "payload": {
-            "type": "object",
-            "properties": {
-              "quantity": {
-                "type": "integer"
-              },
-              "source": {
-                "type": "string"
-              },
-              "destination": {
-                "type": "string"
-              },
-              "zoneId": {
-                "type": "string"
-              },
-              "laneId": {
-                "type": "string"
-              },
-              "worldId": {
-                "type": "string",
-                "format": "uuid"
-              }
-            },
-            "required": [
-              "quantity",
-              "source",
-              "destination",
-              "zoneId",
-              "laneId",
-              "worldId"
-            ],
-            "additionalProperties": true
-          },
-          "evidence": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "properties": {
-              "worldId": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "executionSequence": {
-                "type": "integer"
-              },
-              "state": {
-                "type": "string"
-              },
-              "completedAt": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "required": [
-              "worldId",
-              "executionSequence",
-              "state",
-              "completedAt"
-            ],
-            "additionalProperties": true
-          },
-          "lastError": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "commandId",
-          "allocationId",
-          "movementId",
-          "siteId",
-          "owner",
-          "epoch",
-          "state",
-          "version",
-          "attempts",
-          "failureAttempts",
-          "payload",
-          "evidence",
-          "lastError",
-          "createdAt",
-          "completedAt"
-        ],
-        "additionalProperties": true
+        "$ref": "../schemas/command-view.v1.json"
       }
     },
     "securitySchemes": {

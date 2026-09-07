@@ -130,106 +130,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        /** Read up to 100 site-scoped uncertain or quarantined commands, oldest first */
+        get: operations["listRecoveryCommands"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/commands/{id}/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Supervisor records a versioned status investigation using the original command ID
+         * @description Requires the supervisor role and a reason. A successful response records a request; it is not physical retry authority or proof of completion. A live lease, terminal state or changed version returns 409.
+         */
+        post: operations["investigateCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        "equipment-command": {
-            /** Format: uuid */
-            commandId: string;
-            /** Format: uuid */
-            allocationId: string;
-            /** Format: uuid */
-            movementId: string;
-            siteId: string;
-            /** Format: uuid */
-            loadId: string;
-            /** Format: uuid */
-            worldId: string;
-            /** Format: uuid */
-            journalGeneration: string;
-            expectedLoadVersion: number;
-            source: string;
-            destination: string;
-            /** @enum {string} */
-            zoneId: "ambient" | "chilled" | "returns";
-            laneId: string;
-            quantity: number;
-        };
-        "event-envelope": {
-            /** Format: uuid */
-            eventId: string;
-            eventType: string;
-            /** @constant */
-            schemaVersion: 1;
-            /** Format: date-time */
-            occurredAt: string;
-            siteId: string;
-            source: string;
-            aggregateType: string;
-            /** Format: uuid */
-            aggregateId: string;
-            aggregateVersion: number;
-            /** Format: uuid */
-            correlationId: string;
-            /** Format: uuid */
-            causationId: string | null;
-            traceparent: string | null;
-            payload: Record<string, never>;
-        } & {
-            [key: string]: unknown;
-        };
-        "migration-request": {
-            reason: string;
-            expectedVersion: number;
-            /** @enum {unknown} */
-            targetOwner: "legacy-core" | "execution-service";
-        };
-        movement: {
-            /** Format: uuid */
-            movementId: string;
-            /** Format: uuid */
-            reservationId: string | null;
-            siteId: string;
-            /** @enum {unknown} */
-            product: "fulfilment" | "returns";
-            /** @enum {string} */
-            zoneId: "ambient" | "chilled" | "returns";
-            /** Format: uuid */
-            loadId: string;
-            source: string;
-            /** @enum {unknown} */
-            destination: "outbound-staging" | "reusable" | "cleaning" | "damaged";
-            quantity: number;
-            priority: number;
-            /** Format: date-time */
-            eligibleAt: string;
-        } & {
-            [key: string]: unknown;
-        };
-        "order-request": {
-            sourceSystem: string;
-            externalOrderRef: string;
-            storeId: string;
-            priority: number;
-            lines: {
-                sku: string;
-                quantity: number;
-            }[];
-        };
-        "receipt-request": {
-            sourceSystem: string;
-            externalReceiptRef: string;
-            counts: {
-                REUSABLE: number;
-                NEEDS_CLEANING: number;
-                DAMAGED: number;
-            };
-        };
-        "reconciliation-request": {
-            reason: string;
-            expectedVersion: number;
-        };
+        "equipment-command": components["schemas"]["equipment-command.v1"];
+        "event-envelope": components["schemas"]["event-envelope.v1"];
+        "migration-request": components["schemas"]["migration-request.v1"];
+        movement: components["schemas"]["movement.v1"];
+        "order-request": components["schemas"]["order-request.v1"];
+        "receipt-request": components["schemas"]["receipt-request.v1"];
+        "reconciliation-request": components["schemas"]["reconciliation-request.v1"];
         problem: {
             type: string;
             title: string;
@@ -242,49 +195,12 @@ export interface components {
             id: string;
             statusUrl: string;
         };
-        "order-view": {
-            /** Format: uuid */
-            id: string;
-            siteId: string;
-            externalOrderRef: string;
-            storeId: string;
-            priority: number;
-            /** @enum {string} */
-            state: "ACCEPTED" | "RESERVED" | "IN_PROGRESS" | "COMPLETED" | "COMPLETED_WITH_SHORTAGE" | "SHORTAGE" | "CANCELLED";
-            version: number;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            observedAt: string;
-            lines: ({
-                sku: string;
-                requested: number;
-                reserved: number;
-                shortage: number;
-            } & {
-                [key: string]: unknown;
-            })[];
-            movements: ({
-                /** Format: uuid */
-                movementId: string;
-                state: string;
-                movement: {
-                    zoneId: string;
-                    quantity: number;
-                    destination: string;
-                    source: string;
-                } & {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            })[];
-        } & {
-            [key: string]: unknown;
-        };
-        "order-page": {
+        "order-view": components["schemas"]["order-view.v1"];
+        "order-page": components["schemas"]["order-page.v1"];
+        "task-list": components["schemas"]["task-list.v1"];
+        "equipment-view": components["schemas"]["equipment-view.v1"];
+        "command-view": components["schemas"]["command-view.v1"];
+        "order-page.v1": {
             items: ({
                 /** Format: uuid */
                 id: string;
@@ -334,7 +250,68 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        "task-list": ({
+        "order-request.v1": {
+            sourceSystem: string;
+            externalOrderRef: string;
+            storeId: string;
+            priority: number;
+            lines: {
+                sku: string;
+                quantity: number;
+            }[];
+        };
+        "order-view.v1": {
+            /** Format: uuid */
+            id: string;
+            siteId: string;
+            externalOrderRef: string;
+            storeId: string;
+            priority: number;
+            /** @enum {string} */
+            state: "ACCEPTED" | "RESERVED" | "IN_PROGRESS" | "COMPLETED" | "COMPLETED_WITH_SHORTAGE" | "SHORTAGE" | "CANCELLED";
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            observedAt: string;
+            lines: ({
+                sku: string;
+                requested: number;
+                reserved: number;
+                shortage: number;
+            } & {
+                [key: string]: unknown;
+            })[];
+            movements: ({
+                /** Format: uuid */
+                movementId: string;
+                state: string;
+                movement: {
+                    zoneId: string;
+                    quantity: number;
+                    destination: string;
+                    source: string;
+                } & {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
+        };
+        "receipt-request.v1": {
+            sourceSystem: string;
+            externalReceiptRef: string;
+            counts: {
+                REUSABLE: number;
+                NEEDS_CLEANING: number;
+                DAMAGED: number;
+            };
+        };
+        "task-list.v1": ({
             /** Format: uuid */
             id: string;
             /** Format: uuid */
@@ -352,7 +329,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         })[];
-        "equipment-view": {
+        "equipment-view.v1": {
             /** Format: uuid */
             worldId?: string;
             /** Format: uuid */
@@ -375,7 +352,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        "command-view": {
+        "command-view.v1": {
             /** Format: uuid */
             commandId: string;
             /** Format: uuid */
@@ -403,18 +380,100 @@ export interface components {
             evidence: ({
                 /** Format: uuid */
                 worldId: string;
-                executionSequence: number;
+                executionSequence: number | null;
                 state: string;
                 /** Format: date-time */
-                completedAt: string;
+                completedAt: string | null;
             } & {
                 [key: string]: unknown;
             }) | null;
             lastError: string | null;
+            evidenceVersion?: number;
+            acceptedEver?: boolean;
+            lastObservation?: {
+                [key: string]: unknown;
+            } | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             completedAt: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        "reconciliation-request.v1": {
+            reason: string;
+            expectedVersion: number;
+        };
+        "equipment-command.v1": {
+            /** Format: uuid */
+            commandId: string;
+            /** Format: uuid */
+            allocationId: string;
+            /** Format: uuid */
+            movementId: string;
+            siteId: string;
+            /** Format: uuid */
+            loadId: string;
+            /** Format: uuid */
+            worldId: string;
+            /** Format: uuid */
+            journalGeneration: string;
+            expectedLoadVersion: number;
+            source: string;
+            destination: string;
+            /** @enum {string} */
+            zoneId: "ambient" | "chilled" | "returns";
+            laneId: string;
+            quantity: number;
+        };
+        "event-envelope.v1": {
+            /** Format: uuid */
+            eventId: string;
+            eventType: string;
+            /** @constant */
+            schemaVersion: 1;
+            /** Format: date-time */
+            occurredAt: string;
+            siteId: string;
+            source: string;
+            aggregateType: string;
+            /** Format: uuid */
+            aggregateId: string;
+            aggregateVersion: number;
+            /** Format: uuid */
+            correlationId: string;
+            /** Format: uuid */
+            causationId: string | null;
+            traceparent: string | null;
+            payload: Record<string, never>;
+        } & {
+            [key: string]: unknown;
+        };
+        "migration-request.v1": {
+            reason: string;
+            expectedVersion: number;
+            /** @enum {unknown} */
+            targetOwner: "legacy-core" | "execution-service";
+        };
+        "movement.v1": {
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            reservationId: string | null;
+            siteId: string;
+            /** @enum {unknown} */
+            product: "fulfilment" | "returns";
+            /** @enum {string} */
+            zoneId: "ambient" | "chilled" | "returns";
+            /** Format: uuid */
+            loadId: string;
+            source: string;
+            /** @enum {unknown} */
+            destination: "outbound-staging" | "reusable" | "cleaning" | "damaged";
+            quantity: number;
+            priority: number;
+            /** Format: date-time */
+            eligibleAt: string;
         } & {
             [key: string]: unknown;
         };
@@ -457,7 +516,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["order-page"];
+                    "application/json": components["schemas"]["order-page.v1"];
                 };
             };
             default: components["responses"]["problem"];
@@ -476,7 +535,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["order-request"];
+                "application/json": components["schemas"]["order-request.v1"];
             };
         };
         responses: {
@@ -510,7 +569,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["order-view"];
+                    "application/json": components["schemas"]["order-view.v1"];
                 };
             };
             default: components["responses"]["problem"];
@@ -553,7 +612,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["receipt-request"];
+                "application/json": components["schemas"]["receipt-request.v1"];
             };
         };
         responses: {
@@ -608,7 +667,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["task-list"];
+                    "application/json": components["schemas"]["task-list.v1"];
                 };
             };
             default: components["responses"]["problem"];
@@ -631,7 +690,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["equipment-view"];
+                    "application/json": components["schemas"]["equipment-view.v1"];
                 };
             };
             default: components["responses"]["problem"];
@@ -655,10 +714,73 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["command-view"];
+                    "application/json": components["schemas"]["command-view.v1"];
                 };
             };
             default: components["responses"]["problem"];
+        };
+    };
+    listRecoveryCommands: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Observed recovery queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["problem"];
+            401: components["responses"]["problem"];
+            403: components["responses"]["problem"];
+            404: components["responses"]["problem"];
+            409: components["responses"]["problem"];
+            413: components["responses"]["problem"];
+            422: components["responses"]["problem"];
+            503: components["responses"]["problem"];
+        };
+    };
+    investigateCommand: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Investigation request recorded; repeats with the same key return the same response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["problem"];
+            401: components["responses"]["problem"];
+            403: components["responses"]["problem"];
+            404: components["responses"]["problem"];
+            409: components["responses"]["problem"];
+            413: components["responses"]["problem"];
+            422: components["responses"]["problem"];
+            503: components["responses"]["problem"];
         };
     };
 }

@@ -32,4 +32,11 @@ class AdapterController {
     @GetMapping("/api/v1/sites/{site}/zones") JsonNode zones(@PathVariable String site,@AuthenticationPrincipal Jwt jwt) {
         Access.role(jwt,"operator","supervisor");return allocations.routes(Access.site(jwt,site));
     }
+    @GetMapping("/api/v1/sites/{site}/commands") JsonNode commands(@PathVariable String site,@AuthenticationPrincipal Jwt jwt) {
+        Access.role(jwt,"operator","supervisor");return journal.recoverable(Access.site(jwt,site));
+    }
+    @PostMapping("/api/v1/sites/{site}/commands/{id}/reconciliation") JsonNode reconcile(@PathVariable String site,@PathVariable UUID id,
+            @RequestHeader("Idempotency-Key") String key,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt) {
+        Access.role(jwt,"supervisor");return journal.reconcile(jwt.getSubject(),Access.site(jwt,site),id,key,body);
+    }
 }

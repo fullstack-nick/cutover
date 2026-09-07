@@ -22,6 +22,12 @@ public final class ProblemHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class) ResponseEntity<ProblemDetail> malformed() {
         return problem(new Problem(400, "MALFORMED_JSON", "The request body is not valid JSON for this operation."));
     }
+    @ExceptionHandler({org.springframework.web.bind.MissingRequestHeaderException.class,
+            org.springframework.web.bind.MissingServletRequestParameterException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class})
+    ResponseEntity<ProblemDetail> malformedParameter() {
+        return problem(new Problem(400,"MALFORMED_REQUEST","A required request header or parameter is missing or malformed."));
+    }
     @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class}) ResponseEntity<ProblemDetail> invalid() {
         return problem(Problem.invalid("The request violates the operation's contract."));
     }

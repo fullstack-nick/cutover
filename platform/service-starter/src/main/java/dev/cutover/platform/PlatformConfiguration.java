@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-@Configuration @Import({JwtSecurityConfiguration.class,ProblemHandler.class})
+@Configuration @Import({JwtSecurityConfiguration.class,ProblemHandler.class,dev.cutover.platform.control.TestControlConfiguration.class})
 public class PlatformConfiguration {
     @Bean Clock clock() { return Clock.systemUTC(); }
     @Bean RequestLimits requestLimits() { return new RequestLimits(); }

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["reason", "expectedVersion"],
+  "minProperties": 3,
+  "properties": {
+    "reason": {"type": "string", "minLength": 8, "maxLength": 500},
+    "expectedVersion": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "intakePaused": {"type": "boolean"},
+    "dispatchPaused": {"type": "boolean"},
+    "workersPaused": {"type": "boolean"},
+    "criticalStorage": {"type": "boolean"},
+    "relayPaused": {"type": "boolean"},
+    "consumerPaused": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

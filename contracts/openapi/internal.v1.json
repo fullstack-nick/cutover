@@ -1,0 +1,39 @@
+{
+  "openapi": "3.1.2",
+  "info": {"title": "Cutover internal operations", "version": "1.0.0", "description": "Local authenticated service and test interfaces. The console proxy rejects /internal. An explicitly started core-api or adapter-api loopback forward permits verification with a separately authorized JWT. Process controls affect the single active lab site and require both the test-control role and scenario-driver client. They are absent when cutover.test-controls-enabled is false."},
+  "servers": [{"url": "http://127.0.0.1:8784", "description": "Explicit core-api forward"}, {"url": "http://127.0.0.1:8785", "description": "Explicit adapter-api forward"}],
+  "security": [{"bearer": []}],
+  "paths": {
+    "/internal/v1/sites/{site}/test-controls": {
+      "parameters": [{"$ref": "#/components/parameters/site"}],
+      "get": {"operationId": "readProcessControls", "responses": {"200": {"description": "Current version and pause/critical-storage flags"}, "default": {"$ref": "#/components/responses/problem"}}},
+      "post": {"operationId": "changeProcessControls", "parameters": [{"$ref": "#/components/parameters/key"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/runtime-control-request.v1.json"}}}}, "responses": {"200": {"description": "Versioned, audited control change recorded"}, "default": {"$ref": "#/components/responses/problem"}}}
+    },
+    "/internal/v1/sites/{site}/test-controls/faults": {
+      "parameters": [{"$ref": "#/components/parameters/site"}],
+      "get": {"operationId": "readProcessFaults", "responses": {"200": {"description": "Most recent 100 retained one-shot activations, including fired event IDs"}, "default": {"$ref": "#/components/responses/problem"}}},
+      "post": {"operationId": "armProcessFault", "description": "expectedVersion is the process-control version. A new one-shot fault has its own version 1. An explicit eventId can select an existing event; otherwise only matching events committed after arming are eligible. Consumption and audit commit before fixed exit code 73. At most one armed fault per site/checkpoint.", "parameters": [{"$ref": "#/components/parameters/key"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/process-fault-request.v1.json"}}}}, "responses": {"200": {"description": "One-shot fault armed; returns faultId, version and controlVersion"}, "default": {"$ref": "#/components/responses/problem"}}}
+    },
+    "/internal/v1/sites/{site}/test-controls/faults/{id}/clear": {
+      "parameters": [{"$ref": "#/components/parameters/site"}, {"$ref": "#/components/parameters/id"}],
+      "post": {"operationId": "clearProcessFault", "description": "expectedVersion is the fault version. Activation history is retained.", "parameters": [{"$ref": "#/components/parameters/key"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/reconciliation-request.v1.json"}}}}, "responses": {"200": {"description": "Fault disabled without deleting its evidence"}, "default": {"$ref": "#/components/responses/problem"}}}
+    },
+    "/internal/v1/sites/{site}/messaging": {
+      "parameters": [{"$ref": "#/components/parameters/site"}],
+      "get": {"operationId": "readDeliveryBacklog", "responses": {"200": {"description": "Site-scoped counters and up to 100 outstanding inbox/outbox entries"}, "default": {"$ref": "#/components/responses/problem"}}}
+    },
+    "/internal/v1/sites/{site}/messaging/{kind}/{id}/replay": {
+      "parameters": [{"$ref": "#/components/parameters/site"}, {"$ref": "#/components/parameters/id"}, {"name": "kind", "in": "path", "required": true, "schema": {"enum": ["inbox", "outbox"]}}],
+      "post": {"operationId": "recordDeliveryReplay", "description": "Supervisor only. Retains original envelope and event ID; cannot retry an applied inbox row or bypass an active publish lease. Outbox replay reserves unpublished capacity again.", "parameters": [{"$ref": "#/components/parameters/key"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/reconciliation-request.v1.json"}}}}, "responses": {"200": {"description": "Audited retry recorded"}, "default": {"$ref": "#/components/responses/problem"}}}
+    }
+  },
+  "components": {
+    "securitySchemes": {"bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
+    "parameters": {
+      "site": {"name": "site", "in": "path", "required": true, "schema": {"type": "string", "maxLength": 40}},
+      "id": {"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+      "key": {"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"type": "string", "minLength": 1, "maxLength": 128}}
+    },
+    "responses": {"problem": {"description": "400 malformed; 401 invalid authentication; 403 role/client denied; 404 absent, outside site or disabled; 409 version/state/key conflict; 413 oversize; 422 contract; 503 unavailable durability (Retry-After)."}}
+  }
+}

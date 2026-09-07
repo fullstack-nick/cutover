@@ -49,7 +49,7 @@ export function platformResources(images, settings) {
   add(service('keycloak', platform, [['http', 8080], ['management', 9000]]), workload('keycloak', platform, images.keycloak, {
     user: 1000, readOnly: false, memory: '1Gi', cpu: '2000m', env: identityEnv, args: ['start', '--optimized'], readiness: health(9000, '/health/ready'),
   }));
-  const common = [literal('CUTOVER_MIGRATIONS_ENABLED', 'false'), literal('CUTOVER_ISSUER', 'http://localhost:8780/identity/realms/cutover'),
+  const common = [literal('CUTOVER_MIGRATIONS_ENABLED', 'false'), literal('CUTOVER_TEST_CONTROLS_ENABLED', 'true'), literal('CUTOVER_ISSUER', 'http://localhost:8780/identity/realms/cutover'),
     literal('CUTOVER_JWKS_URI', `http://keycloak.${platform}.svc.cluster.local:8080/identity/realms/cutover/protocol/openid-connect/certs`), literal('CUTOVER_TOKEN_URI', `http://keycloak.${platform}.svc.cluster.local:8080/identity/realms/cutover/protocol/openid-connect/token`),
     literal('SPRING_RABBITMQ_HOST', `rabbitmq.${platform}.svc.cluster.local`), literal('SPRING_RABBITMQ_VIRTUAL_HOST', 'cutover'),
     literal('JAVA_TOOL_OPTIONS', '-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Dorg.jooq.no-logo=true -Dorg.jooq.no-tips=true -javaagent:/app/telemetry.jar'),
@@ -74,13 +74,14 @@ export function platformResources(images, settings) {
   for (const [name, image, port, args, user, memory, storage, readyPath] of [
     ['collector', 'collector', 4318, ['--config=/etc/cutover/config.yaml'], 10001, '384Mi', null, '/'],
     ['prometheus', 'prometheus', 9090, ['--config.file=/etc/cutover/config.yaml', '--storage.tsdb.path=/data', '--storage.tsdb.retention.time=24h', '--storage.tsdb.retention.size=512MB'], 65534, '384Mi', { path: '/data', size: '1Gi' }, '/-/ready'],
-    ['tempo', 'tempo', 3200, ['-config.file=/etc/cutover/config.yaml', '-target=all', '-backend-scheduler.provider.work.compaction.block-retention=24h'], 10001, '512Mi', { path: '/var/tempo', size: '1Gi' }, '/ready'],
+    ['tempo', 'tempo', 3200, ['-config.file=/etc/cutover/config.yaml', '-target=all', '-backend-scheduler.provider.work.compaction.block-retention=24h'], 10001, '1Gi', { path: '/var/tempo', size: '1Gi' }, '/ready'],
     ['grafana', 'grafana', 3000, undefined, 472, '384Mi', { path: '/var/lib/grafana', size: '1Gi' }, '/api/health'],
   ]) {
     const extra = name === 'grafana' ? {
       env: [literal('GF_ANALYTICS_REPORTING_ENABLED', false), literal('GF_ANALYTICS_CHECK_FOR_UPDATES', false), literal('GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES', false), literal('GF_NEWS_NEWS_FEED_ENABLED', false), literal('GF_SECURITY_ADMIN_USER', 'cutover-admin'), secret('GF_SECURITY_ADMIN_PASSWORD', 'password', 'grafana-admin'), literal('GF_USERS_ALLOW_SIGN_UP', false), literal('GF_PLUGINS_PREINSTALL_DISABLED', true)],
       volumes: [configuration('grafana-datasources'), configuration('grafana-dashboards'), configuration('cutover-dashboard')], mounts: [mount('grafana-datasources', '/etc/grafana/provisioning/datasources'), mount('grafana-dashboards', '/etc/grafana/provisioning/dashboards'), mount('cutover-dashboard', '/var/lib/grafana/dashboards')],
     } : { volumes: [configuration(`${name}-config`)], mounts: [mount(`${name}-config`, '/etc/cutover')] };
+    if (name === 'tempo') extra.env = [literal('GOMEMLIMIT', '768MiB')];
     add(service(name, observability, [[name === 'collector' ? 'otlp-http' : 'http', port], ...(name === 'collector' ? [['health', 13133], ['metrics', 8888]] : name === 'tempo' ? [['otlp-grpc', 4317], ['otlp-http', 4318]] : [])]),
       workload(name, observability, images[image], { user, memory, cpu: '1000m', args, port, storage, readiness: health(name === 'collector' ? 13133 : port, readyPath), ...extra }));
   }

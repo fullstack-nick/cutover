@@ -26,6 +26,7 @@ x-java: &java
 
 x-application-env: &application-env
   CUTOVER_MIGRATIONS_ENABLED: 'false'
+  CUTOVER_TEST_CONTROLS_ENABLED: 'true'
   CUTOVER_ISSUER: http://localhost:8780/identity/realms/cutover
   CUTOVER_JWKS_URI: http://keycloak:8080/identity/realms/cutover/protocol/openid-connect/certs
   CUTOVER_TOKEN_URI: http://keycloak:8080/identity/realms/cutover/protocol/openid-connect/token

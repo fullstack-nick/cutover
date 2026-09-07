@@ -20,20 +20,23 @@ export async function token(client = 'scenario-driver') {
   if (!response.ok) throw new Error(`Local identity rejected the service token request (${response.status}).`);
   return (await response.json()).access_token;
 }
-export async function api(path, { method = 'GET', body, key, bearer } = {}) {
+export async function api(path, { method = 'GET', body, key, bearer, target = 'console' } = {}) {
+  const origins = { console: origin, core: 'http://127.0.0.1:8784', adapter: 'http://127.0.0.1:8785' };
+  if (!Object.hasOwn(origins, target)) throw new Error('Unknown Cutover API forward.');
   const headers = { Accept: 'application/json' };
   if (bearer) headers.Authorization = `Bearer ${bearer}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (key) headers['Idempotency-Key'] = key;
-  const response = await fetch(origin + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(8000) });
+  const response = await fetch(origins[target] + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(8000) });
   const text = await response.text();
   return { status: response.status, body: text ? JSON.parse(text) : null };
 }
-export function simulator(path, body, identity = 'scenario') {
+export function simulator(path, body, identity = 'scenario', method = body === undefined ? 'GET' : 'POST') {
+  if (!['GET','POST','PUT','DELETE'].includes(method)) throw new Error('Unsupported equipment HTTP operation.');
   const equipment = resolve(root, '.local/secrets/equipment');
   return new Promise((done, failed) => {
     const request = https.request(`https://localhost:18784${path}`, {
-      method: body === undefined ? 'GET' : 'POST', pfx: readFileSync(resolve(equipment, `${identity}.p12`)),
+      method, pfx: readFileSync(resolve(equipment, `${identity}.p12`)),
       passphrase: credentials.passwords.equipment_store, ca: readFileSync(resolve(equipment, 'ca.pem')),
       headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, timeout: 6000,
     }, response => {

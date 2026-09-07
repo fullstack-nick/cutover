@@ -20,16 +20,19 @@ class CommandJournalTest {
     @BeforeAll static void databases() { adapterDb=new DatabaseFixture("equipment-adapter");simulatorDb=new DatabaseFixture("equipment-simulator"); }
     @AfterAll static void stop() { adapterDb.close();simulatorDb.close(); }
     @BeforeEach void reset() {
-        adapterDb.reset();simulatorDb.reset();clock=new MutableClock(Instant.now().plusSeconds(1));
+        adapterDb.reset();simulatorDb.reset();clock=new MutableClock(Instant.now().plusSeconds(60));
         simulator=new SimulatorEngine(simulatorDb.sql(),clock);port=new Port();allocations=new Allocations(adapterDb.sql());
         observations=new EquipmentObservations(adapterDb.sql(),port,clock);journal=new CommandJournal(adapterDb.sql(),port,observations,clock);observations.refresh();
     }
     class Port implements EquipmentPort {
-        boolean unavailable;
+        boolean unavailable, falseAbsence;
+        JsonNode override;
         @Override public JsonNode equipment() { if(unavailable)throw new Unavailable("Disconnected");return simulator.equipment(); }
         @Override public Reply command(UUID id) {
             if(unavailable)throw new Unavailable("Disconnected");
-            try{return new Reply(200,simulator.status(id));}catch(Problem absent){if(absent.status()!=404)throw absent;return new Reply(404,simulator.equipment());}
+            if (falseAbsence) return new Reply(404,simulator.absence(id));
+            if (override!=null) return new Reply(200,override);
+            try{return new Reply(200,simulator.observedStatus(id));}catch(Problem absent){if(absent.status()!=404)throw absent;return new Reply(404,simulator.absence(id));}
         }
         @Override public Reply send(UUID id,JsonNode payload) {
             try {
@@ -86,5 +89,61 @@ class CommandJournalTest {
         simulatorDb.sql().execute("UPDATE simulation_world SET world_id=gen_random_uuid()");tick();
         assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("QUARANTINED");
         assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM simulator_commands").get(0,Integer.class)).isZero();
+    }
+    @Test void delayedAcceptedObservationCannotRegressExecutingAndDuplicateProofHasOneEffect() {
+        UUID id=UUID.randomUUID(); record(id,movement(id)); simulator.fault("HOLD_EXECUTING",id,1,10000); journal.work();
+        simulator.fault("STALE_STATUS",id,1,3000); tick();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("EXECUTING");
+        tick();
+        var stale=journal.get("site-a",id);
+        assertThat(stale.path("state").asString()).isEqualTo("EXECUTING");
+        assertThat(stale.path("lastError").asString()).isEqualTo("STALE_OBSERVATION");
+        assertThat(stale.path("evidenceVersion").asLong()).isEqualTo(2);
+        simulator.fault("DUPLICATE_RESPONSE",id,2,0); tick(); tick();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM outbox WHERE event_type='CommandAccepted.v1'").get(0,Integer.class)).isEqualTo(2);
+        clock.advance(Duration.ofSeconds(10)); tick();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isEqualTo(1);
+    }
+    @Test void sameVersionWithDifferentMeaningQuarantinesAndRetainsEarlierEvidence() {
+        UUID id=UUID.randomUUID(); record(id,movement(id)); journal.work();
+        var conflicting=(tools.jackson.databind.node.ObjectNode)simulator.status(id).deepCopy(); conflicting.put("state","EXECUTING"); port.override=conflicting;
+        clock.advance(Duration.ofSeconds(2)); journal.work();
+        var command=journal.get("site-a",id);
+        assertThat(command.path("state").asString()).isEqualTo("QUARANTINED");
+        assertThat(command.path("lastError").asString()).isEqualTo("CONTRADICTORY_OBSERVATION");
+        assertThat(command.path("evidence").path("state").asString()).isEqualTo("ACCEPTED");
+        assertThat(command.path("lastObservation").path("state").asString()).isEqualTo("EXECUTING");
+    }
+    JsonNode recovery(UUID id) { return JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",journal.get("site-a",id).path("version").asLong(),"reason","Transport restored; investigate retained command evidence.")); }
+    @Test void exhaustedInvestigationRequiresAuditedVersionedRecoveryAndUsesTheOriginalCommand() {
+        UUID id=UUID.randomUUID(); record(id,movement(id)); port.unavailable=true;
+        for(int i=0;i<5;i++){clock.advance(Duration.ofSeconds(17));journal.work();}
+        assertThat(journal.get("site-a",id).path("failureAttempts").asInt()).isEqualTo(5);
+        assertThat(journal.work()).isZero();
+        var request=recovery(id);
+        assertThatThrownBy(()->journal.reconcile("supervisor","site-b",id,"recovery",request)).isInstanceOf(Problem.class).satisfies(e->assertThat(((Problem)e).status()).isEqualTo(404));
+        var response=journal.reconcile("supervisor","site-a",id,"recovery",request);
+        assertThat(journal.reconcile("supervisor","site-a",id,"recovery",request)).isEqualTo(response);
+        assertThatThrownBy(()->journal.reconcile("supervisor","site-a",id,"another-key",request)).isInstanceOf(Problem.class).hasMessageContaining("changed");
+        port.unavailable=false; observations.refresh(); journal.work(); tick();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(journal.reconcile("supervisor","site-a",id,"recovery",request)).isEqualTo(response);
+        assertThatThrownBy(()->journal.reconcile("supervisor","site-a",id,"terminal",recovery(id))).isInstanceOf(Problem.class).hasMessageContaining("terminal");
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM audit WHERE action='command-investigation'").get(0,Integer.class)).isEqualTo(1);
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger WHERE command_id=?",id).get(0,Integer.class)).isEqualTo(1);
+    }
+    @Test void aTemporaryHistoryGapCanBeInvestigatedButAcceptedHistoryCannotBeInvented() {
+        UUID id=UUID.randomUUID(); record(id,movement(id)); simulator.fault("HISTORY_GAP",id,1,0); journal.work();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("QUARANTINED");
+        journal.reconcile("supervisor","site-a",id,"history-recovered",recovery(id)); journal.work();
+        assertThat(journal.get("site-a",id).path("acceptedEver").asBoolean()).isTrue();
+        port.falseAbsence=true; clock.advance(Duration.ofSeconds(2)); journal.work();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("QUARANTINED");
+        journal.reconcile("supervisor","site-a",id,"cannot-override-proof",recovery(id)); journal.work();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("QUARANTINED");
+        assertThat(journal.get("site-a",id).path("attempts").asInt()).isEqualTo(1);
+        port.falseAbsence=false; simulator.advance(); journal.reconcile("supervisor","site-a",id,"genuine-evidence-returned",recovery(id)); journal.work();
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("COMPLETED");
     }
 }

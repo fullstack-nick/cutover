@@ -79,13 +79,13 @@
           "format": "uuid"
         },
         "executionSequence": {
-          "type": "integer"
+          "type": ["integer", "null"]
         },
         "state": {
           "type": "string"
         },
         "completedAt": {
-          "type": "string",
+          "type": ["string", "null"],
           "format": "date-time"
         }
       },
@@ -103,6 +103,9 @@
         "null"
       ]
     },
+    "evidenceVersion": {"type": "integer", "minimum": 0},
+    "acceptedEver": {"type": "boolean"},
+    "lastObservation": {"type": ["object", "null"], "additionalProperties": true},
     "createdAt": {
       "type": "string",
       "format": "date-time"

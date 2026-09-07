@@ -14,7 +14,10 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnProperty(name = "cutover.messaging-enabled", havingValue = "true")
 public class MessageConfiguration {
     @Bean MessagingOperations messagingOperations(DSLContext database) { return new MessagingOperations(database); }
-    @Bean @ConditionalOnMissingBean DeliveryHooks deliveryHooks() { return DeliveryHooks.NONE; }
+    @Bean @ConditionalOnMissingBean DeliveryHooks deliveryHooks(DSLContext database,Clock clock,
+            @org.springframework.beans.factory.annotation.Value("${cutover.test-controls-enabled:false}") boolean enabled) {
+        return enabled?new dev.cutover.platform.control.ProcessFaults(database,clock):DeliveryHooks.NONE;
+    }
     @Bean RabbitDelivery rabbitDelivery(RabbitTemplate template, DeliveryHooks hooks) { return new RabbitDelivery(template, hooks); }
     @Bean DurableInbox durableInbox(DSLContext database, MessageHandler handler, Clock clock, MessageSubscription subscription) {
         return new DurableInbox(database, handler, clock, subscription.sources(), subscription.sites());

@@ -2,6 +2,8 @@ package dev.cutover.adapter;
 
 import dev.cutover.platform.Database;
 import dev.cutover.platform.Events;
+import dev.cutover.platform.Contracts;
+import dev.cutover.platform.Idempotency;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
 import java.time.Clock;
@@ -69,6 +71,7 @@ public final class CommandJournal {
         if (database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0,Boolean.class)) return 0;
         var ids=database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
+            if (!Database.workersMayWrite(sql)) return java.util.List.<UUID>of();
             var rows=sql.fetch("SELECT command_id FROM command_journal WHERE state NOT IN ('COMPLETED','QUARANTINED','REJECTED_BEFORE_EXECUTION') AND failure_attempts<5 AND next_attempt_at<= ?::timestamptz AND (lease_until IS NULL OR lease_until< ?::timestamptz) ORDER BY next_attempt_at,command_id LIMIT 16 FOR UPDATE SKIP LOCKED",now(),now());
             var selected=rows.getValues("command_id",UUID.class);
             for (UUID id:selected) sql.execute("UPDATE command_journal SET lease_until= ?::timestamptz WHERE command_id= ?",now().plusSeconds(10),id);
@@ -84,7 +87,7 @@ public final class CommandJournal {
         try {
             EquipmentPort.Reply status=equipment.command(id);
             if (status.status()==404) {
-                if (!sameHistory(command,status.body()) || row.get("evidence")!=null) {
+                if (!sameHistory(command,status.body()) || row.get("accepted_ever",Boolean.class)) {
                     transition(id,"QUARANTINED",status.body(),"The simulator cannot prove retained absence of a never-accepted command."); return;
                 }
                 boolean send=database.transactionResult(configuration -> {
@@ -115,7 +118,8 @@ public final class CommandJournal {
                 case "REJECTED_BEFORE_EXECUTION" -> "REJECTED_BEFORE_EXECUTION";
                 default -> "QUARANTINED";
             };
-            if (state.equals("COMPLETED") && (proof.path("executionSequence").asLong(0)<1 || proof.path("completedAt").isNull())) state="QUARANTINED";
+            if (proof.path("version").asLong(0)<1 || (state.equals("COMPLETED")
+                    && (proof.path("executionSequence").asLong(0)<1 || !proof.path("completedAt").isString()))) state="QUARANTINED";
             transition(id,state,proof,state.equals("QUARANTINED")?"Unrecognized or incomplete completion evidence.":null);
         } catch(EquipmentPort.Unavailable failure) {
             transition(id,"OUTCOME_UNKNOWN",null,"Transport outcome is unknown; investigate the same command identity.");
@@ -124,19 +128,37 @@ public final class CommandJournal {
         }
     }
 
-    private void transition(UUID id,String state,JsonNode proof,String error) {
+    private void transition(UUID id,String proposedState,JsonNode proof,String proposedError) {
         database.transaction(configuration -> {
             var sql=DSL.using(configuration);
+            if (!Database.workersMayWrite(sql)) return;
             var summary=sql.fetchOne("SELECT site_id FROM command_journal WHERE command_id= ?",id);
             String site=summary.get("site_id",String.class);
             Allocations.lockRoute(sql,site,id);
             var allocation=sql.fetchOne("SELECT * FROM movement_allocations WHERE site_id= ? AND movement_id= ? FOR UPDATE",site,id);
             var row=sql.fetchOne("SELECT * FROM command_journal WHERE command_id= ? FOR UPDATE",id);
             if ("COMPLETED".equals(row.get("state",String.class))) return;
+            String state=proposedState, error=proposedError;
+            boolean validProof=proof!=null && !state.equals("QUARANTINED");
+            long evidenceVersion=row.get("evidence_version",Long.class);
+            if (validProof && proof.path("version").asLong()<evidenceVersion) {
+                sql.execute("UPDATE command_journal SET last_observation=?::jsonb,last_error='STALE_OBSERVATION',lease_until=NULL,next_attempt_at=?::timestamptz WHERE command_id=?",
+                        JsonSupport.write(proof),now().plusSeconds(1),id);
+                return;
+            }
+            if (validProof && evidenceVersion>0) {
+                JsonNode prior=JsonSupport.read(row.get("evidence").toString());
+                if ((proof.path("version").asLong()==evidenceVersion && !JsonSupport.hash(prior).equals(JsonSupport.hash(proof)))
+                        || (progress(proof.path("state").asString())<progress(prior.path("state").asString()))) {
+                    state="QUARANTINED"; error="CONTRADICTORY_OBSERVATION"; validProof=false;
+                }
+            }
             boolean changed=!state.equals(row.get("state",String.class));
             int failures=state.equals("OUTCOME_UNKNOWN")?row.get("failure_attempts",Integer.class)+1:0;
-            sql.execute("UPDATE command_journal SET state= ?,version=version+ ?,evidence=COALESCE(?::jsonb,evidence),last_error= ?,failure_attempts= ?,lease_until=NULL,next_attempt_at= ?::timestamptz,completed_at=CASE WHEN ? ='COMPLETED' THEN ?::timestamptz ELSE completed_at END WHERE command_id= ?",
-                    state,changed?1:0,proof==null?null:JsonSupport.write(proof),error,failures,now().plusNanos(failures>0?(1L<<Math.min(failures-1,4))*1_000_000_000:200_000_000),state,now(),id);
+            sql.execute("UPDATE command_journal SET state= ?,version=version+ ?,evidence=COALESCE(?::jsonb,evidence),last_observation=COALESCE(?::jsonb,last_observation),evidence_version=?,accepted_ever=accepted_ever OR ?,last_error= ?,failure_attempts= ?,lease_until=NULL,next_attempt_at= ?::timestamptz,completed_at=CASE WHEN ? ='COMPLETED' THEN ?::timestamptz ELSE completed_at END WHERE command_id= ?",
+                    state,changed?1:0,validProof?JsonSupport.write(proof):null,proof==null?null:JsonSupport.write(proof),
+                    validProof?proof.path("version").asLong():evidenceVersion,validProof,error,failures,
+                    now().plusNanos(failures>0?(1L<<Math.min(failures-1,4))*1_000_000_000:200_000_000),state,now(),id);
             if (!changed) return;
             long version=allocation.get("version",Long.class)+1;
             sql.execute("UPDATE movement_allocations SET version= ?,state=CASE WHEN ? ='COMPLETED' THEN 'COMPLETED' ELSE state END,completed_at=CASE WHEN ? ='COMPLETED' THEN ?::timestamptz ELSE completed_at END WHERE allocation_id= ?",
@@ -153,12 +175,47 @@ public final class CommandJournal {
         });
     }
 
+    private static int progress(String state) {
+        return switch(state) { case "ACCEPTED" -> 1; case "EXECUTING" -> 2; case "COMPLETED","REJECTED_BEFORE_EXECUTION" -> 3; default -> 0; };
+    }
+
+    /** Records investigation authority only. The worker must still obtain evidence before any send. */
+    public JsonNode reconcile(String actor,String site,UUID id,String key,JsonNode request) {
+        try { Contracts.validate("reconciliation-request.v1",JsonSupport.write(request)); }
+        catch (IllegalArgumentException invalid) { throw Problem.invalid("Provide an expected version and a reason of 8–500 characters."); }
+        String reason=request.path("reason").asString().trim();
+        if (reason.length()<8) throw Problem.invalid("Explain the evidence or correction that warrants investigation.");
+        return database.transactionResult(configuration -> {
+            var sql=DSL.using(configuration);
+            return Idempotency.execute(sql,actor,site,"command-investigation",key,Map.of("commandId",id,"request",request),()-> {
+                Allocations.lockRoute(sql,site,id);
+                var row=sql.fetchOne("SELECT * FROM command_journal WHERE site_id=? AND command_id=? FOR UPDATE",site,id);
+                if (row==null) throw Problem.missing();
+                long before=row.get("version",Long.class);
+                if (before!=request.path("expectedVersion").asLong()) throw Problem.conflict("VERSION_CONFLICT","The command changed; inspect the latest evidence before requesting investigation.");
+                if (Set.of("COMPLETED","REJECTED_BEFORE_EXECUTION").contains(row.get("state",String.class)))
+                    throw Problem.conflict("COMMAND_TERMINAL","A terminal command cannot be redispatched or reopened.");
+                OffsetDateTime lease=row.get("lease_until",OffsetDateTime.class);
+                if (lease!=null && lease.isAfter(now())) throw Problem.conflict("INVESTIGATION_IN_FLIGHT","Let the current status investigation settle before recording another.");
+                sql.execute("UPDATE command_journal SET state='OUTCOME_UNKNOWN',version=version+1,failure_attempts=0,next_attempt_at=?::timestamptz,lease_until=NULL,last_error='INVESTIGATION_RECORDED' WHERE command_id=?",now(),id);
+                JsonNode response=JsonSupport.MAPPER.valueToTree(Map.of("commandId",id,"state","INVESTIGATION_RECORDED","version",before+1));
+                sql.execute("INSERT INTO audit(audit_id,site_id,actor,action,resource_id,reason,before_version,after_version,outcome,detail) VALUES (?,?,?,'command-investigation',?,?,?,?, 'RECORDED',?::jsonb)",
+                        UUID.randomUUID(),site,actor,id.toString(),reason,before,before+1,JsonSupport.write(response));
+                return response;
+            });
+        });
+    }
+
+    public JsonNode recoverable(String site) {
+        return Database.json(database,"SELECT jsonb_build_object('observedAt',now(),'items',COALESCE(jsonb_agg(jsonb_build_object('commandId',command_id,'siteId',site_id,'owner',owner,'state',state,'version',version,'failureAttempts',failure_attempts,'lastError',last_error,'createdAt',created_at) ORDER BY created_at,command_id),'[]'::jsonb)) FROM (SELECT * FROM command_journal WHERE site_id=? AND (state IN ('OUTCOME_UNKNOWN','QUARANTINED') OR failure_attempts>=5) ORDER BY created_at,command_id LIMIT 100) c",site);
+    }
+
     private boolean sameHistory(JsonNode command,JsonNode response) {
         return response.path("completeHistory").asBoolean(false) && command.path("worldId").equals(response.path("worldId")) && command.path("journalGeneration").equals(response.path("journalGeneration"));
     }
     public JsonNode get(String site,UUID command) { return view(database,site,command); }
     static JsonNode view(DSLContext sql,String site,UUID command) {
-        return Database.json(sql,"SELECT jsonb_build_object('commandId',command_id,'allocationId',allocation_id,'movementId',movement_id,'siteId',site_id,'owner',owner,'epoch',epoch,'state',state,'version',version,'attempts',attempts,'failureAttempts',failure_attempts,'payload',payload,'evidence',evidence,'lastError',last_error,'createdAt',created_at,'completedAt',completed_at) FROM command_journal WHERE site_id= ? AND command_id= ?",site,command);
+        return Database.json(sql,"SELECT jsonb_build_object('commandId',command_id,'allocationId',allocation_id,'movementId',movement_id,'siteId',site_id,'owner',owner,'epoch',epoch,'state',state,'version',version,'attempts',attempts,'failureAttempts',failure_attempts,'payload',payload,'evidence',evidence,'lastObservation',last_observation,'evidenceVersion',evidence_version,'acceptedEver',accepted_ever,'lastError',last_error,'createdAt',created_at,'completedAt',completed_at) FROM command_journal WHERE site_id= ? AND command_id= ?",site,command);
     }
     private OffsetDateTime now() { return OffsetDateTime.ofInstant(clock.instant(),ZoneOffset.UTC); }
 }

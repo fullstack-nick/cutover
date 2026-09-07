@@ -16,6 +16,8 @@ public final class OutboxRelay {
     private final Publisher publisher;
     private final Clock clock;
     private final DeliveryHooks hooks;
+    private java.time.Instant nextPublishAttempt=java.time.Instant.MIN;
+    private int consecutivePublishFailures;
 
     public OutboxRelay(DSLContext database, Publisher publisher, Clock clock, DeliveryHooks hooks) {
         this.database = database; this.publisher = publisher; this.clock = clock; this.hooks = hooks;
@@ -26,6 +28,7 @@ public final class OutboxRelay {
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             if (!Database.workersMayWrite(sql)) return null;
+            if (sql.fetchOne("SELECT relay_paused FROM service_control WHERE singleton").get(0,Boolean.class)) return null;
             var row = sql.fetchOne("""
                     SELECT o.* FROM outbox o
                     WHERE o.published_at IS NULL AND NOT o.paused AND o.next_attempt_at <= ?::timestamptz
@@ -45,6 +48,7 @@ public final class OutboxRelay {
 
     public int poll(int limit) {
         if (limit < 1 || limit > 32) throw new IllegalArgumentException("Relay batch must be 1..32");
+        if (clock.instant().isBefore(nextPublishAttempt)) return 0;
         int count = 0;
         while (count < limit) {
             Claimed row = claim(); if (row == null) break;
@@ -52,9 +56,11 @@ public final class OutboxRelay {
             try {
                 publisher.publish(row.exchange(), row.type(), row.eventId(), row.body());
                 hooks.reached("AFTER_BROKER_CONFIRM", row.eventId());
-                confirmed(row); count++;
+                confirmed(row); count++; consecutivePublishFailures=0;
             } catch (RuntimeException unavailable) {
                 failed(row, unavailable instanceof DeliveryFailure ? unavailable.getMessage() : "BROKER_UNAVAILABLE");
+                consecutivePublishFailures=Math.min(consecutivePublishFailures+1,RetryDelay.MAX_ATTEMPTS);
+                nextPublishAttempt=clock.instant().plus(RetryDelay.after(row.eventId(),consecutivePublishFailures));
                 break; // One unavailable transport cannot tie up a batch or produce a hot loop.
             }
         }

@@ -2,6 +2,13 @@ stream_over_http_enabled: true
 server:
   http_listen_port: 3200
   log_level: warn
+live_store:
+  max_live_traces_bytes: 16777216
+  max_block_bytes: 4194304
+  complete_block_concurrency: 1
+  query_block_concurrency: 1
+querier:
+  max_concurrent_queries: 2
 distributor:
   receivers:
     otlp:

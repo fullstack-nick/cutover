@@ -23,18 +23,22 @@ class SimulatorController {
         return acceptance.result();
     }
     @GetMapping("/sim/v1/commands/{id}") ResponseEntity<JsonNode> status(@PathVariable UUID id) {
-        try { return ResponseEntity.ok(engine.status(id)); }
+        try { return ResponseEntity.ok(engine.observedStatus(id)); }
         catch (Problem absent) {
             if (absent.status()!=404) throw absent;
-            return ResponseEntity.status(404).body(engine.equipment());
+            return ResponseEntity.status(404).body(engine.absence(id));
         }
     }
     @GetMapping("/sim/v1/equipment") JsonNode equipment() { return engine.equipment(); }
     @GetMapping("/sim/v1/history") JsonNode history(@RequestParam(defaultValue="0") long after,@RequestParam(defaultValue="100") int limit) { return engine.history(after,limit); }
     record Fault(String kind, UUID commandId, int count, int delayMillis) {}
     @PostMapping("/sim/v1/test-controls/faults") JsonNode fault(@RequestBody Fault fault) {
-        requireControls(); engine.fault(fault.kind(),fault.commandId(),fault.count(),fault.delayMillis());
-        return JsonSupport.read("{\"configured\":true}");
+        requireControls(); UUID id=engine.fault(fault.kind(),fault.commandId(),fault.count(),fault.delayMillis());
+        return JsonSupport.MAPPER.valueToTree(java.util.Map.of("configured",true,"faultId",id));
+    }
+    @GetMapping("/sim/v1/test-controls/faults") JsonNode faults() { requireControls(); return engine.faults(); }
+    @DeleteMapping("/sim/v1/test-controls/faults/{id}") JsonNode clear(@PathVariable UUID id) {
+        requireControls(); engine.clearFault(id); return JsonSupport.MAPPER.valueToTree(java.util.Map.of("faultId",id,"cleared",true));
     }
     record Lane(String siteId, String laneId, boolean blocked) {}
     @PostMapping("/sim/v1/test-controls/lanes") JsonNode lane(@RequestBody Lane lane) {
