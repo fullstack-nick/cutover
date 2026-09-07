@@ -18,6 +18,10 @@ node tools/scenario-driver/messaging-smoke.mjs
 
 The independently running simulator and its database are required before rendering the demo. The development baseline guide describes their Compose profile. `deploy.ps1` renders secrets privately, runs owner migration Jobs, applies Kustomize output, waits for rollout, and starts the console forward. The ordinary deployment command does not restore or overwrite databases.
 
+The current extraction stage adds a passive execution application and its shadow mode. Shadow uses a separate credential and `cutover_shadow` evidence database on the same application PostgreSQL server. `ensure-databases.mjs` verifies fixed owner identities, creates missing databases and preserves existing data/passwords. Run `configure-local.mjs` when acquiring this stage's additional local credentials, then rebuild/deploy. The two outbound routes still belong to the legacy coordinator until a verified migration changes them.
+
+Use the [shadow comparison runbook](../runbooks/shadow-comparison.md) for the component and running-process comparison checks. Its synthetic scheduling endpoint is internal and scenario-only; comparison details are site-authorized reads through the normal console origin.
+
 On this development host, the first platform deployment used `transfer-baseline.mjs`: application writers were stopped, five application databases were dumped with checksums, and the dumps were restored into empty target databases. The source volumes and independent simulator were preserved. `deploy.ps1 -TransferBaseline` is only for that explicit, captured development transfer; it refuses nonempty targets. It is not the final backup/restore implementation.
 
 Open `http://localhost:8780` and sign in as `operator-a`. Its generated password is in the ignored `.local/secrets/credentials.json`, under `passwords.operator_a`. Never copy that file to a public issue or commit. Seeded human profiles contain fictional names and `.invalid` addresses; no real email service is involved.

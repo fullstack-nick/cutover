@@ -1,0 +1,341 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "roundId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "inputHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "ruleVersion": {
+          "const": 1
+        },
+        "siteId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$"
+        },
+        "zoneId": {
+          "enum": [
+            "ambient",
+            "chilled"
+          ]
+        },
+        "decisionAt": {
+          "type": "string",
+          "pattern": "T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$",
+          "format": "date-time"
+        },
+        "observedAt": {
+          "type": "string",
+          "pattern": "T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$",
+          "format": "date-time"
+        },
+        "topologyVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worldMismatch": {
+          "type": "boolean"
+        },
+        "route": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "enum": [
+                "legacy-core",
+                "execution-service"
+              ]
+            },
+            "epoch": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "state": {
+              "enum": [
+                "ACTIVE",
+                "DRAINING",
+                "RECONCILIATION_REQUIRED"
+              ]
+            }
+          },
+          "required": [
+            "owner",
+            "epoch",
+            "state"
+          ],
+          "additionalProperties": true
+        },
+        "candidates": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "properties": {
+              "movementId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 900,
+                "multipleOf": 100
+              },
+              "eligibleAt": {
+                "type": "string",
+                "pattern": "T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$",
+                "format": "date-time"
+              },
+              "zoneId": {
+                "enum": [
+                  "ambient",
+                  "chilled"
+                ]
+              },
+              "owner": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "epoch": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "allocationState": {
+                "enum": [
+                  "ASSIGNED",
+                  "PENDING",
+                  "COMPLETED",
+                  "CANCELLED"
+                ]
+              },
+              "commandState": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "movementId",
+              "priority",
+              "eligibleAt",
+              "zoneId",
+              "owner",
+              "epoch",
+              "allocationState",
+              "commandState"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "lanes": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "properties": {
+              "siteId": {
+                "type": "string"
+              },
+              "zoneId": {
+                "enum": [
+                  "ambient",
+                  "chilled"
+                ]
+              },
+              "laneId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,39}$"
+              },
+              "blocked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "siteId",
+              "zoneId",
+              "laneId",
+              "blocked"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "ruleVersion",
+        "siteId",
+        "zoneId",
+        "decisionAt",
+        "observedAt",
+        "topologyVersion",
+        "worldMismatch",
+        "route",
+        "candidates",
+        "lanes"
+      ],
+      "additionalProperties": true
+    },
+    "legacyProposal": {
+      "type": "object",
+      "properties": {
+        "ruleVersion": {
+          "const": 1
+        },
+        "selectedMovementId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "selectedLaneId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ranking": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "properties": {
+              "movementId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "enum": [
+                  "READY",
+                  "WORLD_MISMATCH",
+                  "OBSERVATION_STALE",
+                  "ROUTE_UNCERTAIN",
+                  "ZONE_MISMATCH",
+                  "OWNER_MISMATCH",
+                  "UNASSIGNED",
+                  "COMMAND_RECORDED",
+                  "NOT_ELIGIBLE",
+                  "LANE_BLOCKED"
+                ]
+              },
+              "laneId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "movementId",
+              "reason",
+              "laneId"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "ruleVersion",
+        "selectedMovementId",
+        "selectedLaneId",
+        "ranking"
+      ],
+      "additionalProperties": true
+    },
+    "executionProposal": {
+      "type": "object",
+      "properties": {
+        "ruleVersion": {
+          "const": 1
+        },
+        "selectedMovementId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "selectedLaneId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ranking": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "properties": {
+              "movementId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "reason": {
+                "enum": [
+                  "READY",
+                  "WORLD_MISMATCH",
+                  "OBSERVATION_STALE",
+                  "ROUTE_UNCERTAIN",
+                  "ZONE_MISMATCH",
+                  "OWNER_MISMATCH",
+                  "UNASSIGNED",
+                  "COMMAND_RECORDED",
+                  "NOT_ELIGIBLE",
+                  "LANE_BLOCKED"
+                ]
+              },
+              "laneId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "movementId",
+              "reason",
+              "laneId"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "ruleVersion",
+        "selectedMovementId",
+        "selectedLaneId",
+        "ranking"
+      ],
+      "additionalProperties": true
+    },
+    "matches": {
+      "type": "boolean"
+    },
+    "comparedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "roundId",
+    "inputHash",
+    "input",
+    "legacyProposal",
+    "executionProposal",
+    "matches",
+    "comparedAt"
+  ],
+  "additionalProperties": true
+}

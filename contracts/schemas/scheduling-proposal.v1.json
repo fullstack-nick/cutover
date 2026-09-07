@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ruleVersion": {
+      "const": 1
+    },
+    "selectedMovementId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "selectedLaneId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ranking": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "properties": {
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "enum": [
+              "READY",
+              "WORLD_MISMATCH",
+              "OBSERVATION_STALE",
+              "ROUTE_UNCERTAIN",
+              "ZONE_MISMATCH",
+              "OWNER_MISMATCH",
+              "UNASSIGNED",
+              "COMMAND_RECORDED",
+              "NOT_ELIGIBLE",
+              "LANE_BLOCKED"
+            ]
+          },
+          "laneId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "movementId",
+          "reason",
+          "laneId"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "ruleVersion",
+    "selectedMovementId",
+    "selectedLaneId",
+    "ranking"
+  ],
+  "additionalProperties": true
+}

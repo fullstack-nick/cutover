@@ -1,6 +1,6 @@
 spring:
   application:
-    name: execution-service
+    name: ${CUTOVER_SERVICE_NAME:execution-service}
   datasource:
     url: ${CUTOVER_DATABASE_URL}
     username: ${CUTOVER_DATABASE_USER}
@@ -46,8 +46,10 @@ server:
       max: 32
     max-connections: 200
 cutover:
+  shadow-mode: ${CUTOVER_SHADOW_MODE:false}
+  test-controls-enabled: ${CUTOVER_TEST_CONTROLS_ENABLED:false}
   messaging-enabled: ${CUTOVER_MESSAGING_ENABLED:true}
-  service-name: execution-service
+  service-name: ${CUTOVER_SERVICE_NAME:execution-service}
   workers-enabled: ${CUTOVER_WORKERS_ENABLED:true}
   security:
     issuer: ${CUTOVER_ISSUER:http://localhost:8780/identity/realms/cutover}
@@ -56,5 +58,6 @@ cutover:
   adapter:
     url: ${CUTOVER_ADAPTER_URL}
   clients:
+    id: ${CUTOVER_CLIENT_ID:execution-service}
     token-uri: ${CUTOVER_TOKEN_URI}
     secret: ${CUTOVER_CLIENT_SECRET}

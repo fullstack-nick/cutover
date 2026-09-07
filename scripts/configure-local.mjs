@@ -10,7 +10,7 @@ mkdirSync(directory, { recursive: true });
 const credentialFile = resolve(directory, 'credentials.json');
 const credentials = existsSync(credentialFile) ? JSON.parse(readFileSync(credentialFile, 'utf8')) : { createdAt: new Date().toISOString(), passwords: {} };
 const password = key => credentials.passwords[key] ??= randomBytes(32).toString('hex');
-const owners = ['core', 'adapter', 'execution', 'returns', 'keycloak'];
+const owners = ['core', 'adapter', 'execution', 'returns', 'keycloak', 'shadow'];
 const databaseNames = [...owners, 'simulator'];
 for (const owner of databaseNames) for (const purpose of ['migrator', 'runtime']) password(`${owner}_${purpose}`);
 for (const key of ['postgres_admin', 'simulator_postgres_admin', 'keycloak_admin', 'grafana_admin', 'equipment_store', 'operator_a', 'supervisor_a', 'operator_b', 'platform_admin']) password(key);
@@ -83,9 +83,17 @@ write('realm/cutover-realm.json', JSON.stringify(realm, null, 2) + '\n');
 const publishers = ['legacy-core', 'equipment-adapter', 'execution-service', 'returns-service'];
 const shortNames = { 'legacy-core': 'core', 'equipment-adapter': 'adapter', 'execution-service': 'execution', 'returns-service': 'returns', 'shadow-scheduler': 'shadow' };
 const consumers = [...publishers, 'shadow-scheduler'];
-const hashPassword = value => { const salt = randomBytes(4); return Buffer.concat([salt, createHash('sha256').update(salt).update(value).digest()]).toString('base64'); };
+const previousBroker = existsSync(resolve(directory, 'rabbit-definitions.json')) ? JSON.parse(readFileSync(resolve(directory, 'rabbit-definitions.json'), 'utf8')) : { users: [] };
+const hashPassword = (name, value) => {
+  const previous = previousBroker.users.find(user => user.name === name && user.hashing_algorithm === 'rabbit_password_hashing_sha256');
+  if (previous) {
+    const bytes = Buffer.from(previous.password_hash, 'base64'), salt = bytes.subarray(0, 4);
+    if (bytes.length === 36 && bytes.subarray(4).equals(createHash('sha256').update(salt).update(value).digest())) return previous.password_hash;
+  }
+  const salt = randomBytes(4); return Buffer.concat([salt, createHash('sha256').update(salt).update(value).digest()]).toString('base64');
+};
 const rabbit = {
-  users: ['admin', ...Object.values(shortNames)].map(name => ({ name: `cutover_${name}`, password_hash: hashPassword(password(`rabbit_${name}`)), hashing_algorithm: 'rabbit_password_hashing_sha256', tags: name === 'admin' ? ['administrator'] : [] })),
+  users: ['admin', ...Object.values(shortNames)].map(name => ({ name: `cutover_${name}`, password_hash: hashPassword(`cutover_${name}`, password(`rabbit_${name}`)), hashing_algorithm: 'rabbit_password_hashing_sha256', tags: name === 'admin' ? ['administrator'] : [] })),
   vhosts: [{ name: 'cutover' }],
   permissions: [
     { user: 'cutover_admin', vhost: 'cutover', configure: '.*', write: '.*', read: '.*' },

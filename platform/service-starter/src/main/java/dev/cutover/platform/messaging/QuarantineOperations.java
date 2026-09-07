@@ -35,7 +35,7 @@ public final class QuarantineOperations {
                 sql.fetchOne("SELECT singleton FROM message_storage WHERE singleton FOR UPDATE");
                 var row=sql.fetchOne("SELECT * FROM delivery_quarantine WHERE delivery_id=? AND (site_id=? OR site_id IS NULL) FOR UPDATE",id,site);
                 if(row==null)throw Problem.missing();
-                var receiver=new DurableInbox(sql,handler,clock,subscription.sources(),Set.of(site));
+                var receiver=new DurableInbox(sql,handler,clock,new MessageSubscription(subscription.queue(),subscription.sources(),Set.of(site),subscription.exchanges()));
                 byte[] bytes=row.get("raw_body",byte[].class);
                 if(bytes==null || !site.equals(receiver.trustedSite(row.get("received_exchange",String.class),bytes)))throw Problem.missing();
                 long before=row.get("version",Long.class);

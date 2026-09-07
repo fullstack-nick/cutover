@@ -52,7 +52,7 @@ export function simulator(path, body, identity = 'scenario', method = body === u
 }
 
 function postgres(owner, role, sql, { admin = false } = {}) {
-  if (!['core', 'adapter', 'simulator', 'execution', 'returns', 'keycloak'].includes(owner)) throw new Error('Unknown Cutover database owner.');
+  if (!['core', 'adapter', 'simulator', 'execution', 'returns', 'keycloak', 'shadow'].includes(owner)) throw new Error('Unknown Cutover database owner.');
   if (profile === 'demo' && owner !== 'simulator') {
     const target = ['--kubeconfig', resolve(root, '.local/kubeconfig'), '--context', 'kind-cutover', '-n', 'cutover-platform'];
     const inspected = spawnSync('kubectl', [...target, 'get', 'pod', 'application-db-0', '-o', 'json'], { encoding: 'utf8', windowsHide: true });
@@ -75,9 +75,10 @@ function postgres(owner, role, sql, { admin = false } = {}) {
   });
 }
 export function provisionObservers() {
-  for (const owner of ['core', 'adapter', 'simulator', 'execution', 'returns', 'keycloak']) credentials.passwords[`${owner}_observer`] ??= randomBytes(32).toString('hex');
+  const owners=['core','adapter','simulator','execution','returns','keycloak',...(profile==='demo'?['shadow']:[])];
+  for (const owner of owners) credentials.passwords[`${owner}_observer`] ??= randomBytes(32).toString('hex');
   writeFileSync(credentialPath, JSON.stringify(credentials, null, 2) + '\n', { mode: 0o600 });
-  for (const owner of ['core', 'adapter', 'simulator', 'execution', 'returns', 'keycloak']) {
+  for (const owner of owners) {
     const user = `cutover_${owner}_observer`;
     credentials.passwords[`${owner}_observer`] ??= randomBytes(32).toString('hex');
     const secret = credentials.passwords[`${owner}_observer`];

@@ -55,16 +55,16 @@ export function platformResources(images, settings) {
     literal('JAVA_TOOL_OPTIONS', '-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Dorg.jooq.no-logo=true -Dorg.jooq.no-tips=true -javaagent:/app/telemetry.jar'),
     literal('OTEL_EXPORTER_OTLP_ENDPOINT', `http://collector.${observability}.svc.cluster.local:4318`), literal('OTEL_EXPORTER_OTLP_PROTOCOL', 'http/protobuf'),
     literal('OTEL_METRICS_EXPORTER', 'none'), literal('OTEL_LOGS_EXPORTER', 'none'), literal('OTEL_BSP_MAX_QUEUE_SIZE', '512'), literal('OTEL_BSP_MAX_EXPORT_BATCH_SIZE', '128'), literal('OTEL_BSP_EXPORT_TIMEOUT', '2000'), literal('OTEL_EXPORTER_OTLP_TIMEOUT', '2000')];
-  for (const [name, owner] of [['legacy-core', 'core'], ['equipment-adapter', 'adapter']]) {
+  for (const [name, owner] of [['legacy-core', 'core'], ['equipment-adapter', 'adapter'], ['execution-service', 'execution'], ['shadow-scheduler', 'shadow']]) {
     const env = [...common, literal('OTEL_SERVICE_NAME', name), literal('CUTOVER_DATABASE_URL', `jdbc:postgresql://application-db.${platform}.svc.cluster.local:5432/cutover_${owner}`), literal('CUTOVER_DATABASE_USER', `cutover_${owner}_runtime`), secret('CUTOVER_DATABASE_PASSWORD', 'databasePassword', `${name}-runtime`),
       literal('SPRING_RABBITMQ_USERNAME', `cutover_${owner}`), secret('SPRING_RABBITMQ_PASSWORD', 'brokerPassword', `${name}-runtime`)];
     const extra = {};
-    if (name === 'legacy-core') env.push(literal('CUTOVER_ADAPTER_URL', 'http://equipment-adapter:8080'), secret('CUTOVER_CLIENT_SECRET', 'clientSecret', `${name}-runtime`));
+    if (name !== 'equipment-adapter') env.push(literal('CUTOVER_ADAPTER_URL', 'http://equipment-adapter:8080'), secret('CUTOVER_CLIENT_SECRET', 'clientSecret', `${name}-runtime`), literal('CUTOVER_CLIENT_ID', name), literal('CUTOVER_SERVICE_NAME', name), literal('CUTOVER_SHADOW_MODE', name === 'shadow-scheduler'));
     else {
       env.push(literal('CUTOVER_EQUIPMENT_URL', `https://equipment-simulator.${platform}.svc.cluster.local:8443`), literal('CUTOVER_ADAPTER_KEY_STORE', '/etc/cutover/adapter.p12'), literal('CUTOVER_EQUIPMENT_TRUST_STORE', '/etc/cutover/trust.p12'), secret('CUTOVER_EQUIPMENT_STORE_PASSWORD', 'password', 'adapter-equipment'));
       extra.volumes = [credential('adapter-equipment')]; extra.mounts = [mount('adapter-equipment', '/etc/cutover')];
     }
-    add(service(name, apps, [['http', 8080], ['management', 9091]]), workload(name, apps, images[name], { env, ...extra }));
+    add(service(name, apps, [['http', 8080], ['management', 9091]]), workload(name, apps, images[name === 'shadow-scheduler' ? 'execution-service' : name], { env, ...extra }));
   }
   const simulatorService = service('equipment-simulator', platform, [['https', 8443], ['management', 9091]]); delete simulatorService.spec.selector;
   add(simulatorService, { apiVersion: 'discovery.k8s.io/v1', kind: 'EndpointSlice', metadata: { ...metadata('equipment-simulator', platform), labels: { ...labels('equipment-simulator'), 'kubernetes.io/service-name': 'equipment-simulator', 'endpointslice.kubernetes.io/managed-by': 'cutover-renderer' } }, addressType: 'IPv4', ports: [{ name: 'https', port: 8443, protocol: 'TCP' }, { name: 'management', port: 9091, protocol: 'TCP' }], endpoints: [{ addresses: [settings.simulatorAddress], conditions: { ready: true } }] });
@@ -87,12 +87,12 @@ export function platformResources(images, settings) {
   }
   return result;
 }
-export function migrationJob(name, owner, image) {
+export function migrationJob(name, owner, image, schema = name) {
   return { apiVersion: 'batch/v1', kind: 'Job', metadata: metadata(`migrate-${name}`, namespaces.apps), spec: { backoffLimit: 0, activeDeadlineSeconds: 180, ttlSecondsAfterFinished: 86400,
     template: { metadata: { labels: labels(`migrate-${name}`) }, spec: { restartPolicy: 'Never', automountServiceAccountToken: false, securityContext: { runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, seccompProfile: { type: 'RuntimeDefault' } },
       containers: [{ name: 'migrate', image, imagePullPolicy: 'Never', securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ['ALL'] } }, resources: { requests: { memory: '128Mi', cpu: '100m' }, limits: { memory: '512Mi', cpu: '1000m' } },
         command: ['java', '-Dloader.main=dev.cutover.platform.MigrationMain', '-cp', '/app/app.jar', 'org.springframework.boot.loader.launch.PropertiesLauncher'],
-        env: [literal('CUTOVER_DATABASE_URL', `jdbc:postgresql://application-db.${namespaces.platform}.svc.cluster.local:5432/cutover_${owner}`), literal('CUTOVER_DATABASE_USER', `cutover_${owner}_migrator`), secret('CUTOVER_DATABASE_PASSWORD', 'password', `${name}-migrator`), literal('CUTOVER_MIGRATION_LOCATIONS', `classpath:db/platform,classpath:db/${name}`)] }] } } } };
+        env: [literal('CUTOVER_DATABASE_URL', `jdbc:postgresql://application-db.${namespaces.platform}.svc.cluster.local:5432/cutover_${owner}`), literal('CUTOVER_DATABASE_USER', `cutover_${owner}_migrator`), secret('CUTOVER_DATABASE_PASSWORD', 'password', `${name}-migrator`), literal('CUTOVER_MIGRATION_LOCATIONS', `classpath:db/platform,classpath:db/${schema}`)] }] } } } };
 }
 export function identityMigrationJob(image) {
   const env = [literal('KC_DB_URL', 'jdbc:postgresql://application-db:5432/cutover_keycloak'), literal('KC_DB_USERNAME', 'cutover_keycloak_migrator'), secret('KC_DB_PASSWORD', 'password', 'keycloak-migrator'),

@@ -20,6 +20,10 @@ class AdapterController {
     @PostMapping("/internal/v1/sites/{site}/allocations") JsonNode allocate(@PathVariable String site,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt) {
         return allocations.register(Access.site(jwt,site),Access.client(jwt),body);
     }
+    record ContextRequest(java.util.List<UUID> movementIds) {}
+    @PostMapping("/internal/v1/sites/{site}/zones/{zone}/scheduling-context") JsonNode context(@PathVariable String site,@PathVariable String zone,@RequestBody ContextRequest body,@AuthenticationPrincipal Jwt jwt) {
+        Access.role(jwt,"service");return allocations.schedulingContext(Access.site(jwt,site),zone,body.movementIds(),observations);
+    }
     @GetMapping("/internal/v1/sites/{site}/allocations/{movement}") JsonNode allocation(@PathVariable String site,@PathVariable UUID movement,@AuthenticationPrincipal Jwt jwt) {
         return allocations.get(Access.site(jwt,site),movement);
     }

@@ -41,7 +41,9 @@ try {
     Invoke-Kubectl @('-n','cutover-platform','rollout','status','statefulset/application-db','--timeout=180s')
     Invoke-Kubectl @('-n','cutover-platform','rollout','status','statefulset/rabbitmq','--timeout=180s')
     if($TransferBaseline){& node scripts/transfer-baseline.mjs restore;if($LASTEXITCODE -ne 0){throw 'Frozen baseline transfer failed.'}}
-    Run-Jobs 'migrations' 'cutover-apps' @('migrate-legacy-core','migrate-equipment-adapter')
+    & node scripts/ensure-databases.mjs
+    if($LASTEXITCODE -ne 0){throw 'Owner database provisioning failed.'}
+    Run-Jobs 'migrations' 'cutover-apps' @('migrate-legacy-core','migrate-equipment-adapter','migrate-execution-service','migrate-shadow-scheduler')
     # Stop the runtime identity process before its migration account makes schema changes.
     $identity=& kubectl --kubeconfig $config --context kind-cutover -n cutover-platform get deployment keycloak --ignore-not-found -o name
     if($identity){Invoke-Kubectl @('-n','cutover-platform','scale','deployment/keycloak','--replicas=0');Invoke-Kubectl @('-n','cutover-platform','wait','--for=delete','pod','-l','app.kubernetes.io/name=keycloak','--timeout=90s')}
@@ -49,5 +51,6 @@ try {
     Invoke-Kubectl @('apply','-k','.local/kubernetes/demo/runtime')
     foreach($entry in @(@('cutover-platform','deployment/keycloak'),@('cutover-apps','deployment/equipment-adapter'),@('cutover-apps','deployment/legacy-core'),@('cutover-apps','deployment/proxy'),@('cutover-observability','deployment/collector'),@('cutover-observability','statefulset/prometheus'),@('cutover-observability','statefulset/tempo'),@('cutover-observability','statefulset/grafana'))){Invoke-Kubectl @('-n',$entry[0],'rollout','status',$entry[1],'--timeout=240s')}
     & (Join-Path $PSScriptRoot 'forward.ps1') -Action Start -Target console
+    foreach($name in @('execution-service','shadow-scheduler')){Invoke-Kubectl @('-n','cutover-apps','rollout','status',"deployment/$name",'--timeout=240s')}
     Write-Host 'Cutover local platform rolled out. Verify its behavior before recording acceptance.'
 }finally{Pop-Location}

@@ -25,6 +25,11 @@ export function policies(simulatorAddress) {
   connect(o, 'collector', o, 'tempo', [4317]); connect(o, 'grafana', o, 'tempo', [3200]); connect(o, 'grafana', o, 'prometheus', [9090]);
   connect(o, 'prometheus', p, 'keycloak', [9000]); connect(o, 'prometheus', p, 'rabbitmq', [15692]);
   connect(o, 'prometheus', o, 'collector', [8888]); connect(o, 'prometheus', o, 'tempo', [3200]);
+  connect(a, 'shadow-scheduler', p, 'application-db', [5432]); connect(a, 'shadow-scheduler', p, 'rabbitmq', [5672]);
+  connect(a, 'shadow-scheduler', p, 'keycloak', [8080]); connect(a, 'shadow-scheduler', o, 'collector', [4318]);
+  connect(a, 'shadow-scheduler', a, 'equipment-adapter', [8080]); // API identity denies command/allocation writes independently of this read path.
+  connect(a, 'migrate-shadow-scheduler', p, 'application-db', [5432]); connect(o, 'prometheus', a, 'shadow-scheduler', [9091]);
+  connect(a, 'proxy', a, 'shadow-scheduler', [8080]);
   for (const [index, link] of links.entries()) {
     const ports = link.ports.map(port => ({ protocol: 'TCP', port }));
     add(link.fromNs, `allow-${index}-to-${link.to}`, pod(link.from), { policyTypes: ['Egress'], egress: [{ to: [peer(link.toNs, link.to)], ports }] });

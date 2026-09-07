@@ -44,7 +44,7 @@ public final class OrderService {
                 for(Line line:request.lines()) if(!sql.fetchExists(PRODUCTS, PRODUCTS.SITE_ID.eq(site).and(PRODUCTS.SKU.eq(line.sku())))) throw Problem.invalid("Unknown SKU for this site.");
                 UUID id=UUID.randomUUID();
                 sql.execute("UPDATE admission SET active_requests=active_requests+1 WHERE singleton");
-                sql.execute("INSERT INTO orders(order_id,site_id,source_system,external_ref,payload_hash,store_id,priority,state,created_at) VALUES (?,?,?,?,?,?,?,'ACCEPTED',?::timestamptz)",id,site,request.sourceSystem(),request.externalOrderRef(),JsonSupport.hash(request),request.storeId(),request.priority(),java.time.OffsetDateTime.ofInstant(clock.instant(),java.time.ZoneOffset.UTC));
+                sql.execute("INSERT INTO orders(order_id,site_id,source_system,external_ref,payload_hash,store_id,priority,state,created_at) VALUES (?,?,?,?,?,?,?,'ACCEPTED',?::timestamptz)",id,site,request.sourceSystem(),request.externalOrderRef(),JsonSupport.hash(request),request.storeId(),request.priority(),java.time.OffsetDateTime.ofInstant(clock.instant().truncatedTo(java.time.temporal.ChronoUnit.MICROS),java.time.ZoneOffset.UTC));
                 for(Line line:request.lines()) sql.execute("INSERT INTO order_lines(order_id,site_id,sku,requested) VALUES (?,?,?,?)",id,site,line.sku(),line.quantity());
                 Events.append(sql,site,"legacy-core","order",id,1,"OrderAccepted.v1",id,accepted(site,id));
                 sql.fetch("SELECT reserve_order(?)",id);

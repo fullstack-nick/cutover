@@ -54,6 +54,7 @@ class LegacyWorkflowTest {
         @Override public JsonNode allocate(String site,JsonNode movement){return allocations.register(site,"legacy-core",movement);}
         @Override public JsonNode command(String site,UUID movement){try{return journal.get(site,movement);}catch(Problem absent){if(absent.status()!=404)throw absent;return null;}}
         @Override public JsonNode equipment(String site){return observations.forSite(site);}
+        @Override public JsonNode context(String site,String zone,List<UUID> movements){return new dev.cutover.adapter.SchedulingContext(adapterDb.sql(),observations).read(site,zone,movements);}
         @Override public JsonNode dispatch(String site,UUID movement,UUID allocation,long epoch,String lane,JsonNode payload){return journal.record(site,"legacy-core",movement,allocation,epoch,lane,payload);}
     },orders,clock);}
     JsonNode request(String reference,OrderService.Line... lines){return JsonSupport.MAPPER.valueToTree(new OrderService.Request("test-driver",reference,"store-01",5,List.of(lines)));}
@@ -279,6 +280,43 @@ class LegacyWorkflowTest {
         assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM order_cancellations").get(0,Integer.class)).isEqualTo(1);
         assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isEqualTo(1);
     }
+    @Test void actualSqlProposalSelectsHighestPriorityAndRetainsItsInputBeforeDispatch() {
+        UUID normal=accept("decision-normal",new OrderService.Line("SKU-001",1));
+        var body=(tools.jackson.databind.node.ObjectNode)request("decision-urgent",new OrderService.Line("SKU-003",1));body.put("priority",9);
+        UUID urgent=Database.uuid(orders.accept("scenario","site-a","decision-urgent",body),"id");
+        UUID urgentMovement=Database.uuid(orders.get("site-a",urgent).path("movements").get(0),"movementId");
+        scheduler.poll();
+        var first=coreDb.sql().fetchOne("SELECT input,input_hash,proposal FROM legacy_decision_rounds ORDER BY created_at,round_id LIMIT 1");
+        var input=JsonSupport.read(first.get("input").toString());var proposal=JsonSupport.read(first.get("proposal").toString());
+        assertThat(input.path("candidates")).hasSize(2);
+        assertThat(JsonSupport.hash(input)).isEqualTo(first.get("input_hash"));
+        assertThat(proposal.path("selectedMovementId").asString()).isEqualTo(urgentMovement.toString());
+        assertThat(adapterDb.sql().fetchOne("SELECT command_id FROM command_journal ORDER BY created_at LIMIT 1").get(0,UUID.class)).isEqualTo(urgentMovement);
+        finish(normal,"COMPLETED");finish(urgent,"COMPLETED");
+    }
+    @Test void exhaustedTaskTransportPausesUntilVersionedAuditedStatusRecovery() {
+        UUID order=accept("task-transport",new OrderService.Line("SKU-001",1));
+        var unavailable=new AtomicBoolean(true);var calls=new java.util.concurrent.atomic.AtomicInteger();
+        scheduler=new LegacyScheduler(coreDb.sql(),new DispatchPort(){
+            public JsonNode allocate(String site,JsonNode movement){calls.incrementAndGet();if(unavailable.get())throw new dev.cutover.platform.ServiceHttp.Unavailable("Test transport outage");return allocations.register(site,"legacy-core",movement);}
+            public JsonNode equipment(String site){return observations.forSite(site);}
+            public JsonNode command(String site,UUID id){try{return journal.get(site,id);}catch(Problem missing){if(missing.status()==404)return null;throw missing;}}
+            public JsonNode context(String site,String zone,List<UUID> ids){return new dev.cutover.adapter.SchedulingContext(adapterDb.sql(),observations).read(site,zone,ids);}
+            public JsonNode dispatch(String site,UUID movement,UUID allocation,long epoch,String lane,JsonNode payload){return journal.record(site,"legacy-core",movement,allocation,epoch,lane,payload);}
+        },orders,clock);
+        for(int attempt=0;attempt<6;attempt++){scheduler.poll();clock.advance(Duration.ofSeconds(20));}
+        var task=coreDb.sql().fetchOne("SELECT task_id,version,transport_paused,transport_failures FROM legacy_tasks WHERE order_id=?",order);
+        assertThat(task.get("transport_paused",Boolean.class)).isTrue();assertThat(calls.get()).isEqualTo(6);
+        scheduler.poll();assertThat(calls.get()).isEqualTo(6);
+        UUID id=task.get("task_id",UUID.class);var body=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",task.get("version"),"reason","Adapter transport repaired; investigate the retained movement identity."));
+        assertThatThrownBy(()->scheduler.resume("supervisor","site-b",id,"resume",body)).isInstanceOf(Problem.class);
+        var response=scheduler.resume("supervisor","site-a",id,"resume",body);
+        assertThat(scheduler.resume("supervisor","site-a",id,"resume",body)).isEqualTo(response);
+        assertThatThrownBy(()->scheduler.resume("other-supervisor","site-a",id,"resume",body)).isInstanceOf(Problem.class);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM audit WHERE action='legacy-task-recovery'").get(0,Integer.class)).isEqualTo(1);
+        unavailable.set(false);finish(order,"COMPLETED");
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isEqualTo(1);
+    }
     @Test void criticalCoreStorageStopsNewAllocationButRetainsAcceptedWork() {
         UUID id=accept("storage-paused",new OrderService.Line("SKU-001",2));
         coreDb.sql().execute("UPDATE service_control SET critical_storage=true");
@@ -305,6 +343,6 @@ class LegacyWorkflowTest {
         assertThat(coreDb.sql().fetchOne("SELECT allocation_id,epoch,version FROM legacy_tasks WHERE order_id=?",id).intoArray()).containsExactly(null,null,0L);
         assertThat(coreDb.sql().fetchOne("SELECT state FROM movement_intents WHERE order_id=?",id).get(0,String.class)).isEqualTo("REQUESTED");
         assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isZero();
-        coreDb.sql().execute("UPDATE service_control SET workers_paused=false");clock.advance(Duration.ofSeconds(21));finish(id,"COMPLETED");
+        coreDb.sql().execute("UPDATE service_control SET workers_paused=false");clock.advance(Duration.ofSeconds(61));finish(id,"COMPLETED");
     }
 }

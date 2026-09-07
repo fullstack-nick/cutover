@@ -29,11 +29,14 @@ public final class EquipmentObservations {
             UUID pinned=row.get("pinned_world_id",UUID.class),journal=row.get("pinned_journal_generation",UUID.class);
             boolean mismatch=(pinned!=null && (!pinned.equals(world)||!journal.equals(generation))) || !observation.path("completeHistory").asBoolean(false);
             sql.execute("UPDATE equipment_observation SET pinned_world_id=COALESCE(pinned_world_id,?),pinned_journal_generation=COALESCE(pinned_journal_generation,?),observation= ?::jsonb,observed_at= ?::timestamptz,world_mismatch= ? WHERE singleton",
-                    world,generation,JsonSupport.write(observation),OffsetDateTime.ofInstant(clock.instant(),ZoneOffset.UTC),mismatch);
+                    world,generation,JsonSupport.write(observation),OffsetDateTime.ofInstant(clock.instant().truncatedTo(java.time.temporal.ChronoUnit.MICROS),ZoneOffset.UTC),mismatch);
         });
     }
     public JsonNode forSite(String site) {
-        var row=database.selectFrom(EQUIPMENT_OBSERVATION).where(EQUIPMENT_OBSERVATION.SINGLETON.isTrue()).fetchSingle();
+        return forSite(database,site);
+    }
+    JsonNode forSite(DSLContext sql,String site) {
+        var row=sql.selectFrom(EQUIPMENT_OBSERVATION).where(EQUIPMENT_OBSERVATION.SINGLETON.isTrue()).fetchSingle();
         var result=JsonSupport.MAPPER.createObjectNode();
         if (row.get("observation")==null) { result.put("stale",true); result.putArray("lanes"); return result; }
         var observation=JsonSupport.read(row.get("observation").toString());

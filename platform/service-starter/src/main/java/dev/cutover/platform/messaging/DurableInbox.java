@@ -26,8 +26,14 @@ public final class DurableInbox {
     private final Clock clock;
     private final Set<String> sources;
     private final Set<String> sites;
+    private final Map<String,String> exchanges;
     public DurableInbox(DSLContext database, MessageHandler handler, Clock clock, Set<String> sources, Set<String> sites) {
+        this(database,handler,clock,new MessageSubscription("",sources,sites));
+    }
+    public DurableInbox(DSLContext database,MessageHandler handler,Clock clock,MessageSubscription subscription) {
+        var sources=subscription.sources();var sites=subscription.sites();
         this.database = database; this.handler = handler; this.clock = clock; this.sources = Set.copyOf(sources); this.sites = Set.copyOf(sites);
+        this.exchanges=subscription.exchanges();
     }
 
     public UUID receive(String exchange, String transportMessageId, byte[] body) {
@@ -38,7 +44,7 @@ public final class DurableInbox {
             json = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(body)).toString();
             Contracts.validate("event-envelope.v1", json);
             envelope = JsonSupport.MAPPER.readValue(json, Events.Envelope.class);
-            if (!sources.contains(envelope.source()) || !("cutover." + envelope.source() + ".v1").equals(exchange)) throw DeliveryFailure.permanent("UNTRUSTED_EVENT_SOURCE");
+            if (!sources.contains(envelope.source()) || !exchange.equals(exchanges.get(envelope.source()))) throw DeliveryFailure.permanent("UNTRUSTED_EVENT_SOURCE");
             if (!sites.contains(envelope.siteId())) throw DeliveryFailure.permanent("EVENT_SITE_DENIED");
             if (envelope.payload().has("siteId") && !envelope.siteId().equals(envelope.payload().path("siteId").asString())) throw DeliveryFailure.permanent("EVENT_SITE_MISMATCH");
             if (transportMessageId != null && !envelope.eventId().toString().equals(transportMessageId)) throw DeliveryFailure.permanent("TRANSPORT_ID_MISMATCH");
@@ -129,7 +135,7 @@ public final class DurableInbox {
         try {
             String json=StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(body)).toString();
             var candidate=JsonSupport.read(json);String source=candidate.path("source").asString(),site=candidate.path("siteId").asString();
-            if(sources.contains(source) && ("cutover."+source+".v1").equals(exchange) && sites.contains(site)
+            if(sources.contains(source) && exchange.equals(exchanges.get(source)) && sites.contains(site)
                     && (!candidate.path("payload").has("siteId") || site.equals(candidate.path("payload").path("siteId").asString())))return site;
         } catch(Exception invalid) { /* Unparseable bytes stay in the platform-only diagnostic pool. */ }
         return null;

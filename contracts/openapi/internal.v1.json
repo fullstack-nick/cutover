@@ -332,6 +332,97 @@
           }
         }
       }
+    },
+    "/internal/v1/sites/{site}/zones/{zone}/scheduling-context": {
+      "parameters": [
+        {
+          "name": "site",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "zone",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "readSchedulingContext",
+        "description": "Read-only service query. Returns route, site-filtered equipment, allocations and known commands for at most 64 unique movement IDs while sharing the authoritative route lock. Intake independently rechecks every dispatch.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "movementIds": {
+                    "type": "array",
+                    "maxItems": 64,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                },
+                "required": [
+                  "movementIds"
+                ],
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bounded authoritative observations"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/sites/{site}/test-controls/scheduling-rounds": {
+      "parameters": [
+        {
+          "name": "site",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "recordSeededSchedulingRound",
+        "description": "Explicitly enabled scenario-driver/test-control interface. Runs the actual legacy SQL, persists the synthetic input and publishes only to the separate observation queue. Never creates a task or equipment command.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/scheduling-snapshot.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Persisted round identity and input hash"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {

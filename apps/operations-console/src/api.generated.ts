@@ -219,6 +219,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/shadow-comparisons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Operator/supervisor read of the isolated shadow evidence database; latest 50 summaries and total/mismatch counts. */
+        get: operations["listShadowComparisons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/shadow-comparisons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getShadowComparison"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/tasks/{id}/recovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supervisor resumes six exhausted transport observations with expected version and reason. Retains movement/allocation/command identities. */
+        post: operations["recoverLegacyTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -248,6 +306,101 @@ export interface components {
         "equipment-view": components["schemas"]["equipment-view.v1"];
         "command-view": components["schemas"]["command-view.v1"];
         "cancellation-certificate": components["schemas"]["cancellation-certificate.v1"];
+        "scheduling-comparison": {
+            /** Format: uuid */
+            roundId: string;
+            inputHash: string;
+            input: {
+                /** @constant */
+                ruleVersion: 1;
+                siteId: string;
+                /** @enum {unknown} */
+                zoneId: "ambient" | "chilled";
+                /** Format: date-time */
+                decisionAt: string;
+                /** Format: date-time */
+                observedAt: string;
+                topologyVersion: number;
+                worldMismatch: boolean;
+                route: {
+                    /** @enum {unknown} */
+                    owner: "legacy-core" | "execution-service";
+                    epoch: number;
+                    /** @enum {unknown} */
+                    state: "ACTIVE" | "DRAINING" | "RECONCILIATION_REQUIRED";
+                } & {
+                    [key: string]: unknown;
+                };
+                candidates: ({
+                    /** Format: uuid */
+                    movementId: string;
+                    priority: number;
+                    /** Format: date-time */
+                    eligibleAt: string;
+                    /** @enum {unknown} */
+                    zoneId: "ambient" | "chilled";
+                    owner: string | null;
+                    epoch: number | null;
+                    /** @enum {unknown} */
+                    allocationState: "ASSIGNED" | "PENDING" | "COMPLETED" | "CANCELLED";
+                    commandState: string | null;
+                } & {
+                    [key: string]: unknown;
+                })[];
+                lanes: ({
+                    siteId: string;
+                    /** @enum {unknown} */
+                    zoneId: "ambient" | "chilled";
+                    laneId: string;
+                    blocked: boolean;
+                } & {
+                    [key: string]: unknown;
+                })[];
+            } & {
+                [key: string]: unknown;
+            };
+            legacyProposal: {
+                /** @constant */
+                ruleVersion: 1;
+                /** Format: uuid */
+                selectedMovementId: string | null;
+                selectedLaneId: string | null;
+                ranking: ({
+                    /** Format: uuid */
+                    movementId: string;
+                    /** @enum {unknown} */
+                    reason: "READY" | "WORLD_MISMATCH" | "OBSERVATION_STALE" | "ROUTE_UNCERTAIN" | "ZONE_MISMATCH" | "OWNER_MISMATCH" | "UNASSIGNED" | "COMMAND_RECORDED" | "NOT_ELIGIBLE" | "LANE_BLOCKED";
+                    laneId: string | null;
+                } & {
+                    [key: string]: unknown;
+                })[];
+            } & {
+                [key: string]: unknown;
+            };
+            executionProposal: {
+                /** @constant */
+                ruleVersion: 1;
+                /** Format: uuid */
+                selectedMovementId: string | null;
+                selectedLaneId: string | null;
+                ranking: ({
+                    /** Format: uuid */
+                    movementId: string;
+                    /** @enum {unknown} */
+                    reason: "READY" | "WORLD_MISMATCH" | "OBSERVATION_STALE" | "ROUTE_UNCERTAIN" | "ZONE_MISMATCH" | "OWNER_MISMATCH" | "UNASSIGNED" | "COMMAND_RECORDED" | "NOT_ELIGIBLE" | "LANE_BLOCKED";
+                    laneId: string | null;
+                } & {
+                    [key: string]: unknown;
+                })[];
+            } & {
+                [key: string]: unknown;
+            };
+            matches: boolean;
+            /** Format: date-time */
+            comparedAt: string;
+        } & {
+            [key: string]: unknown;
+        };
         "order-page.v1": {
             items: ({
                 /** Format: uuid */
@@ -957,6 +1110,79 @@ export interface operations {
             413: components["responses"]["problem"];
             422: components["responses"]["problem"];
             503: components["responses"]["problem"];
+        };
+    };
+    listShadowComparisons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Comparison totals and retained summaries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    getShadowComparison: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Identical input with both proposals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["scheduling-comparison"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    recoverLegacyTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Audited status investigation requested */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["problem"];
         };
     };
 }

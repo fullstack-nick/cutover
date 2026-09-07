@@ -21,7 +21,7 @@ public class MessageConfiguration {
     }
     @Bean RabbitDelivery rabbitDelivery(RabbitTemplate template, DeliveryHooks hooks) { return new RabbitDelivery(template, hooks); }
     @Bean DurableInbox durableInbox(DSLContext database, MessageHandler handler, Clock clock, MessageSubscription subscription) {
-        return new DurableInbox(database, handler, clock, subscription.sources(), subscription.sites());
+        return new DurableInbox(database, handler, clock, subscription);
     }
     @Bean OutboxRelay outboxRelay(DSLContext database, RabbitDelivery rabbit, Clock clock, DeliveryHooks hooks) { return new OutboxRelay(database, rabbit, clock, hooks); }
     @Bean(initMethod = "start", destroyMethod = "close")

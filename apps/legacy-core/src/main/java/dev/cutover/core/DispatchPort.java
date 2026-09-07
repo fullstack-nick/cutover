@@ -8,5 +8,6 @@ public interface DispatchPort {
     JsonNode command(String site,UUID movement);
     JsonNode equipment(String site);
     JsonNode dispatch(String site,UUID movement,UUID allocation,long epoch,String lane,JsonNode payload);
+    default JsonNode context(String site,String zone,java.util.List<UUID> movements){throw new dev.cutover.platform.ServiceHttp.Unavailable("Scheduling context is unavailable.");}
     default JsonNode cancellation(String site,JsonNode request) { throw new dev.cutover.platform.ServiceHttp.Unavailable("Cancellation fencing is unavailable."); }
 }
