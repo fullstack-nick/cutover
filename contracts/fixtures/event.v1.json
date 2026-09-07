@@ -1,0 +1,17 @@
+{
+  "eventId": "00000000-0000-4000-8000-000000000001",
+  "eventType": "MovementRequested.v1",
+  "schemaVersion": 1,
+  "occurredAt": "2026-09-07T16:00:00Z",
+  "siteId": "site-a",
+  "source": "legacy-core",
+  "aggregateType": "movement",
+  "aggregateId": "00000000-0000-4000-8000-000000000002",
+  "aggregateVersion": 1,
+  "correlationId": "00000000-0000-4000-8000-000000000003",
+  "causationId": null,
+  "traceparent": null,
+  "payload": {
+    "movementId": "00000000-0000-4000-8000-000000000002"
+  }
+}

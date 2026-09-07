@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cutover:order-request:v1",
+  "type": "object",
+  "properties": {
+    "sourceSystem": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "externalOrderRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "storeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "sku",
+          "quantity"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "sourceSystem",
+    "externalOrderRef",
+    "storeId",
+    "priority",
+    "lines"
+  ],
+  "additionalProperties": false
+}

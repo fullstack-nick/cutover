@@ -1,0 +1,16 @@
+{
+  "sourceSystem": "scenario-driver",
+  "externalOrderRef": "sample-order-001",
+  "storeId": "store-01",
+  "priority": 5,
+  "lines": [
+    {
+      "sku": "SKU-001",
+      "quantity": 4
+    },
+    {
+      "sku": "SKU-002",
+      "quantity": 2
+    }
+  ]
+}

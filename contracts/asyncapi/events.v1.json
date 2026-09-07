@@ -1,0 +1,119 @@
+{
+  "asyncapi": "3.0.0",
+  "info": {
+    "title": "Cutover durable events",
+    "version": "1.0.0"
+  },
+  "defaultContentType": "application/json",
+  "channels": {
+    "business": {
+      "address": "cutover.{publisher}.v1",
+      "parameters": {
+        "publisher": {
+          "description": "Authenticated publisher identity"
+        }
+      },
+      "messages": {
+        "event": {
+          "$ref": "#/components/messages/event"
+        }
+      }
+    }
+  },
+  "operations": {
+    "publishEvent": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/business"
+      }
+    }
+  },
+  "components": {
+    "messages": {
+      "event": {
+        "name": "VersionedBusinessEvent",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "eventId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "eventType": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "schemaVersion": {
+              "const": 1
+            },
+            "occurredAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "siteId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "aggregateType": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "aggregateId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "aggregateVersion": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "correlationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "causationId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uuid"
+            },
+            "traceparent": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 128
+            },
+            "payload": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "eventId",
+            "eventType",
+            "schemaVersion",
+            "occurredAt",
+            "siteId",
+            "source",
+            "aggregateType",
+            "aggregateId",
+            "aggregateVersion",
+            "correlationId",
+            "causationId",
+            "traceparent",
+            "payload"
+          ],
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

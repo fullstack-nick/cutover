@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cutover:migration-request:v1",
+  "type": "object",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 500
+    },
+    "expectedVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "targetOwner": {
+      "enum": [
+        "legacy-core",
+        "execution-service"
+      ]
+    }
+  },
+  "required": [
+    "reason",
+    "expectedVersion",
+    "targetOwner"
+  ],
+  "additionalProperties": false
+}

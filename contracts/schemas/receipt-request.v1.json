@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cutover:receipt-request:v1",
+  "type": "object",
+  "properties": {
+    "sourceSystem": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "externalReceiptRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "counts": {
+      "type": "object",
+      "properties": {
+        "REUSABLE": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "NEEDS_CLEANING": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "DAMAGED": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      },
+      "required": [
+        "REUSABLE",
+        "NEEDS_CLEANING",
+        "DAMAGED"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "sourceSystem",
+    "externalReceiptRef",
+    "counts"
+  ],
+  "additionalProperties": false
+}

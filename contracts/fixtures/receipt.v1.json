@@ -1,0 +1,9 @@
+{
+  "sourceSystem": "scenario-driver",
+  "externalReceiptRef": "sample-return-001",
+  "counts": {
+    "REUSABLE": 5,
+    "NEEDS_CLEANING": 3,
+    "DAMAGED": 1
+  }
+}

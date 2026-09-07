@@ -1,0 +1,712 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Cutover operations API",
+    "version": "1.0.0",
+    "description": "Local synthetic operations. Every request checks role and site. Errors use RFC 9457: 400 malformed, 401 unauthenticated, 403 role denied, 404 outside site or absent, 409 conflict, 413 body over 64 KiB, 422 domain validation, 429 rate limit, 503 durable admission unavailable with Retry-After."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8780"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "paths": {
+    "/api/v1/sites/{siteId}/orders": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      ],
+      "post": {
+        "operationId": "createOrders",
+        "summary": "Durably accept synthetic work; acceptance is not completion",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/order-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Committed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/accepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      },
+      "get": {
+        "operationId": "listOrders",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page with items, nextCursor and observedAt"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/orders/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOrders",
+        "responses": {
+          "200": {
+            "description": "Resource projection and observation time"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/return-receipts": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      ],
+      "post": {
+        "operationId": "createReturnReceipts",
+        "summary": "Durably accept synthetic work; acceptance is not completion",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/receipt-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Committed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/accepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      },
+      "get": {
+        "operationId": "listReturnReceipts",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page with items, nextCursor and observedAt"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/return-receipts/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getReturnReceipts",
+        "responses": {
+          "200": {
+            "description": "Resource projection and observation time"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "equipment-command": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "loadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "worldId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "journalGeneration": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedLoadVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "destination": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "zoneId": {
+            "type": "string",
+            "enum": [
+              "ambient",
+              "chilled",
+              "returns"
+            ]
+          },
+          "laneId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "commandId",
+          "allocationId",
+          "movementId",
+          "siteId",
+          "loadId",
+          "worldId",
+          "journalGeneration",
+          "expectedLoadVersion",
+          "source",
+          "destination",
+          "zoneId",
+          "laneId",
+          "quantity"
+        ],
+        "additionalProperties": false
+      },
+      "event-envelope": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "schemaVersion": {
+            "const": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "siteId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "aggregateType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "aggregateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aggregateVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "causationId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "traceparent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          },
+          "payload": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "eventId",
+          "eventType",
+          "schemaVersion",
+          "occurredAt",
+          "siteId",
+          "source",
+          "aggregateType",
+          "aggregateId",
+          "aggregateVersion",
+          "correlationId",
+          "causationId",
+          "traceparent",
+          "payload"
+        ],
+        "additionalProperties": true
+      },
+      "migration-request": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 500
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "targetOwner": {
+            "enum": [
+              "legacy-core",
+              "execution-service"
+            ]
+          }
+        },
+        "required": [
+          "reason",
+          "expectedVersion",
+          "targetOwner"
+        ],
+        "additionalProperties": false
+      },
+      "movement": {
+        "type": "object",
+        "properties": {
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "product": {
+            "enum": [
+              "fulfilment",
+              "returns"
+            ]
+          },
+          "zoneId": {
+            "type": "string",
+            "enum": [
+              "ambient",
+              "chilled",
+              "returns"
+            ]
+          },
+          "loadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "destination": {
+            "enum": [
+              "outbound-staging",
+              "reusable",
+              "cleaning",
+              "damaged"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9
+          },
+          "eligibleAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "movementId",
+          "reservationId",
+          "siteId",
+          "product",
+          "zoneId",
+          "loadId",
+          "source",
+          "destination",
+          "quantity",
+          "priority",
+          "eligibleAt"
+        ],
+        "additionalProperties": true
+      },
+      "order-request": {
+        "type": "object",
+        "properties": {
+          "sourceSystem": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "externalOrderRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "storeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000
+                }
+              },
+              "required": [
+                "sku",
+                "quantity"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "sourceSystem",
+          "externalOrderRef",
+          "storeId",
+          "priority",
+          "lines"
+        ],
+        "additionalProperties": false
+      },
+      "receipt-request": {
+        "type": "object",
+        "properties": {
+          "sourceSystem": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "externalReceiptRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "REUSABLE": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "NEEDS_CLEANING": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "DAMAGED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              }
+            },
+            "required": [
+              "REUSABLE",
+              "NEEDS_CLEANING",
+              "DAMAGED"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "sourceSystem",
+          "externalReceiptRef",
+          "counts"
+        ],
+        "additionalProperties": false
+      },
+      "reconciliation-request": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 500
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "reason",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "problem": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "accepted": {
+        "type": "object",
+        "required": [
+          "id",
+          "statusUrl"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusUrl": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "problem": {
+        "description": "Bounded problem response without internal exceptions",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/problem"
+            }
+          }
+        }
+      }
+    }
+  }
+}
