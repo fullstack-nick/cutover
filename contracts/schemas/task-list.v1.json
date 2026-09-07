@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "movementId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "orderId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "zoneId": {
+        "type": "string"
+      },
+      "state": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "epoch": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "version": {
+        "type": "integer"
+      },
+      "lastError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "eligibleAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": [
+      "id",
+      "movementId",
+      "orderId",
+      "zoneId",
+      "state",
+      "owner",
+      "epoch",
+      "version",
+      "lastError",
+      "eligibleAt"
+    ],
+    "additionalProperties": true
+  }
+}

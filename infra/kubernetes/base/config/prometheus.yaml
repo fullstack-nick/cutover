@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: cutover-applications
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [legacy-core.cutover-apps.svc.cluster.local:9091]
+        labels: { service: legacy-core }
+      - targets: [equipment-adapter.cutover-apps.svc.cluster.local:9091]
+        labels: { service: equipment-adapter }
+      - targets: [equipment-simulator.cutover-platform.svc.cluster.local:9091]
+        labels: { service: equipment-simulator }
+  - job_name: cutover-identity
+    static_configs:
+      - targets: [keycloak.cutover-platform.svc.cluster.local:9000]
+  - job_name: cutover-broker
+    static_configs:
+      - targets: [rabbitmq.cutover-platform.svc.cluster.local:15692]
+  - job_name: cutover-collector
+    static_configs:
+      - targets: [collector:8888]
+  - job_name: cutover-tempo
+    static_configs:
+      - targets: [tempo:3200]

@@ -4,7 +4,7 @@ A local modernization lab for grocery fulfilment and reusable-crate returns.
 
 Cutover explores a practical architecture problem: how to move task coordination out of a database-heavy legacy system while warehouse work keeps flowing, then reuse the platform for a second product.
 
-**Current status: implementation in progress.** The legacy workflow, adapter journal, and independent simulator pass 20 component tests and six real HTTP/process checks, including mutual TLS, a lost equipment response, and restarts. Reproducible packaging is working. The complete kind platform, extraction, returns, operations UI, and final acceptance evidence are still being developed. Follow the [implementation ledger](docs/planning/implementation-progress.md) for verified milestones.
+**Current status: implementation in progress.** The legacy workflow, adapter journal, and independent simulator pass 20 component tests and six real HTTP/process checks. The local kind/Calico platform now runs an authenticated operations console, with 44 network traffic checks and verified metrics/traces. Extraction, migration, returns, recovery and the full acceptance suite are still being developed. Follow the [implementation ledger](docs/planning/implementation-progress.md) for verified milestones.
 
 The project will run entirely on one development machine. Equipment and business data are synthetic. GitHub hosts the source; builds, tests, and deployments are invoked locally, with no CI/CD.
 
@@ -64,6 +64,8 @@ The eventual demonstration will submit orders, compare schedulers, migrate a zon
 The current backend test suite requires Java 21 and a working Docker Linux engine. On Windows, run `./mvnw.cmd -B -ntp test` from the repository root. Maven and test images are acquired on the first run; tests create and clean up their own disposable containers. This is a development check, not the final demonstration quickstart.
 
 The [development baseline guide](docs/operations/development-baseline.md) provides the current build/start/check/stop commands and explains the process verification scope.
+
+The [local platform guide](docs/operations/local-platform.md) describes the current kind deployment, console sign-in and optional local diagnostics.
 
 The final quickstart will provide verified platform setup, a 10–15-minute walkthrough, screenshots, cleanup instructions, and measured results tied to a commit.
 

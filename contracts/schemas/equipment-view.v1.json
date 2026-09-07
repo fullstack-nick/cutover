@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "worldId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "journalGeneration": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "completeHistory": {
+      "type": "boolean"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "journalHighWater": {
+      "type": "integer"
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "worldMismatch": {
+      "type": "boolean"
+    },
+    "lanes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "siteId": {
+            "type": "string"
+          },
+          "laneId": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "string"
+          },
+          "blocked": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "siteId",
+          "laneId",
+          "zoneId",
+          "blocked",
+          "version"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "stale",
+    "lanes"
+  ],
+  "additionalProperties": true
+}

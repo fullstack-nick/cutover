@@ -4,8 +4,12 @@ $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {
+    & node scripts/bootstrap-assets.mjs --build-only
+    if($LASTEXITCODE -ne 0){throw 'Build asset verification failed.'}
     if(-not $SkipCompile){& .\mvnw.cmd -B -ntp -DskipTests package;if($LASTEXITCODE -ne 0){throw 'Java packaging failed.'}}
     $lock=Get-Content -LiteralPath infra/versions.lock.json -Raw | ConvertFrom-Json
+    $agentHash=(Get-FileHash -LiteralPath .local/assets/opentelemetry-javaagent.jar -Algorithm SHA256).Hash.ToLowerInvariant()
+    if($agentHash -ne $lock.javaAgent.sha256){throw 'Acquire the pinned Java agent with bootstrap-assets.mjs first.'}
     $revision=(git rev-parse HEAD).Trim();$short=$revision.Substring(0,12)
     $environment=[ordered]@{
         CUTOVER_POSTGRES_IMAGE=$lock.images.postgres.reference
@@ -18,9 +22,9 @@ try {
         $hash=(Get-FileHash -LiteralPath $jar -Algorithm SHA256).Hash.ToLowerInvariant()
         $dockerfileHash=(Get-FileHash -LiteralPath infra/images/application.Dockerfile -Algorithm SHA256).Hash
         $hasher=[Security.Cryptography.SHA256]::Create()
-        try{$imageIdentity=-join ($hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes("$hash|$dockerfileHash|$($lock.images.javaRuntime.reference)")) | ForEach-Object {$_.ToString('x2')})}finally{$hasher.Dispose()}
+        try{$imageIdentity=-join ($hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes("$hash|$dockerfileHash|$($lock.images.javaRuntime.reference)|$agentHash")) | ForEach-Object {$_.ToString('x2')})}finally{$hasher.Dispose()}
         $tag="cutover/$($service):$short-$($imageIdentity.Substring(0,12))"
-        docker build --pull=false --build-arg "JAVA_IMAGE=$($lock.images.javaRuntime.reference)" --build-arg "SERVICE=$service" --build-arg "REVISION=$revision" --build-arg "JAR_SHA256=$hash" --file infra/images/application.Dockerfile --tag $tag .
+        docker build --pull=false --build-arg "JAVA_IMAGE=$($lock.images.javaRuntime.reference)" --build-arg "SERVICE=$service" --build-arg "REVISION=$revision" --build-arg "JAR_SHA256=$hash" --build-arg "AGENT_SHA256=$agentHash" --file infra/images/application.Dockerfile --tag $tag .
         if($LASTEXITCODE -ne 0){throw "Image build failed for $service"}
         $id=(docker image inspect $tag --format '{{.Id}}').Trim()
         $environment["CUTOVER_$($service.ToUpperInvariant().Replace('-','_'))_IMAGE"]=$tag
@@ -35,5 +39,6 @@ try {
     New-Item -ItemType Directory -Force -Path .local/images | Out-Null
     $environment.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" } | Set-Content -LiteralPath .local/images/images.env -Encoding utf8
     $manifest | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath .local/images/manifest.json -Encoding utf8
+    & (Join-Path $PSScriptRoot 'build-console.ps1')
     Write-Host 'Local images built and recorded. No registry upload or deployment was performed.'
 } finally { Pop-Location }

@@ -92,7 +92,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Page with items, nextCursor and observedAt"
+            "description": "Current owner projection, with observation time where applicable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/order-page"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -125,7 +132,14 @@
         "operationId": "getOrders",
         "responses": {
           "200": {
-            "description": "Resource projection and observation time"
+            "description": "Current owner projection, with observation time where applicable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/order-view"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -243,6 +257,105 @@
         "responses": {
           "200": {
             "description": "Resource projection and observation time"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/tasks": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listTasks",
+        "responses": {
+          "200": {
+            "description": "Current owner projection, with observation time where applicable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/task-list"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/equipment": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getEquipment",
+        "responses": {
+          "200": {
+            "description": "Current owner projection, with observation time where applicable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/equipment-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/commands/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getCommand",
+        "responses": {
+          "200": {
+            "description": "Current owner projection, with observation time where applicable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/command-view"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -687,6 +800,568 @@
             "type": "string"
           }
         }
+      },
+      "order-view": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string"
+          },
+          "externalOrderRef": {
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "RESERVED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "COMPLETED_WITH_SHORTAGE",
+              "SHORTAGE",
+              "CANCELLED"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "requested": {
+                  "type": "integer"
+                },
+                "reserved": {
+                  "type": "integer"
+                },
+                "shortage": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sku",
+                "requested",
+                "reserved",
+                "shortage"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "movementId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "movement": {
+                  "type": "object",
+                  "properties": {
+                    "zoneId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    },
+                    "destination": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "zoneId",
+                    "quantity",
+                    "destination",
+                    "source"
+                  ],
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "movementId",
+                "state",
+                "movement"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "id",
+          "siteId",
+          "externalOrderRef",
+          "storeId",
+          "priority",
+          "state",
+          "version",
+          "createdAt",
+          "completedAt",
+          "observedAt",
+          "lines",
+          "movements"
+        ],
+        "additionalProperties": true
+      },
+      "order-page": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "siteId": {
+                  "type": "string"
+                },
+                "externalOrderRef": {
+                  "type": "string"
+                },
+                "storeId": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "integer"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "ACCEPTED",
+                    "RESERVED",
+                    "IN_PROGRESS",
+                    "COMPLETED",
+                    "COMPLETED_WITH_SHORTAGE",
+                    "SHORTAGE",
+                    "CANCELLED"
+                  ]
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "completedAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "observedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lines": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sku": {
+                        "type": "string"
+                      },
+                      "requested": {
+                        "type": "integer"
+                      },
+                      "reserved": {
+                        "type": "integer"
+                      },
+                      "shortage": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "sku",
+                      "requested",
+                      "reserved",
+                      "shortage"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                "movements": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "movementId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "movement": {
+                        "type": "object",
+                        "properties": {
+                          "zoneId": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer"
+                          },
+                          "destination": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "zoneId",
+                          "quantity",
+                          "destination",
+                          "source"
+                        ],
+                        "additionalProperties": true
+                      }
+                    },
+                    "required": [
+                      "movementId",
+                      "state",
+                      "movement"
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "siteId",
+                "externalOrderRef",
+                "storeId",
+                "priority",
+                "state",
+                "version",
+                "createdAt",
+                "completedAt",
+                "observedAt",
+                "lines",
+                "movements"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "observedAt"
+        ],
+        "additionalProperties": true
+      },
+      "task-list": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "movementId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "orderId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "zoneId": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "string"
+            },
+            "epoch": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "version": {
+              "type": "integer"
+            },
+            "lastError": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "eligibleAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "id",
+            "movementId",
+            "orderId",
+            "zoneId",
+            "state",
+            "owner",
+            "epoch",
+            "version",
+            "lastError",
+            "eligibleAt"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "equipment-view": {
+        "type": "object",
+        "properties": {
+          "worldId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "journalGeneration": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "completeHistory": {
+            "type": "boolean"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "journalHighWater": {
+            "type": "integer"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "worldMismatch": {
+            "type": "boolean"
+          },
+          "lanes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "siteId": {
+                  "type": "string"
+                },
+                "laneId": {
+                  "type": "string"
+                },
+                "zoneId": {
+                  "type": "string"
+                },
+                "blocked": {
+                  "type": "boolean"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "siteId",
+                "laneId",
+                "zoneId",
+                "blocked",
+                "version"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "stale",
+          "lanes"
+        ],
+        "additionalProperties": true
+      },
+      "command-view": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "epoch": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "failureAttempts": {
+            "type": "integer"
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "quantity": {
+                "type": "integer"
+              },
+              "source": {
+                "type": "string"
+              },
+              "destination": {
+                "type": "string"
+              },
+              "zoneId": {
+                "type": "string"
+              },
+              "laneId": {
+                "type": "string"
+              },
+              "worldId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "quantity",
+              "source",
+              "destination",
+              "zoneId",
+              "laneId",
+              "worldId"
+            ],
+            "additionalProperties": true
+          },
+          "evidence": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "worldId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "executionSequence": {
+                "type": "integer"
+              },
+              "state": {
+                "type": "string"
+              },
+              "completedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "worldId",
+              "executionSequence",
+              "state",
+              "completedAt"
+            ],
+            "additionalProperties": true
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "commandId",
+          "allocationId",
+          "movementId",
+          "siteId",
+          "owner",
+          "epoch",
+          "state",
+          "version",
+          "attempts",
+          "failureAttempts",
+          "payload",
+          "evidence",
+          "lastError",
+          "createdAt",
+          "completedAt"
+        ],
+        "additionalProperties": true
       }
     },
     "securitySchemes": {

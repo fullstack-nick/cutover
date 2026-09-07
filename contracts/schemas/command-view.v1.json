@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "commandId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "allocationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "movementId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "siteId": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "epoch": {
+      "type": "integer"
+    },
+    "state": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "attempts": {
+      "type": "integer"
+    },
+    "failureAttempts": {
+      "type": "integer"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "quantity": {
+          "type": "integer"
+        },
+        "source": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "zoneId": {
+          "type": "string"
+        },
+        "laneId": {
+          "type": "string"
+        },
+        "worldId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "quantity",
+        "source",
+        "destination",
+        "zoneId",
+        "laneId",
+        "worldId"
+      ],
+      "additionalProperties": true
+    },
+    "evidence": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "worldId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "executionSequence": {
+          "type": "integer"
+        },
+        "state": {
+          "type": "string"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "worldId",
+        "executionSequence",
+        "state",
+        "completedAt"
+      ],
+      "additionalProperties": true
+    },
+    "lastError": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "commandId",
+    "allocationId",
+    "movementId",
+    "siteId",
+    "owner",
+    "epoch",
+    "state",
+    "version",
+    "attempts",
+    "failureAttempts",
+    "payload",
+    "evidence",
+    "lastError",
+    "createdAt",
+    "completedAt"
+  ],
+  "additionalProperties": true
+}

@@ -12,6 +12,9 @@
 **/dist/
 **/test-results/
 **/playwright-report/
+.playwright/
+.playwright-cli/
+output/playwright/
 .idea/
 .vscode/
 *.log

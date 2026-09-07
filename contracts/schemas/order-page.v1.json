@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string"
+          },
+          "externalOrderRef": {
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "RESERVED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "COMPLETED_WITH_SHORTAGE",
+              "SHORTAGE",
+              "CANCELLED"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "requested": {
+                  "type": "integer"
+                },
+                "reserved": {
+                  "type": "integer"
+                },
+                "shortage": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sku",
+                "requested",
+                "reserved",
+                "shortage"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "movementId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "movement": {
+                  "type": "object",
+                  "properties": {
+                    "zoneId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    },
+                    "destination": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "zoneId",
+                    "quantity",
+                    "destination",
+                    "source"
+                  ],
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "movementId",
+                "state",
+                "movement"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "id",
+          "siteId",
+          "externalOrderRef",
+          "storeId",
+          "priority",
+          "state",
+          "version",
+          "createdAt",
+          "completedAt",
+          "observedAt",
+          "lines",
+          "movements"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "nextCursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "items",
+    "nextCursor",
+    "observedAt"
+  ],
+  "additionalProperties": true
+}

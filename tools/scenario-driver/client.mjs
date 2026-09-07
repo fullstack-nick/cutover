@@ -9,6 +9,8 @@ import https from 'node:https';
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const credentialPath = resolve(root, '.local/secrets/credentials.json');
 export const credentials = JSON.parse(readFileSync(credentialPath, 'utf8'));
+export const profile = process.env.CUTOVER_PROFILE ?? 'dev';
+if (!['dev', 'demo'].includes(profile)) throw new Error('Unknown Cutover verification profile.');
 const origin = 'http://localhost:8780';
 export async function token(client = 'scenario-driver') {
   const response = await fetch(`${origin}/identity/realms/cutover/protocol/openid-connect/token`, {
@@ -48,6 +50,17 @@ export function simulator(path, body, identity = 'scenario') {
 
 function postgres(owner, role, sql, { admin = false } = {}) {
   if (!['core', 'adapter', 'simulator', 'execution', 'returns', 'keycloak'].includes(owner)) throw new Error('Unknown Cutover database owner.');
+  if (profile === 'demo' && owner !== 'simulator') {
+    const target = ['--kubeconfig', resolve(root, '.local/kubeconfig'), '--context', 'kind-cutover', '-n', 'cutover-platform'];
+    const inspected = spawnSync('kubectl', [...target, 'get', 'pod', 'application-db-0', '-o', 'json'], { encoding: 'utf8', windowsHide: true });
+    if (inspected.status !== 0 || JSON.parse(inspected.stdout).metadata.labels['app.kubernetes.io/part-of'] !== 'cutover') throw new Error('Kubernetes database ownership check failed.');
+    const user = admin ? 'postgres' : `cutover_${owner}_${role}`;
+    const password = credentials.passwords[admin ? 'postgres_admin' : `${owner}_${role}`];
+    if (!password) throw new Error('Required local database credential is missing.');
+    return spawnSync('kubectl', [...target, 'exec', '-i', 'application-db-0', '--', 'sh', '-c', `IFS= read -r PGPASSWORD; export PGPASSWORD; exec psql -X -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -h 127.0.0.1 -U ${user} -d cutover_${owner} -At -f -`], {
+      input: password + '\n' + sql, encoding: 'utf8', windowsHide: true, maxBuffer: 1024 * 1024,
+    });
+  }
   const container = `cutover-dev-${owner === 'simulator' ? 'simulator' : 'application'}-db-1`;
   const inspected = spawnSync('docker', ['inspect', '--format', '{{index .Config.Labels "com.docker.compose.project"}}', container], { encoding: 'utf8', windowsHide: true });
   if (inspected.status !== 0 || inspected.stdout.trim() !== 'cutover-dev') throw new Error('Database container ownership check failed.');
@@ -89,6 +102,7 @@ export function roleCannotCreate(owner) {
   return result.status !== 0 && result.stderr.includes('42501');
 }
 export async function restartDevelopmentServices(services) {
+  if (profile !== 'dev') throw new Error('Development restart checks cannot run against the demo profile.');
   const allowed = ['legacy-core', 'equipment-adapter', 'equipment-simulator', 'application-db', 'simulator-db', 'rabbitmq', 'keycloak'];
   const names = services.map(service => {
     if (!allowed.includes(service)) throw new Error('Unrecognized development service.');
@@ -113,6 +127,6 @@ export function saveEvidence(name, evidence) {
   const directory = resolve(root, '.local/evidence', name); mkdirSync(directory, { recursive: true });
   const revision = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.trim();
   const dirty = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.trim().length > 0;
-  writeFileSync(resolve(directory, 'results.json'), JSON.stringify({ recordedAt: new Date().toISOString(), revision, dirty, images: JSON.parse(readFileSync(resolve(root, '.local/images/manifest.json'), 'utf8')), ...evidence }, null, 2) + '\n');
+  writeFileSync(resolve(directory, 'results.json'), JSON.stringify({ recordedAt: new Date().toISOString(), profile, revision, dirty, images: JSON.parse(readFileSync(resolve(root, '.local/images/manifest.json'), 'utf8')), ...(profile === 'demo' ? { nodeImages: JSON.parse(readFileSync(resolve(root, '.local/images/node-images.json'), 'utf8')) } : {}), ...evidence }, null, 2) + '\n');
   return directory;
 }

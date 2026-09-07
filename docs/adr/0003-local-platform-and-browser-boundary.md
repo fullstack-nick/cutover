@@ -1,0 +1,21 @@
+# 0003 — Local platform and browser boundary
+
+Status: accepted, 7 September 2026.
+
+Cutover now runs its application services, PostgreSQL, RabbitMQ, Keycloak and telemetry in one kind node with Calico VXLAN and the iptables dataplane. The simulator and its PostgreSQL volume remain outside the cluster. Platform replacement therefore cannot silently erase physical movement history. A selectorless Service and EndpointSlice expose the discovered simulator address to the adapter; a generated endpoint policy and mutual TLS restrict access.
+
+All lifecycle commands select an explicit project kubeconfig and `kind-cutover` context. The node uses the project-owned `cutover-kind` Docker network so it does not join another project's pre-existing kind network. This uses kind's experimental Docker-network selection variable, scoped to the creation process; the tested kind version warns that this override is unsupported. Cluster upgrades must repeat the network and lifecycle checks. The default host Kubernetes context is unchanged.
+
+The pinned upstream Calico manifest is preserved, with provenance and an Apache license notice. The overlay disables BIRD readiness and liveness checks because this setup uses VXLAN without BGP. Removing only the readiness check caused node restarts during the first smoke run; removing the inapplicable liveness check corrected that failure. The approach follows [Calico's kind guidance](https://docs.tigera.io/calico/latest/getting-started/kubernetes/kind).
+
+Docker's containerd image store did not export complete multi-platform content through the initial kind load path. The loader instead creates a single Linux/amd64 archive, verifies its archive and platform manifest hashes, imports it into the node, and verifies the CRI repository digest. Workloads reference the actual platform digest with `imagePullPolicy: Never`; an index digest is not relabelled as if it were the platform manifest. This is based on [kind's documented image-store issue](https://kind.sigs.k8s.io/docs/user/known-issues/) and [Docker's platform-specific image export](https://docs.docker.com/reference/cli/docker/image/save/).
+
+Three namespaces have default-deny ingress and egress. Explicit policies permit DNS, owner database connections, broker traffic, service identity, adapter access and telemetry. The executed smoke matrix contains 44 DNS/TCP checks across seven identities. Verification probes use a separate project label so Service selectors cannot accidentally route business requests to probes. This was a test-harness defect found and corrected before the successful rerun.
+
+The browser sees only `http://localhost:8780`: bundled React assets, fixed API routes and Keycloak under `/identity`. PKCE S256 uses the public console client, exact callbacks and in-memory tokens. Non-secret view preference may persist in session storage. Loopback HTTP is a single-machine lab choice, not evidence of browser TLS. API issuer checks use the public issuer while internal JWKS requests use the local service address.
+
+OpenAPI generates TypeScript response types. The UI uses TypeScript 7.0.2; `openapi-typescript` 7.13.0 declares a TypeScript 5 peer dependency, so generation is isolated in `tools/api-types` with TypeScript 5.9.3. No peer constraint is bypassed. The locked Playwright CLI is 0.1.19; its actual dependency is `playwright` 1.63.0-alpha-2026-08-31. That test-tool snapshot is explicitly recorded, not described as a stable 1.63 release.
+
+The Java agent exports traces through a bounded Collector, while Actuator supplies metrics. Seven configured Prometheus targets are healthy; application traces can be retrieved from Tempo, and Grafana reports a healthy local database. Tempo 3 runs monolithically and requires writable local state under `/var/tempo`, including its live-store cache. The initial read-only-path failure was corrected before successful rollout. See [Tempo's local deployment guidance](https://grafana.com/docs/tempo/latest/set-up-for-tracing/setup-tempo/deploy/locally/linux/).
+
+These checks establish the platform milestone. They do not establish the complete outage, retention, performance, backup or prepared-offline guarantees. PVC size requests are not evidence of physical filesystem quotas. Those properties retain separate acceptance scenarios.

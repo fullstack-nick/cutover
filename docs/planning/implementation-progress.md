@@ -4,11 +4,11 @@ Implementation goal started 7 September 2026. The implementation plan and all 54
 
 | Phase | Status | Evidence / next work |
 | --- | --- | --- |
-| 0. Setup and compatibility | Backend setup verified; platform compatibility next | Git/public remote, tool checksums, backend dependency lock and compatibility tests pass. Kubernetes/telemetry smoke gates belong to the next phase. |
+| 0. Setup and compatibility | Initial compatibility verified | Git/public remote, checksums, backend, Kubernetes, identity, browser and telemetry smoke gates pass. Full clean/offline verification remains phase 8. |
 | 1. Walking legacy system | Baseline verified | Stored routines, trigger-created tasks, polling scheduler, adapter journal and independent ledger pass component and real process checks. |
 | 2. Reproducible packaging | Baseline verified | Clean Maven verification, reproducible generated SQL types, local images, JWT/mTLS workflow and process restart checks pass. |
-| 3. Local platform | In progress | Build dedicated kind/Calico, policies, persistence, console identity flow and telemetry. |
-| 4. Reliability boundary | Pending | Transactional messages, bounded admission/retries, fault tests, and durable uncertainty handling. |
+| 3. Local platform | Initial milestone verified | Dedicated kind/Calico, frozen baseline transfer, 44 traffic checks, authenticated console, seven metric targets and retrievable traces. |
+| 4. Reliability boundary | In progress | Transactional messages, bounded admission/retries, fault tests, and durable uncertainty handling. |
 | 5. Extraction and shadow | Pending | Independent execution tasks and at least 1,000 identical-input comparisons. |
 | 6. Cutover and rollback | Pending | Durable drain sessions, fencing, restart/reversal tests, and compatible image rollback. |
 | 7. Second product | Pending | Scaffold and verify independent reusable-crate returns. |
@@ -44,3 +44,13 @@ Corrections found by these checks included explicit timestamp casts in plain SQL
 `./scripts/dev.ps1 -Action Start -SkipBuild` and `node tools/scenario-driver/baseline.mjs` passed on the rebuilt images. The six process checks establish real Keycloak authentication, HTTP intake/idempotency, service-to-service HTTP, simulator mutual TLS, site and signature rejection, authenticated runtime DDL denial (including Keycloak), one physical/inventory effect after a lost response, and blocked accepted work surviving restart of core, adapter and simulator. Evidence is recorded in ignored run `baseline-1788804441006`, with exact image IDs, jar hashes, and source revision `0ca4677` plus the then-uncommitted packaging changes. These results are development-profile milestone evidence, not final A01–A54 acceptance.
 
 Startup tests found three configuration defects: an unquoted comma in a YAML tmpfs option, a Windows-reserved simulator port, and a missing `/identity` path in the advertised issuer. They also exposed Docker's internal-network-only port-publication behavior. All were corrected and the complete process suite rerun. See ADR 0002 and the development-baseline runbook.
+
+### Local platform milestone — 7 September 2026
+
+The dedicated kind 0.33.0 / Kubernetes 1.36.4 cluster uses Calico 3.32.2 with VXLAN, explicit policies and project-local image digests. Five frozen application databases were transferred from the development profile into empty cluster databases; the independent simulator and its physical history were preserved. Runtime role grants were reverified after restoration.
+
+`platform-smoke.mjs` passed four checks in run `platform-1788806310326`: fresh simulator evidence through the in-cluster adapter, an authenticated ambient/chilled order with one physical and inventory effect per movement, site restriction, and runtime DDL denial. `network-policy-smoke.mjs` passed all 44 checks in run `policy-1788806688461`. `telemetry-smoke.mjs` passed three checks in run `telemetry-1788808276745`: seven expected scrape targets, an indexed/retrievable application trace, and Grafana database health. Evidence retains revision `579ff51` plus the uncommitted platform changes and exact image inventories.
+
+Playwright CLI verified local PKCE login, real order/reservation detail, command-journal display, equipment navigation, Escape dismissal and a 390-pixel viewport without document overflow. The browser reported no console warnings/errors in the exercised flow; a storage-key check found no persistent token key. Screenshots are local development evidence, not final portfolio images or full A51 acceptance. The incomplete first-login human profile, narrow sidebar overflow, stale forward after rollout and loss of a requested view across identity redirection were found during this work and corrected in source.
+
+The initial single-platform image import, Calico liveness and Tempo writable-path failures are recorded in ADR 0003 with the successful corrective configuration. The first telemetry assertion used the wrong Prometheus label; the corrected check follows the actual configured job/service labels. No full A01–A54 acceptance claim is made from these milestone checks. Extraction, migration, returns, recovery and the complete failure suite remain required.

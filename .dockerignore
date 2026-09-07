@@ -1,5 +1,8 @@
 .git
-.local
+.local/**
+!.local/assets/
+.local/assets/**
+!.local/assets/opentelemetry-javaagent.jar
 **/node_modules
 **/test-results
 **/playwright-report
