@@ -9,7 +9,7 @@ import java.util.Set;
 import org.jooq.DSLContext;
 
 public final class CoreMessages implements MessageHandler {
-    private static final Set<String> TYPES = Set.of("MovementAssigned.v1", "CommandAccepted.v1", "MovementCompleted.v1", "CommandOutcomeUnknown.v1", "CommandRejected.v1", "ZoneOwnershipChanged.v1");
+    private static final Set<String> TYPES = Set.of("MovementAssigned.v1", "MovementCancelled.v1", "CommandAccepted.v1", "MovementCompleted.v1", "CommandOutcomeUnknown.v1", "CommandRejected.v1", "ZoneOwnershipChanged.v1");
     private final Clock clock;
     public CoreMessages(Clock clock) { this.clock = clock; }
     @Override public void apply(DSLContext sql, Events.Envelope event) {

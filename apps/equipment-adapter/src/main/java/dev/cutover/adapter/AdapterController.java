@@ -12,7 +12,11 @@ class AdapterController {
     private final Allocations allocations;
     private final CommandJournal journal;
     private final EquipmentObservations observations;
-    AdapterController(Allocations allocations,CommandJournal journal,EquipmentObservations observations) { this.allocations=allocations;this.journal=journal;this.observations=observations; }
+    private final CancellationGate cancellations;
+    AdapterController(Allocations allocations,CommandJournal journal,EquipmentObservations observations,CancellationGate cancellations) { this.allocations=allocations;this.journal=journal;this.observations=observations;this.cancellations=cancellations; }
+    @PostMapping("/internal/v1/sites/{site}/cancellations") JsonNode cancel(@PathVariable String site,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt) {
+        return cancellations.fence(Access.site(jwt,site),Access.client(jwt),body);
+    }
     @PostMapping("/internal/v1/sites/{site}/allocations") JsonNode allocate(@PathVariable String site,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt) {
         return allocations.register(Access.site(jwt,site),Access.client(jwt),body);
     }

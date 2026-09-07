@@ -486,6 +486,205 @@
           }
         }
       }
+    },
+    "/api/v1/sites/{siteId}/orders/{id}/cancellation": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "cancelOrder",
+        "summary": "Supervisor cancels an entirely unstarted order",
+        "description": "expectedVersion is the order version. The durable intent holds dispatch while the adapter fences the complete movement inventory. A 200 response confirms exactly one reservation release; 409 indicates a version or unsafe-movement conflict. A 503 CANCELLATION_PENDING means the intent remains durable; inspect the order. Reuse the identical request/key after a transport interruption.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reconciliation-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancellation committed, with complete adapter fence certificate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cancellationId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "const": "CANCELLED"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "certificate": {
+                      "$ref": "#/components/schemas/cancellation-certificate"
+                    }
+                  },
+                  "required": [
+                    "cancellationId",
+                    "orderId",
+                    "state",
+                    "version",
+                    "certificate"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/orders/{id}/cancellations/{cancellationId}/retry": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "cancellationId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "resumeCancellation",
+        "summary": "Supervisor resumes a paused cancellation after repair",
+        "description": "expectedVersion is the cancellation version. Only PAUSED may resume. The 200 response records a new bounded retry budget for the same intent; poll the order for the final outcome. The original browser request key is not required.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reconciliation-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Retry recorded, with cancellationId, orderId, state PENDING and version"
+          },
+          "400": {
+            "$ref": "#/components/responses/problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -567,6 +766,9 @@
       },
       "command-view": {
         "$ref": "../schemas/command-view.v1.json"
+      },
+      "cancellation-certificate": {
+        "$ref": "../schemas/cancellation-certificate.v1.json"
       }
     },
     "securitySchemes": {

@@ -27,14 +27,14 @@ public final class Allocations {
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             Database.requireDurability(sql,false);
+            var route=sql.fetchOne("SELECT * FROM zone_routes WHERE site_id= ? AND zone_id= ? FOR UPDATE",site,zone);
+            if (route==null) throw Problem.missing();
             Database.lock(sql,"movement",site,id);
             var existing=sql.fetchOne("SELECT * FROM movement_allocations WHERE site_id= ? AND movement_id= ?",site,id);
             if (existing!=null) {
                 if (!JsonSupport.hash(movement).equals(existing.get("payload_hash",String.class))) throw Problem.conflict("IMMUTABLE_MOVEMENT","An existing movement cannot change its payload.");
                 return view(sql,site,id);
             }
-            var route=sql.fetchOne("SELECT * FROM zone_routes WHERE site_id= ? AND zone_id= ? FOR UPDATE",site,zone);
-            if (route==null) throw Problem.missing();
             boolean active="ACTIVE".equals(route.get("state",String.class));
             UUID allocation=UUID.randomUUID();
             sql.execute("INSERT INTO movement_allocations(allocation_id,movement_id,site_id,zone_id,source,movement,payload_hash,owner,epoch,state,version) VALUES (?,?,?,?,?,?::jsonb,?,?,?,?,?)",

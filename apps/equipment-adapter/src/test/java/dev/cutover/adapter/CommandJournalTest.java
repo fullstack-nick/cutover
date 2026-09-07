@@ -146,4 +146,31 @@ class CommandJournalTest {
         port.falseAbsence=false; simulator.advance(); journal.reconcile("supervisor","site-a",id,"genuine-evidence-returned",recovery(id)); journal.work();
         assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("COMPLETED");
     }
+    @Test void cancellationFenceStopsAWorkerThatReturnsAfterItsStatusLeaseExpired() throws Exception {
+        UUID id=UUID.randomUUID();JsonNode movement=movement(id);record(id,movement);
+        var queried=new java.util.concurrent.CountDownLatch(1);var resume=new java.util.concurrent.CountDownLatch(1);
+        EquipmentPort delayed=new EquipmentPort() {
+            public JsonNode equipment(){return port.equipment();}
+            public Reply command(UUID command){
+                queried.countDown();
+                try { if(!resume.await(10,java.util.concurrent.TimeUnit.SECONDS))throw new AssertionError("Status barrier did not resume"); }
+                catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new Unavailable("Interrupted status");}
+                return port.command(command);
+            }
+            public Reply send(UUID command,JsonNode payload){throw new AssertionError("A fenced movement was sent after lease expiry");}
+        };
+        var claimed=new CommandJournal(adapterDb.sql(),delayed,observations,clock);
+        try(var worker=java.util.concurrent.Executors.newSingleThreadExecutor()) {
+            var future=worker.submit(()->claimed.work());
+            try {
+                assertThat(queried.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                clock.advance(Duration.ofSeconds(11));observations.refresh();
+                var request=JsonSupport.MAPPER.valueToTree(Map.of("cancellationId",UUID.randomUUID(),"orderId",UUID.randomUUID(),"siteId","site-a","actor","supervisor","reason","Fence never-submitted work after the old query lease expired.","movements",java.util.List.of(movement)));
+                new CancellationGate(adapterDb.sql(),observations,clock).fence("site-a","legacy-core",request);
+            } finally { resume.countDown(); }
+            future.get(10,java.util.concurrent.TimeUnit.SECONDS);
+        }
+        assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("REJECTED_BEFORE_EXECUTION");
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM simulator_commands").get(0,Integer.class)).isZero();
+    }
 }

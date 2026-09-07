@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 @Component @ConditionalOnProperty(name="cutover.workers-enabled",havingValue="true",matchIfMissing=true)
 class LegacyWorker {
     private final LegacyScheduler scheduler;
-    LegacyWorker(LegacyScheduler scheduler){this.scheduler=scheduler;}
+    private final OrderCancellations cancellations;
+    LegacyWorker(LegacyScheduler scheduler,OrderCancellations cancellations){this.scheduler=scheduler;this.cancellations=cancellations;}
     @Scheduled(fixedDelay=150) void poll(){scheduler.poll();}
+    @Scheduled(fixedDelay=500) void cancel(){cancellations.poll();}
 }

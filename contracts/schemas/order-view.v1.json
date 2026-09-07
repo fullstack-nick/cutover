@@ -119,6 +119,62 @@
         ],
         "additionalProperties": true
       }
+    },
+    "cancellation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "cancellationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "PAUSED",
+            "CANCELLED",
+            "DENIED"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastError": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finishedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "cancellationId",
+        "state",
+        "version",
+        "attempts",
+        "lastError",
+        "createdAt",
+        "finishedAt"
+      ],
+      "additionalProperties": true
     }
   },
   "required": [

@@ -24,6 +24,7 @@ public class AdapterApplication {
     }
     @Bean EquipmentObservations observations(DSLContext sql,EquipmentPort port,Clock clock) { return new EquipmentObservations(sql,port,clock); }
     @Bean CommandJournal journal(DSLContext sql,EquipmentPort port,EquipmentObservations observations,Clock clock) { return new CommandJournal(sql,port,observations,clock); }
+    @Bean CancellationGate cancellationGate(DSLContext sql,EquipmentObservations observations,Clock clock) { return new CancellationGate(sql,observations,clock); }
     @Bean MessageHandler messageHandler() { return new AdapterMessages(); }
     @Bean MessageSubscription messageSubscription() { return new MessageSubscription("cutover.equipment-adapter.inbox", Set.of("legacy-core", "returns-service"), Set.of("site-a")); }
 }

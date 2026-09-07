@@ -172,6 +172,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/orders/{id}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Supervisor cancels an entirely unstarted order
+         * @description expectedVersion is the order version. The durable intent holds dispatch while the adapter fences the complete movement inventory. A 200 response confirms exactly one reservation release; 409 indicates a version or unsafe-movement conflict. A 503 CANCELLATION_PENDING means the intent remains durable; inspect the order. Reuse the identical request/key after a transport interruption.
+         */
+        post: operations["cancelOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/orders/{id}/cancellations/{cancellationId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+                cancellationId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Supervisor resumes a paused cancellation after repair
+         * @description expectedVersion is the cancellation version. Only PAUSED may resume. The 200 response records a new bounded retry budget for the same intent; poll the order for the final outcome. The original browser request key is not required.
+         */
+        post: operations["resumeCancellation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -200,6 +247,7 @@ export interface components {
         "task-list": components["schemas"]["task-list.v1"];
         "equipment-view": components["schemas"]["equipment-view.v1"];
         "command-view": components["schemas"]["command-view.v1"];
+        "cancellation-certificate": components["schemas"]["cancellation-certificate.v1"];
         "order-page.v1": {
             items: ({
                 /** Format: uuid */
@@ -299,6 +347,21 @@ export interface components {
             } & {
                 [key: string]: unknown;
             })[];
+            cancellation?: ({
+                /** Format: uuid */
+                cancellationId: string;
+                /** @enum {string} */
+                state: "PENDING" | "PAUSED" | "CANCELLED" | "DENIED";
+                version: number;
+                attempts: number;
+                lastError: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                finishedAt: string | null;
+            } & {
+                [key: string]: unknown;
+            }) | null;
         } & {
             [key: string]: unknown;
         };
@@ -403,6 +466,35 @@ export interface components {
         "reconciliation-request.v1": {
             reason: string;
             expectedVersion: number;
+        };
+        "cancellation-certificate.v1": {
+            /** Format: uuid */
+            cancellationId: string;
+            /** Format: uuid */
+            orderId: string;
+            siteId: string;
+            /** @constant */
+            state: "FENCED";
+            /** Format: uuid */
+            worldId: string;
+            /** Format: uuid */
+            journalGeneration: string;
+            proofHash: string;
+            /** Format: date-time */
+            issuedAt: string;
+            movements: ({
+                /** Format: uuid */
+                movementId: string;
+                /** Format: uuid */
+                allocationId: string;
+                allocationVersion: number;
+                /** @constant */
+                proof: "NEVER_SUBMITTED";
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
         };
         "equipment-command.v1": {
             /** Format: uuid */
@@ -767,6 +859,90 @@ export interface operations {
         };
         responses: {
             /** @description Investigation request recorded; repeats with the same key return the same response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["problem"];
+            401: components["responses"]["problem"];
+            403: components["responses"]["problem"];
+            404: components["responses"]["problem"];
+            409: components["responses"]["problem"];
+            413: components["responses"]["problem"];
+            422: components["responses"]["problem"];
+            503: components["responses"]["problem"];
+        };
+    };
+    cancelOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Cancellation committed, with complete adapter fence certificate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        cancellationId: string;
+                        /** Format: uuid */
+                        orderId: string;
+                        /** @constant */
+                        state: "CANCELLED";
+                        version: number;
+                        certificate: components["schemas"]["cancellation-certificate.v1"];
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["problem"];
+            401: components["responses"]["problem"];
+            403: components["responses"]["problem"];
+            404: components["responses"]["problem"];
+            409: components["responses"]["problem"];
+            413: components["responses"]["problem"];
+            422: components["responses"]["problem"];
+            503: components["responses"]["problem"];
+        };
+    };
+    resumeCancellation: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+                cancellationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Retry recorded, with cancellationId, orderId, state PENDING and version */
             200: {
                 headers: {
                     [name: string]: unknown;

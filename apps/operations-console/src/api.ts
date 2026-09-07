@@ -18,13 +18,19 @@ export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }
 }
 export async function get<T>(path: string): Promise<T> {
+  return request<T>(path);
+}
+export async function post<T>(path: string, body: unknown, key: string): Promise<T> {
+  return request<T>(path, body, key);
+}
+async function request<T>(path: string, payload?: unknown, key?: string): Promise<T> {
   if (!identity.authenticated) throw new ApiError(401, 'SIGN_IN_REQUIRED', 'Sign in to view site operations.');
   try { await identity.updateToken(30); }
   catch {
     if (!identity.token || identity.isTokenExpired()) throw new ApiError(401, 'SESSION_EXPIRED', 'Your local session expired. Sign in again to continue.');
     // A still-valid in-memory token remains useful during an identity outage.
   }
-  const response = await fetch(path, { headers: { Authorization: `Bearer ${identity.token}`, Accept: 'application/json' }, signal: AbortSignal.timeout(8000), cache: 'no-store' });
+  const response = await fetch(path, { method: payload === undefined ? 'GET' : 'POST', body: payload === undefined ? undefined : JSON.stringify(payload), headers: { Authorization: `Bearer ${identity.token}`, Accept: 'application/json', ...(payload === undefined ? {} : { 'Content-Type': 'application/json', 'Idempotency-Key': key! }) }, signal: AbortSignal.timeout(8000), cache: 'no-store' });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new ApiError(response.status, body.code ?? `HTTP_${response.status}`, body.detail ?? `The service returned ${response.status}.`);

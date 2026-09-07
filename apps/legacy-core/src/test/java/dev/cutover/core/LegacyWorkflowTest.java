@@ -169,4 +169,114 @@ class LegacyWorkflowTest {
         assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM outbox").get(0,Integer.class)).isEqualTo(1);
         assertThat(orders.get("site-a",id).path("state").asString()).isEqualTo("RESERVED");
     }
+    JsonNode cancellationRequest(UUID order) { return JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",orders.get("site-a",order).path("version").asLong(),"reason","Cancel the complete unstarted order after reviewing its movements.")); }
+    OrderCancellations cancellations(AtomicBoolean loseResponse) {
+        var gate=new dev.cutover.adapter.CancellationGate(adapterDb.sql(),observations,clock);
+        return new OrderCancellations(coreDb.sql(),new DispatchPort() {
+            public JsonNode allocate(String site,JsonNode movement){throw new AssertionError();}
+            public JsonNode command(String site,UUID movement){throw new AssertionError();}
+            public JsonNode equipment(String site){throw new AssertionError();}
+            public JsonNode dispatch(String site,UUID movement,UUID allocation,long epoch,String lane,JsonNode payload){throw new AssertionError();}
+            public JsonNode cancellation(String site,JsonNode request) {
+                JsonNode result=gate.fence(site,"legacy-core",request);
+                if(loseResponse.getAndSet(false))throw new dev.cutover.platform.ServiceHttp.Unavailable("Response lost after durable fence");
+                return result;
+            }
+        },clock);
+    }
+    @Test void unstartedMixedOrderReleasesExactlyOnceAndLateIntentCannotRecreateWork() {
+        UUID id=accept("cancel-mixed",new OrderService.Line("SKU-001",3),new OrderService.Line("SKU-002",2));
+        var cancel=cancellations(new AtomicBoolean());var request=cancellationRequest(id);
+        var response=cancel.cancel("supervisor","site-a",id,"cancel",request);
+        assertThat(response.path("state").asString()).isEqualTo("CANCELLED");
+        assertThat(cancel.cancel("supervisor","site-a",id,"cancel",request)).isEqualTo(response);
+        assertThatThrownBy(()->cancel.cancel("supervisor","site-a",id,"another-key",cancellationRequest(id))).isInstanceOf(Problem.class);
+        for(var row:coreDb.sql().fetch("SELECT movement FROM movement_intents WHERE order_id=?",id)) {
+            var allocation=allocations.register("site-a","legacy-core",JsonSupport.read(row.get(0).toString()));
+            assertThat(allocation.path("state").asString()).isEqualTo("CANCELLED");
+        }
+        scheduler.poll();journal.work();simulator.advance();
+        assertThat(coreDb.sql().fetchOne("SELECT count(*),sum(quantity) FROM reservation_releases").intoArray()).containsExactly(2L,5L);
+        assertThat(coreDb.sql().fetchOne("SELECT sum(reserved) FROM stock").get(0,Long.class)).isZero();
+        assertThat(coreDb.sql().fetchOne("SELECT on_hand FROM stock WHERE site_id='site-a' AND sku='SKU-001'").get(0,Integer.class)).isEqualTo(100);
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isZero();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM cancellation_certificates").get(0,Integer.class)).isEqualTo(1);
+        assertThat(coreDb.sql().fetchOne("SELECT active_requests FROM admission").get(0,Integer.class)).isZero();
+    }
+    @Test void recordedButNeverSubmittedCommandCanBeFencedBeforePhysicalAcceptance() {
+        UUID id=accept("cancel-unsent",new OrderService.Line("SKU-001",2));scheduler.poll();
+        assertThat(adapterDb.sql().fetchOne("SELECT attempts FROM command_journal").get(0,Integer.class)).isZero();
+        cancellations(new AtomicBoolean()).cancel("supervisor","site-a",id,"unsent",cancellationRequest(id));journal.work();
+        assertThat(adapterDb.sql().fetchOne("SELECT state FROM command_journal").get(0,String.class)).isEqualTo("REJECTED_BEFORE_EXECUTION");
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isEqualTo(1);
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM simulator_commands").get(0,Integer.class)).isZero();
+    }
+    @Test void oneUnknownMovementRejectsTheWholeCancellationWithoutReleasingOtherLines() {
+        UUID id=accept("cancel-unknown",new OrderService.Line("SKU-001",2),new OrderService.Line("SKU-002",2));
+        var movement=orders.get("site-a",id).path("movements").get(0).path("movement");UUID movementId=Database.uuid(movement,"movementId");
+        var allocation=allocations.register("site-a","legacy-core",movement);
+        journal.record("site-a","legacy-core",movementId,Database.uuid(allocation,"allocationId"),0,movement.path("zoneId").asString()+"-a",movement);
+        simulator.fault("LOST_RESPONSE",movementId,1,5000);journal.work();
+        var cancel=cancellations(new AtomicBoolean());var request=cancellationRequest(id);
+        assertThatThrownBy(()->cancel.cancel("supervisor","site-a",id,"unknown",request)).isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).status()).isEqualTo(409));
+        assertThatThrownBy(()->cancel.cancel("supervisor","site-a",id,"unknown",request)).isInstanceOf(Problem.class);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isZero();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM movement_allocations WHERE state='CANCELLED'").get(0,Integer.class)).isZero();
+        assertThat(coreDb.sql().fetchOne("SELECT cancellation_pending FROM orders WHERE order_id=?",id).get(0,Boolean.class)).isFalse();
+        finish(id,"COMPLETED");
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM inventory_ledger").get(0,Integer.class)).isEqualTo(2);
+    }
+    @Test void lostFenceResponseAndCoordinatorRestartDoNotRepeatAnyReservationRelease() {
+        UUID id=accept("cancel-lost-proof",new OrderService.Line("SKU-001",2));var request=cancellationRequest(id);
+        assertThatThrownBy(()->cancellations(new AtomicBoolean(true)).cancel("supervisor","site-a",id,"lost-proof",request)).isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).status()).isEqualTo(503));
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isZero();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM cancellation_certificates").get(0,Integer.class)).isEqualTo(1);
+        assertThat(scheduler.poll()).isZero();
+        clock.advance(Duration.ofSeconds(2));var restarted=cancellations(new AtomicBoolean());restarted.poll();
+        var result=restarted.cancel("supervisor","site-a",id,"lost-proof",request);
+        assertThat(result.path("state").asString()).isEqualTo("CANCELLED");
+        assertThat(restarted.cancel("supervisor","site-a",id,"lost-proof",request)).isEqualTo(result);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isEqualTo(1);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM outbox WHERE event_type='MovementCancelled.v1'").get(0,Integer.class)).isEqualTo(1);
+        coreDb.sql().execute("UPDATE service_control SET workers_paused=true");
+        assertThat(restarted.cancel("supervisor","site-a",id,"lost-proof",request)).isEqualTo(result);
+    }
+    @Test void exhaustedCancellationCanResumeFromANewSessionWithVersionAndReason() {
+        UUID order=accept("cancel-paused",new OrderService.Line("SKU-001",2));
+        var lost=new AtomicBoolean(true);var coordinator=cancellations(lost);
+        assertThatThrownBy(()->coordinator.cancel("first-supervisor","site-a",order,"original-key",cancellationRequest(order))).isInstanceOf(Problem.class);
+        for(int i=0;i<5;i++){clock.advance(Duration.ofSeconds(20));observations.refresh();lost.set(true);coordinator.poll();}
+        var paused=orders.get("site-a",order).path("cancellation");
+        assertThat(paused.path("state").asString()).isEqualTo("PAUSED");
+        assertThat(paused.path("attempts").asInt()).isEqualTo(6);
+        UUID id=Database.uuid(paused,"cancellationId");
+        var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",paused.path("version").asLong(),"reason","Response delivery repaired; resume the retained cancellation certificate."));
+        assertThatThrownBy(()->coordinator.retry("second-supervisor","site-b",order,id,"retry",request)).isInstanceOf(Problem.class);
+        var restarted=cancellations(new AtomicBoolean());
+        var recorded=restarted.retry("second-supervisor","site-a",order,id,"retry",request);
+        assertThat(restarted.retry("second-supervisor","site-a",order,id,"retry",request)).isEqualTo(recorded);
+        assertThatThrownBy(()->restarted.retry("third-supervisor","site-a",order,id,"other",request)).isInstanceOf(Problem.class);
+        restarted.poll();
+        assertThat(orders.get("site-a",order).path("state").asString()).isEqualTo("CANCELLED");
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isEqualTo(1);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM audit WHERE action='order-cancellation-retry' AND actor='second-supervisor'").get(0,Integer.class)).isEqualTo(1);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM cancellation_certificates").get(0,Integer.class)).isEqualTo(1);
+        assertThat(restarted.retry("second-supervisor","site-a",order,id,"retry",request)).isEqualTo(recorded);
+    }
+    @Test void simultaneousSupervisorsCannotBothCreateCancellationIntents() throws Exception {
+        UUID order=accept("cancel-race",new OrderService.Line("SKU-001",2));
+        var request=cancellationRequest(order);var start=new CountDownLatch(1);
+        try(var workers=Executors.newFixedThreadPool(2)) {
+            var futures=new java.util.ArrayList<java.util.concurrent.Future<Integer>>();
+            for(int i=0;i<2;i++){final int actor=i;futures.add(workers.submit(()->{
+                start.await();
+                try {cancellations(new AtomicBoolean()).cancel("supervisor-"+actor,"site-a",order,"race-"+actor,request);return 200;}
+                catch(Problem conflict){return conflict.status();}
+            }));}
+            start.countDown();
+            assertThat(java.util.List.of(futures.get(0).get(15,TimeUnit.SECONDS),futures.get(1).get(15,TimeUnit.SECONDS))).containsExactlyInAnyOrder(200,409);
+        }
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM order_cancellations").get(0,Integer.class)).isEqualTo(1);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isEqualTo(1);
+    }
 }

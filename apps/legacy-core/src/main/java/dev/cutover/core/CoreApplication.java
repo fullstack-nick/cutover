@@ -23,6 +23,7 @@ public class CoreApplication {
         return new AdapterHttpClient(new ServiceHttp(url,new ClientCredentials(tokenUri,"legacy-core",secret)));
     }
     @Bean LegacyScheduler legacyScheduler(DSLContext database,DispatchPort port,OrderService orders,Clock clock){return new LegacyScheduler(database,port,orders,clock);}
+    @Bean OrderCancellations orderCancellations(DSLContext database,DispatchPort port,Clock clock){return new OrderCancellations(database,port,clock);}
     @Bean MessageHandler messageHandler(Clock clock) { return new CoreMessages(clock); }
     @Bean MessageSubscription messageSubscription() { return new MessageSubscription("cutover.legacy-core.inbox", Set.of("equipment-adapter"), Set.of("site-a")); }
 }

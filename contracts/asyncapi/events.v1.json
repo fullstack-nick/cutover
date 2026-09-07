@@ -2,7 +2,8 @@
   "asyncapi": "3.0.0",
   "info": {
     "title": "Cutover durable events",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "Complete, versioned aggregate streams include observations that a consumer does not apply as business effects. Outbound order streams include OrderAccepted.v1, StockReservationRecorded.v1, OrderProgressed.v1, OrderCancellationRequested.v1, OrderCancellationDenied.v1 and OrderCancelled.v1. Adapter movement streams include MovementAssigned.v1, command progress and MovementCancelled.v1. A cancellation event is not physical completion evidence; only the inventory owner releases reservations after the complete fence certificate."
   },
   "defaultContentType": "application/json",
   "channels": {

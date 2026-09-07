@@ -87,7 +87,11 @@ public final class OrderService {
         });
     }
     private JsonNode accepted(String site,UUID id) { return JsonSupport.MAPPER.valueToTree(Map.of("id",id,"statusUrl","/api/v1/sites/"+site+"/orders/"+id)); }
-    public JsonNode get(String site,UUID id) { return view(database,site,id); }
+    public JsonNode get(String site,UUID id) {
+        var result=(tools.jackson.databind.node.ObjectNode)view(database,site,id);
+        result.set("cancellation",Database.json(database,"SELECT COALESCE((SELECT jsonb_build_object('cancellationId',cancellation_id,'state',state,'version',version,'attempts',attempts,'lastError',last_error,'createdAt',created_at,'finishedAt',finished_at) FROM order_cancellations WHERE site_id=? AND order_id=? ORDER BY created_at DESC,cancellation_id LIMIT 1),'null'::jsonb)",site,id));
+        return result;
+    }
     static JsonNode view(DSLContext sql,String site,UUID id) {
         return Database.json(sql,"SELECT jsonb_build_object('id',o.order_id,'siteId',o.site_id,'externalOrderRef',o.external_ref,'storeId',o.store_id,'priority',o.priority,'state',o.state,'version',o.version,'createdAt',o.created_at,'completedAt',o.completed_at,'observedAt',now(),'lines',(SELECT COALESCE(jsonb_agg(jsonb_build_object('sku',l.sku,'requested',l.requested,'reserved',l.reserved_quantity,'shortage',l.shortage) ORDER BY l.sku),'[]'::jsonb) FROM order_lines l WHERE l.order_id=o.order_id),'movements',(SELECT COALESCE(jsonb_agg(jsonb_build_object('movementId',m.movement_id,'state',m.state,'movement',m.movement) ORDER BY m.movement_id),'[]'::jsonb) FROM movement_intents m WHERE m.order_id=o.order_id)) FROM orders o WHERE o.site_id= ? AND o.order_id= ?",site,id);
     }

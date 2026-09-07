@@ -1,0 +1,15 @@
+# Cancelling an unstarted order
+
+Cancellation is a supervisor action in order detail. Inspect every movement, enter a reason and confirm. The API independently checks the role, site, expected order version and idempotency key. An operator cannot authorize the action by calling the endpoint directly.
+
+The core records a durable intent and holds dispatch for that order before contacting the adapter. The adapter locks all affected routes and movements, checks the entire inventory, and either fences every allocation or refuses the whole request. No reservation is released until the core commits the complete certificate with a unique release row for each reservation. Available stock increases through a reduced reservation count; on-hand inventory is unchanged.
+
+Any submitted command, current investigation lease, physical acceptance, contradictory evidence or unknown outcome prevents cancellation. The UI's order state alone cannot establish that work is unstarted. The adapter's durable journal is the authority at this boundary. A local cancelled-command tombstone records that no submission occurred; it never fabricates a simulator rejection.
+
+A lost HTTP response leaves the intent discoverable on the order. Automatic attempts are bounded at six with backoff; while unresolved, the order retains its reservations and dispatch hold. Refresh the order to observe its outcome. If the request becomes `PAUSED`, repair the adapter/network/storage condition, enter a recovery reason and confirm a cancellation retry. This uses the cancellation's current version and resumes the same intent with a new bounded budget. It works from a new browser session. A recorded retry is not a completed cancellation.
+
+`409` means inspect the latest order and command evidence. A version conflict requires refreshing before a new decision. `MOVEMENT_STARTED_OR_UNKNOWN` releases nothing and permits ordinary movement recovery to continue. Never replace a command identity to obtain cancellation. `503 CANCELLATION_PENDING` means the intent remains durable; an interrupted original request can be retried with its identical key and body. Frozen workers or critical storage can postpone writes without deleting accepted data.
+
+The complete fence assumes the current adapter journal is intact and that every equipment submission first passed through it. After restoring stale application data, keep workers and dispatch frozen until the independent physical ledger has been reconciled. Missing rows in a stale dump are not evidence of never-submitted equipment work.
+
+API definitions: [public operations](../../contracts/openapi/operations.v1.json) and [internal fence](../../contracts/openapi/internal.v1.json). Reproduce the running-platform check with `node tools/scenario-driver/cancellation-smoke.mjs` after the platform is deployed and the console forward is healthy. It creates isolated synthetic orders and restores its dispatch pause and selected simulator faults. Other accepted work must be allowed to settle first.

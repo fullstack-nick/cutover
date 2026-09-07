@@ -94,8 +94,9 @@ public final class CommandJournal {
                     var sql=DSL.using(configuration);
                     Database.requireDurability(sql,false);
                     var route=Allocations.lockRoute(sql,row.get("site_id",String.class),id);
+                    var allocation=sql.fetchOne("SELECT state FROM movement_allocations WHERE site_id=? AND movement_id=? FOR UPDATE",row.get("site_id"),id);
                     var current=sql.fetchOne("SELECT * FROM command_journal WHERE command_id= ? FOR UPDATE",id);
-                    if ("COMPLETED".equals(current.get("state",String.class))) return false;
+                    if ("COMPLETED".equals(current.get("state",String.class)) || "CANCELLED".equals(allocation.get(0,String.class))) return false;
                     if (!current.get("owner").equals(route.get("owner")) || !current.get("epoch").equals(route.get("epoch")) || "RECONCILIATION_REQUIRED".equals(route.get("state")))
                         throw Problem.conflict("STALE_OWNER","The route changed before the journaled send.");
                     sql.execute("UPDATE command_journal SET state='SEND_PENDING',attempts=attempts+1 WHERE command_id= ?",id);
@@ -137,7 +138,7 @@ public final class CommandJournal {
             Allocations.lockRoute(sql,site,id);
             var allocation=sql.fetchOne("SELECT * FROM movement_allocations WHERE site_id= ? AND movement_id= ? FOR UPDATE",site,id);
             var row=sql.fetchOne("SELECT * FROM command_journal WHERE command_id= ? FOR UPDATE",id);
-            if ("COMPLETED".equals(row.get("state",String.class))) return;
+            if ("COMPLETED".equals(row.get("state",String.class)) || "CANCELLED".equals(allocation.get("state",String.class))) return;
             String state=proposedState, error=proposedError;
             boolean validProof=proof!=null && !state.equals("QUARANTINED");
             long evidenceVersion=row.get("evidence_version",Long.class);

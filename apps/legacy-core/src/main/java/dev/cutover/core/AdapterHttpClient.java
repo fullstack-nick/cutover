@@ -13,6 +13,7 @@ public final class AdapterHttpClient implements DispatchPort {
     @Override public JsonNode allocate(String site,JsonNode movement){return checked(http.request("POST",prefix(site)+"/allocations",movement),false);}
     @Override public JsonNode command(String site,UUID movement){return checked(http.request("GET",prefix(site)+"/commands/"+movement,null),true);}
     @Override public JsonNode equipment(String site){return checked(http.request("GET",prefix(site)+"/equipment",null),false);}
+    @Override public JsonNode cancellation(String site,JsonNode request){return checked(http.request("POST",prefix(site)+"/cancellations",request),false);}
     @Override public JsonNode dispatch(String site,UUID movement,UUID allocation,long epoch,String lane,JsonNode payload){
         return checked(http.request("PUT",prefix(site)+"/commands/"+movement,JsonSupport.MAPPER.valueToTree(Map.of("allocationId",allocation,"epoch",epoch,"laneId",lane,"movement",payload))),false);
     }
