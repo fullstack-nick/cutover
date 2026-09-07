@@ -28,5 +28,6 @@ public final class Database {
                 || control.get(intake ? "intake_paused" : "dispatch_paused", Boolean.class)) {
             throw new Problem(503, "DURABILITY_PAUSED", "Durable processing is paused; retry after recovery.");
         }
+        StorageBudget.requireHeadroom(sql);
     }
 }

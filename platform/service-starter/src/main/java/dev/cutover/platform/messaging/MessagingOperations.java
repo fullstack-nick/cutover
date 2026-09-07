@@ -24,6 +24,7 @@ public final class MessagingOperations {
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             return Idempotency.execute(sql, actor, site, "recover-" + kind, key, Map.of("id", id, "request", request), () -> {
+                if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Delivery recovery is paused for the checkpoint.");
                 if (kind.equals("outbox")) sql.fetchOne("SELECT * FROM admission WHERE singleton FOR UPDATE");
                 else sql.fetchOne("SELECT * FROM message_storage WHERE singleton FOR UPDATE");
                 var row = sql.fetchOne("SELECT * FROM " + kind + " WHERE event_id= ? AND site_id= ? FOR UPDATE", id, site);

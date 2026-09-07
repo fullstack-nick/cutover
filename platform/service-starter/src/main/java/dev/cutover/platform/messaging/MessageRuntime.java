@@ -15,8 +15,10 @@ public final class MessageRuntime implements AutoCloseable {
     private final DurableInbox inbox;
     private final RabbitDelivery rabbit;
     private final String queue;
-    public MessageRuntime(DSLContext database, OutboxRelay relay, DurableInbox inbox, RabbitDelivery rabbit, String queue) {
+    private final MessageRetention retention;
+    public MessageRuntime(DSLContext database, OutboxRelay relay, DurableInbox inbox, RabbitDelivery rabbit, String queue, MessageRetention retention) {
         this.database = database; this.relay = relay; this.inbox = inbox; this.rabbit = rabbit; this.queue = queue;
+        this.retention = retention;
         var sequence = new AtomicInteger();
         this.workers = Executors.newScheduledThreadPool(3, runnable -> {
             var thread = new Thread(runnable, "cutover-delivery-" + sequence.incrementAndGet());
@@ -29,6 +31,7 @@ public final class MessageRuntime implements AutoCloseable {
             if (!database.fetchOne("SELECT workers_paused OR consumer_paused FROM service_control WHERE singleton").get(0, Boolean.class)) rabbit.consume(queue, inbox, 16);
         }), 100, 50, TimeUnit.MILLISECONDS);
         workers.scheduleWithFixedDelay(new Guard("inbox-retry", () -> inbox.retry(16)), 250, 150, TimeUnit.MILLISECONDS);
+        workers.scheduleWithFixedDelay(new Guard("message-retention", () -> retention.compact()), 30000, 30000, TimeUnit.MILLISECONDS);
     }
     @Override public void close() {
         workers.shutdownNow();

@@ -64,6 +64,7 @@ public final class OrderService {
             throw Problem.conflict("UNVERIFIED_COMPLETION","A movement requires verified adapter and simulator completion.");
         database.transaction(configuration -> {
             var sql=DSL.using(configuration);
+            if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Inventory mutation is paused for the checkpoint.");
             sql.fetchOne("SELECT * FROM admission WHERE singleton FOR UPDATE");
             var reservation=sql.fetchOne("SELECT * FROM reservations WHERE site_id= ? AND reservation_id= ? FOR UPDATE",site,movementId);
             if(reservation==null) throw Problem.missing();

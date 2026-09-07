@@ -44,7 +44,7 @@ public final class DurableInbox {
             if (transportMessageId != null && !envelope.eventId().toString().equals(transportMessageId)) throw DeliveryFailure.permanent("TRANSPORT_ID_MISMATCH");
         } catch (Exception invalid) {
             String code = invalid instanceof DeliveryFailure ? invalid.getMessage() : "INVALID_EVENT_CONTRACT";
-            return database.transactionResult(configuration -> quarantineRaw(DSL.using(configuration), exchange, transportMessageId, body, code, null));
+            return database.transactionResult(configuration -> quarantineRaw(DSL.using(configuration), exchange, transportMessageId, body, code, trustedSite(exchange,body)));
         }
         var event = envelope;
         String hash = JsonSupport.hash(JsonSupport.read(json));
@@ -119,9 +119,20 @@ public final class DurableInbox {
         } catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
         if (sql.fetchExists(DSL.table("delivery_quarantine"), DSL.field("delivery_id").eq(id))) return id;
         reserveStorage(sql, body.length);
-        sql.execute("INSERT INTO delivery_quarantine(delivery_id,transport_message_id,received_exchange,site_id,raw_body,payload_bytes,reason,received_at) VALUES (?,?,?,?,?,?,?,?::timestamptz)",
-                id, messageId, exchange, site, body, body.length, reason, now());
+        sql.execute("INSERT INTO delivery_quarantine(delivery_id,transport_message_id,received_exchange,site_id,raw_body,payload_bytes,reason,received_at,body_hash) VALUES (?,?,?,?,?,?,?,?::timestamptz,encode(sha256(?),'hex'))",
+                id, messageId, exchange, site, body, body.length, reason, now(),body);
         return id;
+    }
+
+    /** A site label is trustworthy only when it agrees with the broker-authenticated publisher. */
+    String trustedSite(String exchange,byte[] body) {
+        try {
+            String json=StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(body)).toString();
+            var candidate=JsonSupport.read(json);String source=candidate.path("source").asString(),site=candidate.path("siteId").asString();
+            if(sources.contains(source) && ("cutover."+source+".v1").equals(exchange) && sites.contains(site)
+                    && (!candidate.path("payload").has("siteId") || site.equals(candidate.path("payload").path("siteId").asString())))return site;
+        } catch(Exception invalid) { /* Unparseable bytes stay in the platform-only diagnostic pool. */ }
+        return null;
     }
 
     private static void lockStorage(DSLContext sql) {

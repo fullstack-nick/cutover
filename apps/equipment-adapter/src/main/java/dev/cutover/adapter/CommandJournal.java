@@ -125,7 +125,9 @@ public final class CommandJournal {
         } catch(EquipmentPort.Unavailable failure) {
             transition(id,"OUTCOME_UNKNOWN",null,"Transport outcome is unknown; investigate the same command identity.");
         } catch(Problem paused) {
-            database.execute("UPDATE command_journal SET lease_until=NULL,next_attempt_at= ?::timestamptz,last_error= ? WHERE command_id= ?",now().plusSeconds(2),paused.code(),id);
+            database.transaction(configuration->{var sql=DSL.using(configuration);if(!Database.workersMayWrite(sql))return;
+                sql.execute("UPDATE command_journal SET lease_until=NULL,next_attempt_at= ?::timestamptz,last_error= ? WHERE command_id= ? AND state NOT IN ('COMPLETED','REJECTED_BEFORE_EXECUTION')",now().plusSeconds(2),paused.code(),id);
+            });
         }
     }
 

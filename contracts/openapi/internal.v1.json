@@ -248,6 +248,90 @@
           }
         }
       }
+    },
+    "/internal/v1/platform/storage": {
+      "get": {
+        "operationId": "readOwnerStorage",
+        "description": "Platform-administrator diagnostic. Own database bytes, retained/unpublished message quotas and seven-day replay horizon. No business recovery authority.",
+        "responses": {
+          "200": {
+            "description": "Bounded current diagnostic view"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/platform/untrusted-deliveries": {
+      "get": {
+        "operationId": "readUntrustedDeliveryDiagnostics",
+        "description": "Platform-administrator diagnostic. Up to 100 site-less entries with opaque IDs, hash, size, reason and time; no raw payload, publisher or claimed business identity.",
+        "responses": {
+          "200": {
+            "description": "Bounded current diagnostic view"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/sites/{site}/messaging/quarantine": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/site"
+        }
+      ],
+      "get": {
+        "operationId": "readSiteRawQuarantine",
+        "description": "Operator/supervisor site-scoped view of original deliveries that failed before inbox transfer.",
+        "responses": {
+          "200": {
+            "description": "Bounded current diagnostic view"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/sites/{site}/messaging/quarantine/{id}/reprocess": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/site"
+        },
+        {
+          "$ref": "#/components/parameters/id"
+        }
+      ],
+      "post": {
+        "operationId": "reprocessOriginalDelivery",
+        "description": "Supervisor action. Requires an authorized site, current raw-delivery version, correction reason and idempotency key. Original bytes/exchange/transport identity are immutable and pass through current validation. TRANSFERRED means the durable inbox owns the result; it does not promise a business effect.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/key"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audited versioned result: deliveryId, state QUARANTINED or TRANSFERRED, version"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {

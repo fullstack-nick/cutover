@@ -71,6 +71,86 @@ class DurableDeliveryTest {
     String state(UUID id) { return db.sql().fetchOne("SELECT state FROM inbox WHERE event_id=?", id).get(0, String.class); }
     static final class Crash extends Error {}
 
+    @Test void publishedHistoryHasASeparateHardBudgetAndIntakeHeadroom() {
+        db.sql().execute("UPDATE admission SET retained_outbox_limit=65536");
+        int committed=0;
+        for(int i=0;i<30;i++) {
+            UUID id=UUID.randomUUID();
+            try {
+                db.sql().transaction(configuration->{var sql=DSL.using(configuration);sql.execute("INSERT INTO effects(event_id,aggregate_id,version,value) VALUES (?,?,1,1)",id,id);Events.append(sql,"site-a","producer","thing",id,1,"Changed.v1",id,JsonSupport.MAPPER.valueToTree(Map.of("padding","x".repeat(6000))));});
+                committed++;
+                var claimed=relay(DeliveryHooks.NONE).claim();relay(DeliveryHooks.NONE).confirmed(claimed);
+            } catch(Problem full) {assertThat(full.code()).isEqualTo("OUTBOX_CAPACITY");break;}
+        }
+        assertThat(committed).isBetween(8,11);
+        assertThat(count("effects")).isEqualTo(committed);
+        assertThat(count("outbox")).isEqualTo(committed);
+        assertThat(db.sql().fetchOne("SELECT unpublished_events,retained_outbox_bytes FROM admission").get("unpublished_events",Integer.class)).isZero();
+        assertThat(db.sql().fetchOne("SELECT retained_outbox_bytes FROM admission").get(0,Long.class)).isLessThanOrEqualTo(65536);
+        assertThatThrownBy(()->db.sql().transaction(configuration->dev.cutover.platform.Database.requireDurability(DSL.using(configuration),true))).isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).code()).isEqualTo("STORAGE_HEADROOM"));
+        assertThat(dev.cutover.platform.StorageBudget.status(db.sql()).path("databaseBytes").asLong()).isPositive();
+    }
+
+    @Test void retentionKeepsTheReplayHorizonPendingWorkAndPermanentDuplicateIdentities() {
+        UUID published=append(UUID.randomUUID(),1);relay(DeliveryHooks.NONE).poll(16);rabbit.consume(queue,inbox,16);
+        var event=JsonSupport.MAPPER.readValue(db.sql().fetchOne("SELECT envelope FROM inbox WHERE event_id=?",published).get(0).toString(),Events.Envelope.class);
+        var pending=event(UUID.randomUUID(),2,2);deliver(pending);
+        UUID unpublished=append(UUID.randomUUID(),1);
+        var retention=new MessageRetention(db.sql(),clock);
+        clock.advance(Duration.ofDays(6));assertThat(retention.compact()).isZero();
+        clock.advance(Duration.ofDays(2));assertThat(retention.compact()).isEqualTo(2);
+        assertThat(db.sql().fetchExists(DSL.table("outbox"),DSL.field("event_id").eq(published))).isFalse();
+        assertThat(db.sql().fetchOne("SELECT envelope,raw_body,payload_bytes FROM inbox WHERE event_id=?",published).intoArray()).containsExactly(null,null,0);
+        assertThat(db.sql().fetchExists(DSL.table("outbox"),DSL.field("event_id").eq(unpublished))).isTrue();
+        assertThat(state(pending.eventId())).isEqualTo("PENDING");
+        deliver(event);assertThat(count("effects")).isEqualTo(1);
+        var conflicting=new Events.Envelope(event.eventId(),event.eventType(),1,event.occurredAt(),event.siteId(),event.source(),event.aggregateType(),event.aggregateId(),1,event.correlationId(),null,null,JsonSupport.MAPPER.valueToTree(Map.of("value",999)));
+        deliver(conflicting);assertThat(count("delivery_quarantine")).isEqualTo(1);assertThat(count("effects")).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT retained_bytes=(SELECT COALESCE(sum(payload_bytes),0) FROM inbox)+(SELECT COALESCE(sum(payload_bytes),0) FROM delivery_quarantine) FROM message_storage").get(0,Boolean.class)).isTrue();
+        assertThat(db.sql().fetchOne("SELECT retained_outbox_bytes=(SELECT COALESCE(sum(payload_bytes),0) FROM outbox) FROM admission").get(0,Boolean.class)).isTrue();
+    }
+
+    @Test void sourceConfigurationRepairTransfersOriginalQuarantineBytesThroughTheInboxOnce() {
+        var event=event(UUID.randomUUID(),1,42);byte[] original=JsonSupport.write(event).getBytes(StandardCharsets.UTF_8);
+        var misconfigured=new DurableInbox(db.sql(),EFFECT,clock,Set.of("other-source"),Set.of("site-a"));
+        UUID raw=misconfigured.receive(EXCHANGE,event.eventId().toString(),original);
+        assertThat(count("effects")).isZero();
+        var operations=new QuarantineOperations(db.sql(),EFFECT,new MessageSubscription(queue,Set.of("producer"),Set.of("site-a")),clock);
+        assertThat(operations.untrustedDiagnostics()).hasSize(1);
+        assertThat(operations.untrustedDiagnostics().get(0).has("transportMessageId")).isFalse();
+        var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"reason","Repaired the receiving publisher allowlist to the reviewed source configuration."));
+        var result=operations.reprocess("supervisor","site-a",raw,"repair",request);
+        assertThat(result.path("state").asString()).isEqualTo("TRANSFERRED");
+        assertThat(operations.reprocess("supervisor","site-a",raw,"repair",request)).isEqualTo(result);
+        assertThat(db.sql().fetchOne("SELECT raw_body FROM delivery_quarantine WHERE delivery_id=?",raw).get(0,byte[].class)).containsExactly(original);
+        assertThat(db.sql().fetchOne("SELECT event_id FROM effects").get(0,UUID.class)).isEqualTo(event.eventId());
+        assertThat(count("audit")).isEqualTo(1);assertThat(count("inbox")).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT active_messages FROM message_storage").get(0,Integer.class)).isZero();
+        clock.advance(Duration.ofDays(8));new MessageRetention(db.sql(),clock).compact();
+        assertThat(db.sql().fetchOne("SELECT raw_body FROM delivery_quarantine WHERE delivery_id=?",raw).get(0)).isNull();
+        deliver(event);assertThat(count("effects")).isEqualTo(1);
+    }
+
+    @Test void untrustedSiteAndMalformedQuarantineCannotBeReinterpretedAsLocalWork() {
+        var wrongSite=new Events.Envelope(UUID.randomUUID(),"Changed.v1",1,clock.instant(),"site-b","producer","thing",UUID.randomUUID(),1,UUID.randomUUID(),null,null,JsonSupport.MAPPER.valueToTree(Map.of("value",1)));
+        UUID raw=inbox.receive(EXCHANGE,wrongSite.eventId().toString(),JsonSupport.write(wrongSite).getBytes(StandardCharsets.UTF_8));
+        UUID malformed=inbox.receive(EXCHANGE,"untrusted",new byte[]{(byte)0xc3,(byte)0x28});
+        var operations=new QuarantineOperations(db.sql(),EFFECT,new MessageSubscription(queue,Set.of("producer"),Set.of("site-a")),clock);
+        var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"reason","Inspect the original delivery without changing its claimed site or bytes."));
+        for(UUID id:java.util.List.of(raw,malformed))for(String site:java.util.List.of("site-a","site-b"))assertThatThrownBy(()->operations.reprocess("supervisor",site,id,"probe-"+id+site,request)).isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).status()).isEqualTo(404));
+        assertThat(operations.status("site-a")).isEmpty();assertThat(count("effects")).isZero();assertThat(count("audit")).isZero();
+    }
+
+    @Test void frozenWorkersPreventRetentionAndManualDeliveryRecovery() {
+        UUID id=append(UUID.randomUUID(),1);relay(DeliveryHooks.NONE).poll(16);rabbit.consume(queue,inbox,16);clock.advance(Duration.ofDays(8));
+        db.sql().execute("UPDATE service_control SET workers_paused=true");
+        assertThat(new MessageRetention(db.sql(),clock).compact()).isZero();
+        long version=db.sql().fetchOne("SELECT version FROM outbox WHERE event_id=?",id).get(0,Long.class);
+        var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",version,"reason","A frozen checkpoint must prevent a new manual replay mutation."));
+        assertThatThrownBy(()->new MessagingOperations(db.sql()).recover("supervisor","site-a","outbox",id,"paused",request)).isInstanceOf(Problem.class);
+        assertThat(count("audit")).isZero();assertThat(count("outbox")).isEqualTo(1);
+    }
+
     @Test void processFaultCommitsItsOneShotConsumptionBeforeTerminating() {
         var controls=new dev.cutover.platform.control.RuntimeControls(db.sql());
         for (String checkpoint:java.util.List.of("AFTER_BUSINESS_COMMIT","AFTER_BROKER_CONFIRM","AFTER_EFFECT_BEFORE_ACK")) {

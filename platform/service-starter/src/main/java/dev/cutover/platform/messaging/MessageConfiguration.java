@@ -10,10 +10,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(MessagingController.class)
+@Import({MessagingController.class,DiagnosticController.class})
 @ConditionalOnProperty(name = "cutover.messaging-enabled", havingValue = "true")
 public class MessageConfiguration {
     @Bean MessagingOperations messagingOperations(DSLContext database) { return new MessagingOperations(database); }
+    @Bean QuarantineOperations quarantineOperations(DSLContext database,MessageHandler handler,MessageSubscription subscription,Clock clock) {return new QuarantineOperations(database,handler,subscription,clock);}
     @Bean @ConditionalOnMissingBean DeliveryHooks deliveryHooks(DSLContext database,Clock clock,
             @org.springframework.beans.factory.annotation.Value("${cutover.test-controls-enabled:false}") boolean enabled) {
         return enabled?new dev.cutover.platform.control.ProcessFaults(database,clock):DeliveryHooks.NONE;
@@ -24,7 +25,7 @@ public class MessageConfiguration {
     }
     @Bean OutboxRelay outboxRelay(DSLContext database, RabbitDelivery rabbit, Clock clock, DeliveryHooks hooks) { return new OutboxRelay(database, rabbit, clock, hooks); }
     @Bean(initMethod = "start", destroyMethod = "close")
-    MessageRuntime messageRuntime(DSLContext database, OutboxRelay relay, DurableInbox inbox, RabbitDelivery rabbit, MessageSubscription subscription) {
-        return new MessageRuntime(database, relay, inbox, rabbit, subscription.queue());
+    MessageRuntime messageRuntime(DSLContext database, OutboxRelay relay, DurableInbox inbox, RabbitDelivery rabbit, MessageSubscription subscription, Clock clock) {
+        return new MessageRuntime(database, relay, inbox, rabbit, subscription.queue(),new MessageRetention(database,clock));
     }
 }

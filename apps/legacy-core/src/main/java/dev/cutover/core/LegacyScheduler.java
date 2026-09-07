@@ -21,6 +21,7 @@ public final class LegacyScheduler {
         if(database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0,Boolean.class))return 0;
         var tasks=database.transactionResult(configuration->{
             var sql=DSL.using(configuration);
+            if(!Database.workersMayWrite(sql))return sql.fetch("SELECT t.*,m.movement FROM legacy_tasks t JOIN movement_intents m ON m.movement_id=t.movement_id WHERE false");
             var rows=sql.fetch("SELECT t.*,m.movement FROM legacy_tasks t JOIN movement_intents m ON m.movement_id=t.movement_id JOIN orders o ON o.order_id=t.order_id WHERE t.state NOT IN ('COMPLETED','CANCELLED') AND NOT o.cancellation_pending AND t.next_attempt_at <= ?::timestamptz AND (t.lease_until IS NULL OR t.lease_until < ?::timestamptz) ORDER BY t.priority DESC,t.eligible_at,t.movement_id LIMIT 16 FOR UPDATE OF t SKIP LOCKED",now(),now());
             for(var row:rows)sql.execute("UPDATE legacy_tasks SET lease_until=?::timestamptz WHERE task_id=?",now().plusSeconds(20),row.get("task_id"));
             return rows;
@@ -34,15 +35,20 @@ public final class LegacyScheduler {
             JsonNode payload=JsonSupport.read(task.get("movement").toString());
             UUID allocation=task.get("allocation_id",UUID.class);Long epoch=task.get("epoch",Long.class);
             if(allocation==null){
+                ensureDispatchWritable();
                 var assigned=adapter.allocate(site,payload);
                 if(!"ASSIGNED".equals(assigned.path("state").asString())){update(movement,"BLOCKED","ZONE_DRAINING");return;}
                 if(!"legacy-core".equals(assigned.path("owner").asString())){update(movement,"RECONCILIATION_REQUIRED","MOVEMENT_OWNED_ELSEWHERE");return;}
                 allocation=Database.uuid(assigned,"allocationId");epoch=assigned.path("epoch").asLong();
-                database.execute("UPDATE legacy_tasks SET allocation_id=?,epoch=? WHERE movement_id=?",allocation,epoch,movement);
-                database.execute("UPDATE movement_intents SET state='ASSIGNED' WHERE movement_id=? AND state='REQUESTED'",movement);
+                UUID assignedId=allocation;Long assignedEpoch=epoch;
+                database.transaction(configuration->{var sql=DSL.using(configuration);if(!Database.workersMayWrite(sql))return;
+                    sql.execute("UPDATE legacy_tasks SET allocation_id=?,epoch=? WHERE movement_id=? AND state NOT IN ('COMPLETED','CANCELLED')",assignedId,assignedEpoch,movement);
+                    sql.execute("UPDATE movement_intents SET state='ASSIGNED' WHERE movement_id=? AND state='REQUESTED'",movement);
+                });
             }
             JsonNode command=adapter.command(site,movement);
             if(command==null){
+                ensureDispatchWritable();
                 var observed=adapter.equipment(site);
                 if(observed.path("stale").asBoolean(true)||observed.path("worldMismatch").asBoolean()){update(movement,"BLOCKED","EQUIPMENT_EVIDENCE_STALE");return;}
                 String lane=null;
@@ -57,8 +63,11 @@ public final class LegacyScheduler {
         catch(ServiceHttp.Unavailable unavailable){update(movement,"RECONCILIATION_REQUIRED","ADAPTER_UNAVAILABLE");}
     }
     private void update(UUID movement,String state,String error){
-        database.execute("UPDATE legacy_tasks SET state=?,last_error=?,version=version+1,next_attempt_at=?::timestamptz,lease_until=NULL WHERE movement_id=? AND state NOT IN ('COMPLETED','CANCELLED')",state,error,now().plusNanos(300_000_000),movement);
+        database.transaction(configuration->{var sql=DSL.using(configuration);if(!Database.workersMayWrite(sql))return;
+            sql.execute("UPDATE legacy_tasks SET state=?,last_error=?,version=version+1,next_attempt_at=?::timestamptz,lease_until=NULL WHERE movement_id=? AND state NOT IN ('COMPLETED','CANCELLED')",state,error,now().plusNanos(300_000_000),movement);
+        });
     }
+    private void ensureDispatchWritable(){database.transaction(configuration->Database.requireDurability(DSL.using(configuration),false));}
     public JsonNode tasks(String site){
         return Database.json(database,"SELECT COALESCE(jsonb_agg(jsonb_build_object('id',task_id,'movementId',movement_id,'orderId',order_id,'zoneId',zone_id,'state',state,'owner',owner,'epoch',epoch,'version',version,'lastError',last_error,'eligibleAt',eligible_at) ORDER BY priority DESC,eligible_at,movement_id),'[]'::jsonb) FROM (SELECT * FROM legacy_tasks WHERE site_id=? ORDER BY priority DESC,eligible_at,movement_id LIMIT 100) t",site);
     }

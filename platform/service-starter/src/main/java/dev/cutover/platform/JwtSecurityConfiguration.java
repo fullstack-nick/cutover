@@ -45,6 +45,8 @@ public class JwtSecurityConfiguration {
         });
         return http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(requests -> requests.requestMatchers("/actuator/health/**","/actuator/prometheus").permitAll()
+                        .requestMatchers("/internal/v1/platform/storage","/internal/v1/platform/untrusted-deliveries").hasRole("platform-admin")
+                        .requestMatchers("/internal/v1/sites/*/messaging","/internal/v1/sites/*/messaging/**").hasAnyRole("operator","supervisor","platform-admin","service")
                         .requestMatchers("/internal/**").hasRole("service").requestMatchers("/api/v1/**").authenticated().anyRequest().denyAll())
                 .oauth2ResourceServer(server -> server.jwt(jwt -> jwt.jwtAuthenticationConverter(converter))).build();
     }

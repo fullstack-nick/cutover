@@ -279,4 +279,32 @@ class LegacyWorkflowTest {
         assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM order_cancellations").get(0,Integer.class)).isEqualTo(1);
         assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservation_releases").get(0,Integer.class)).isEqualTo(1);
     }
+    @Test void criticalCoreStorageStopsNewAllocationButRetainsAcceptedWork() {
+        UUID id=accept("storage-paused",new OrderService.Line("SKU-001",2));
+        coreDb.sql().execute("UPDATE service_control SET critical_storage=true");
+        scheduler.poll();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM movement_allocations").get(0,Integer.class)).isZero();
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM reservations WHERE state='RESERVED'").get(0,Integer.class)).isEqualTo(1);
+        assertThatThrownBy(()->accept("storage-new",new OrderService.Line("SKU-001",1))).isInstanceOf(Problem.class);
+        assertThat(orders.get("site-a",id).path("state").asString()).isEqualTo("RESERVED");
+        coreDb.sql().execute("UPDATE service_control SET critical_storage=false");finish(id,"COMPLETED");
+    }
+    @Test void allocationResponseAfterAWorkerFreezeCannotMutateTheCheckpoint() {
+        UUID id=accept("freeze-in-flight",new OrderService.Line("SKU-001",2));
+        var late=new LegacyScheduler(coreDb.sql(),new DispatchPort(){
+            public JsonNode allocate(String site,JsonNode movement){
+                JsonNode result=allocations.register(site,"legacy-core",movement);
+                coreDb.sql().execute("UPDATE service_control SET workers_paused=true");
+                return result;
+            }
+            public JsonNode command(String site,UUID movement){return null;}
+            public JsonNode equipment(String site){throw new AssertionError("Frozen core must not start a dispatch decision");}
+            public JsonNode dispatch(String site,UUID movement,UUID allocation,long epoch,String lane,JsonNode payload){throw new AssertionError("Frozen core must not submit");}
+        },orders,clock);
+        late.poll();
+        assertThat(coreDb.sql().fetchOne("SELECT allocation_id,epoch,version FROM legacy_tasks WHERE order_id=?",id).intoArray()).containsExactly(null,null,0L);
+        assertThat(coreDb.sql().fetchOne("SELECT state FROM movement_intents WHERE order_id=?",id).get(0,String.class)).isEqualTo("REQUESTED");
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isZero();
+        coreDb.sql().execute("UPDATE service_control SET workers_paused=false");clock.advance(Duration.ofSeconds(21));finish(id,"COMPLETED");
+    }
 }
