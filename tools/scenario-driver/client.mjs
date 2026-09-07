@@ -127,6 +127,19 @@ export function saveEvidence(name, evidence) {
   const directory = resolve(root, '.local/evidence', name); mkdirSync(directory, { recursive: true });
   const revision = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.trim();
   const dirty = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.trim().length > 0;
-  writeFileSync(resolve(directory, 'results.json'), JSON.stringify({ recordedAt: new Date().toISOString(), profile, revision, dirty, images: JSON.parse(readFileSync(resolve(root, '.local/images/manifest.json'), 'utf8')), ...(profile === 'demo' ? { nodeImages: JSON.parse(readFileSync(resolve(root, '.local/images/node-images.json'), 'utf8')) } : {}), ...evidence }, null, 2) + '\n');
+  const runtime = {};
+  const simulatorState = spawnSync('docker', ['inspect', '--format', '{{json .}}', 'cutover-dev-equipment-simulator-1'], { encoding: 'utf8', windowsHide: true });
+  if (simulatorState.status === 0) {
+    const actual = JSON.parse(simulatorState.stdout);
+    if (actual.Config.Labels['dev.cutover.project'] === 'cutover') runtime.simulator = { imageId: actual.Image, imageReference: actual.Config.Image, startedAt: actual.State.StartedAt };
+  }
+  if (profile === 'demo') {
+    runtime.pods = [];
+    for (const namespace of ['cutover-apps', 'cutover-platform', 'cutover-observability']) {
+      const result = spawnSync('kubectl', ['--kubeconfig', resolve(root, '.local/kubeconfig'), '--context', 'kind-cutover', '-n', namespace, 'get', 'pods', '-l', 'app.kubernetes.io/part-of=cutover', '-o', 'json'], { encoding: 'utf8', windowsHide: true });
+      if (result.status === 0) runtime.pods.push(...JSON.parse(result.stdout).items.map(pod => ({ namespace, name: pod.metadata.name, uid: pod.metadata.uid, containers: (pod.status.containerStatuses ?? []).map(item => ({ name: item.name, image: item.image, imageId: item.imageID, ready: item.ready, restartCount: item.restartCount })) })));
+    }
+  }
+  writeFileSync(resolve(directory, 'results.json'), JSON.stringify({ recordedAt: new Date().toISOString(), profile, revision, dirty, images: JSON.parse(readFileSync(resolve(root, '.local/images/manifest.json'), 'utf8')), runtime, ...(profile === 'demo' ? { nodeImages: JSON.parse(readFileSync(resolve(root, '.local/images/node-images.json'), 'utf8')) } : {}), ...evidence }, null, 2) + '\n');
   return directory;
 }

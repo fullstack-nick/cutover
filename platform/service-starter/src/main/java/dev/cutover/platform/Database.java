@@ -18,6 +18,9 @@ public final class Database {
         try { return UUID.fromString(node.required(key).asString()); }
         catch (RuntimeException invalid) { throw Problem.invalid("Invalid " + key); }
     }
+    public static boolean workersMayWrite(DSLContext sql) {
+        return !sql.fetchOne("SELECT workers_paused FROM service_control WHERE singleton FOR SHARE").get(0, Boolean.class);
+    }
     public static void requireDurability(DSLContext sql, boolean intake) {
         var control = sql.fetchOne("SELECT * FROM service_control WHERE singleton FOR SHARE");
         if (control == null || control.get("critical_storage", Boolean.class)

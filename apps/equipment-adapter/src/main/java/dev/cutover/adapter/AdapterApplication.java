@@ -11,8 +11,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import dev.cutover.platform.messaging.*;
+import java.util.Set;
 
-@SpringBootApplication @EnableScheduling @Import(PlatformConfiguration.class)
+@SpringBootApplication @EnableScheduling @Import({PlatformConfiguration.class, MessageConfiguration.class})
 public class AdapterApplication {
     public static void main(String[] args) { SpringApplication.run(AdapterApplication.class,args); }
     @Bean Allocations allocations(DSLContext sql) { return new Allocations(sql); }
@@ -22,4 +24,6 @@ public class AdapterApplication {
     }
     @Bean EquipmentObservations observations(DSLContext sql,EquipmentPort port,Clock clock) { return new EquipmentObservations(sql,port,clock); }
     @Bean CommandJournal journal(DSLContext sql,EquipmentPort port,EquipmentObservations observations,Clock clock) { return new CommandJournal(sql,port,observations,clock); }
+    @Bean MessageHandler messageHandler() { return new AdapterMessages(); }
+    @Bean MessageSubscription messageSubscription() { return new MessageSubscription("cutover.equipment-adapter.inbox", Set.of("legacy-core", "returns-service"), Set.of("site-a")); }
 }

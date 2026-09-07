@@ -13,6 +13,7 @@ node scripts/bootstrap-assets.mjs
 ./scripts/deploy.ps1
 node tools/scenario-driver/platform-smoke.mjs
 node tools/scenario-driver/network-policy-smoke.mjs
+node tools/scenario-driver/messaging-smoke.mjs
 ```
 
 The independently running simulator and its database are required before rendering the demo. The development baseline guide describes their Compose profile. `deploy.ps1` renders secrets privately, runs owner migration Jobs, applies Kustomize output, waits for rollout, and starts the console forward. The ordinary deployment command does not restore or overwrite databases.
@@ -22,6 +23,8 @@ On this development host, the first platform deployment used `transfer-baseline.
 Open `http://localhost:8780` and sign in as `operator-a`. Its generated password is in the ignored `.local/secrets/credentials.json`, under `passwords.operator_a`. Never copy that file to a public issue or commit. Seeded human profiles contain fictional names and `.invalid` addresses; no real email service is involved.
 
 The current console shows overview, orders, reservation detail, command evidence and equipment. Supervisor migration/reconciliation and the returns product are later implementation phases. Page counters are explicitly limited to the displayed order page.
+
+The messaging smoke waits for the retained source streams to apply in their receiving owners, submits an order, and checks inboxes, inventory and the physical ledger. `node tools/scenario-driver/messaging-smoke.mjs --broker-outage` also briefly scales only the labelled Cutover RabbitMQ StatefulSet to zero and restores it, preserving its PVC. It requires the legacy milestone's otherwise-settled data; do not run it during another fault experiment. Retry exhaustion remains visible and requires an audited supervisor replay after the underlying cause is corrected.
 
 Optional diagnostics are manually started and loopback-only:
 

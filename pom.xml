@@ -19,6 +19,7 @@
     <module>platform/service-starter</module>
     <module>platform/test-support</module>
     <module>tools/compatibility-checks</module>
+    <module>tools/reliability-checks</module>
     <module>apps/equipment-simulator</module>
     <module>apps/equipment-adapter</module>
     <module>apps/legacy-core</module>

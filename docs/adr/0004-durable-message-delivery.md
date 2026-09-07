@@ -1,0 +1,21 @@
+# 0004 — Durable message delivery
+
+Status: implementation in progress, 7 September 2026.
+
+Each owner commits its business change and outbox together. The relay claims one eligible event with a lease, releases the database transaction, publishes, and then marks publication in a new transaction. Earlier unpublished events—including paused ones—prevent overtaking within the same publisher/site/aggregate stream. A lease identity prevents a late worker from marking another worker's claim.
+
+Spring AMQP supplies correlated publisher confirmation and mandatory returns. The wire event ID remains stable across attempts; the confirmation ID identifies the attempt. A positive acknowledgement is accepted only when no mandatory return was recorded. Spring guarantees the return is available before the corresponding confirmation completes. See [Spring's confirmation contract](https://docs.spring.io/spring-amqp/docs/current/api/org/springframework/amqp/rabbit/connection/CorrelationData.html). Broker confirmation does not establish consumer processing or physical completion.
+
+The bounded consumer uses manual acknowledgements and at most one unacknowledged pull delivery per loop. It commits inbox deduplication, the owner's effect, its new outbox entries and the stream cursor in one database transaction. A nested savepoint lets a failed effect roll back while the outer transaction retains the original pending payload and retry reason. Unpersisted work stays with the broker. Pull batch size is the consumer bound: AMQP prefetch does not bound `basic.get`. See [RabbitMQ's acknowledgement guidance](https://www.rabbitmq.com/docs/confirms).
+
+Malformed data, unsupported major versions, source/exchange mismatch, site mismatch and contradictory stream versions do not reach business handlers. Original malformed bytes and transport identity remain in durable quarantine. Valid events with gaps wait for their exact predecessor. An event with no local effect still advances the cursor because each consumer subscribes to the complete source stream. Semantic stream tombstones distinguish a harmless duplicate version from contradictory contents.
+
+Retries use five bounded exponential delays with deterministic jitter. Exhaustion quarantines an inbox event or visibly pauses an unpublished outbox event. A supervisor can record a retry/replay with an idempotency key, expected version and reason. Replay uses the original outbox event ID. It does not edit the payload, manufacture a new movement, or bypass equipment uncertainty. The audit records actor, site, action, versions and outcome. An unchanged poisoned event will fail again; the underlying dependency, data context or consumer code must first be repaired.
+
+Inbox storage reserves capacity transactionally before transfer of broker responsibility: 10,000 active deliveries, 64 MiB active payload and 256 MiB retained payload. Pending/quarantined records retain their active reservations. Applied records retain their identities and payload history. Full retention cleanup, disk-pressure enforcement and checkpoint replay ranges remain separate operational work; no history is silently discarded at a threshold.
+
+Three bounded delivery threads separate publishing, receiving and local retries from equipment scheduling. Transport failure backs off without rolling back an unrelated accepted HTTP request. Explicit worker-pause checks hold a shared control-row lock during mutations so a checkpoint pause can wait for those transactions to finish.
+
+Technical and owner migrations share a version sequence. The delivery upgrade is V101, after the existing V100 owner baseline. An upgrade test applies V100 first, retains an existing business row, then applies V101. Empty-database generation alone would not have established this upgrade path.
+
+The initial full backend run passed 35 tests, including 13 connected reliability checks and two owner-transaction checks. A subsequent focused run passed 14 reliability checks including the previous-schema upgrade. The real process smoke then verified source-stream application and one physical/inventory effect per movement. Its broker-outage variant retained accepted work and drained after the broker returned. The rest of phase 4 and the final acceptance matrix remain required.

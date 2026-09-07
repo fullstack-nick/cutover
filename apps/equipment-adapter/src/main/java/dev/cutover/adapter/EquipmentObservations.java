@@ -19,10 +19,12 @@ public final class EquipmentObservations {
     private final Clock clock;
     public EquipmentObservations(DSLContext database,EquipmentPort equipment,Clock clock) { this.database=database;this.equipment=equipment;this.clock=clock; }
     public void refresh() {
+        if (database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0, Boolean.class)) return;
         JsonNode observation=equipment.equipment();
         UUID world=Database.uuid(observation,"worldId"),generation=Database.uuid(observation,"journalGeneration");
         database.transaction(configuration -> {
             var sql=DSL.using(configuration);
+            if (!Database.workersMayWrite(sql)) return;
             var row=sql.selectFrom(EQUIPMENT_OBSERVATION).where(EQUIPMENT_OBSERVATION.SINGLETON.isTrue()).forUpdate().fetchSingle();
             UUID pinned=row.get("pinned_world_id",UUID.class),journal=row.get("pinned_journal_generation",UUID.class);
             boolean mismatch=(pinned!=null && (!pinned.equals(world)||!journal.equals(generation))) || !observation.path("completeHistory").asBoolean(false);

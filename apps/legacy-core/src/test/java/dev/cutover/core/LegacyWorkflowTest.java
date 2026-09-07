@@ -4,6 +4,13 @@ import dev.cutover.adapter.Allocations;
 import dev.cutover.adapter.CommandJournal;
 import dev.cutover.adapter.EquipmentObservations;
 import dev.cutover.adapter.EquipmentPort;
+import dev.cutover.adapter.AdapterMessages;
+import dev.cutover.platform.Contracts;
+import dev.cutover.platform.Events;
+import dev.cutover.platform.messaging.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import dev.cutover.platform.Database;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
@@ -123,5 +130,43 @@ class LegacyWorkflowTest {
         UUID id=accept("site-check",new OrderService.Line("SKU-001",1));
         assertThatThrownBy(()->orders.get("site-b",id)).isInstanceOf(Problem.class);
         assertThat(orders.list("site-b",null,25).path("items")).isEmpty();
+    }
+    @Test void completionEventAndInventoryEffectShareTheInboxTransaction() {
+        UUID id=accept("message-completion",new OrderService.Line("SKU-001",2));
+        UUID movement=Database.uuid(orders.get("site-a",id).path("movements").get(0),"movementId");
+        scheduler.poll(); journal.work();
+        for(int i=0;i<10&&!journal.get("site-a",movement).path("state").asString().equals("COMPLETED");i++) {
+            clock.advance(Duration.ofMillis(500));simulator.advance();journal.work();
+        }
+        assertThat(journal.get("site-a",movement).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM inventory_ledger").get(0,Integer.class)).isZero();
+        var broken=new AtomicBoolean(true);var owner=new CoreMessages(clock);
+        var inbox=new DurableInbox(coreDb.sql(),(sql,event)->{owner.apply(sql,event);if(event.eventType().equals("MovementCompleted.v1")&&broken.get())throw DeliveryFailure.pending("SIMULATED_EFFECT_FAILURE");},clock,Set.of("equipment-adapter"),Set.of("site-a"));
+        for(var row:adapterDb.sql().fetch("SELECT envelope FROM outbox WHERE aggregate_id=? ORDER BY aggregate_version",movement)) {
+            var event=JsonSupport.MAPPER.readValue(row.get(0).toString(),Events.Envelope.class);
+            inbox.receive("cutover.equipment-adapter.v1",event.eventId().toString(),row.get(0).toString().getBytes(StandardCharsets.UTF_8));
+        }
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM inventory_ledger").get(0,Integer.class)).isZero();
+        assertThat(coreDb.sql().fetchOne("SELECT state FROM reservations WHERE reservation_id=?",movement).get(0,String.class)).isEqualTo("RESERVED");
+        broken.set(false);clock.advance(Duration.ofSeconds(2));inbox.retry(16);
+        assertThat(orders.get("site-a",id).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM inventory_ledger").get(0,Integer.class)).isEqualTo(1);
+        Contracts.validate("order-view.v1",JsonSupport.write(orders.get("site-a",id)));
+        Contracts.validate("order-page.v1",JsonSupport.write(orders.list("site-a",null,25)));
+        Contracts.validate("command-view.v1",JsonSupport.write(journal.get("site-a",movement)));
+    }
+    @Test void movementAllocationAndAssignmentOutboxShareTheInboxTransaction() {
+        UUID id=accept("message-allocation",new OrderService.Line("SKU-001",1));
+        var row=coreDb.sql().fetchOne("SELECT envelope FROM outbox WHERE event_type='MovementRequested.v1'");
+        var event=JsonSupport.MAPPER.readValue(row.get(0).toString(),Events.Envelope.class);
+        var broken=new AtomicBoolean(true);var owner=new AdapterMessages();
+        var inbox=new DurableInbox(adapterDb.sql(),(sql,message)->{owner.apply(sql,message);if(broken.get())throw DeliveryFailure.pending("SIMULATED_ALLOCATION_FAILURE");},clock,Set.of("legacy-core"),Set.of("site-a"));
+        inbox.receive("cutover.legacy-core.v1",event.eventId().toString(),row.get(0).toString().getBytes(StandardCharsets.UTF_8));
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM movement_allocations").get(0,Integer.class)).isZero();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM outbox").get(0,Integer.class)).isZero();
+        broken.set(false);clock.advance(Duration.ofSeconds(2));inbox.retry(16);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM movement_allocations").get(0,Integer.class)).isEqualTo(1);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM outbox").get(0,Integer.class)).isEqualTo(1);
+        assertThat(orders.get("site-a",id).path("state").asString()).isEqualTo("RESERVED");
     }
 }

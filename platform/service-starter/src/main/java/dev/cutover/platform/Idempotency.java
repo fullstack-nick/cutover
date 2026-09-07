@@ -18,7 +18,8 @@ public final class Idempotency {
             if (!hash.equals(previous.get("payload_hash", String.class))) throw Problem.conflict("IDEMPOTENCY_CONFLICT", "This key was used with a different payload.");
             return JsonSupport.read(previous.get("response").toString());
         }
-        JsonNode response = action.get();
+        // Return the same JSON number representation on first use and after storage round-trip.
+        JsonNode response = JsonSupport.read(JsonSupport.write(action.get()));
         sql.execute("INSERT INTO idempotency(caller,site_id,operation,request_key,payload_hash,response) VALUES (?,?,?,?,?,?::jsonb)",
                 caller, site, operation, key, hash, JsonSupport.write(response));
         return response;

@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { platformResources, migrationJob, identityMigrationJob, config, namespaces } from '../infra/kubernetes/base/platform.mjs';
 import { policies } from '../infra/kubernetes/base/policies.mjs';
 
@@ -57,6 +58,25 @@ const dashboard = { uid: 'cutover-platform', title: 'Cutover · local operations
 ] };
 objects.push(config('cutover-dashboard', observability, { 'platform.json': JSON.stringify(dashboard) }));
 objects.push(...policies(simulatorAddress));
+// Mounted subPath files and environment secrets require a pod restart when their contents change.
+for (const workload of objects.filter(item => ['Deployment', 'StatefulSet'].includes(item.kind))) {
+  const pod = workload.spec.template.spec;
+  const references = new Set();
+  for (const volume of pod.volumes ?? []) {
+    if (volume.configMap) references.add(`ConfigMap/${volume.configMap.name}`);
+    if (volume.secret) references.add(`Secret/${volume.secret.secretName}`);
+  }
+  for (const container of pod.containers) for (const variable of container.env ?? []) {
+    if (variable.valueFrom?.secretKeyRef) references.add(`Secret/${variable.valueFrom.secretKeyRef.name}`);
+  }
+  const inputs = [...references].sort().map(reference => {
+    const [kind, name] = reference.split('/');
+    const value = objects.find(item => item.kind === kind && item.metadata.namespace === workload.metadata.namespace && item.metadata.name === name);
+    if (!value) throw new Error(`Missing local configuration reference: ${reference}`);
+    return { kind, name, data: value.data };
+  });
+  workload.spec.template.metadata.annotations = { 'dev.cutover/config-sha256': createHash('sha256').update(JSON.stringify(inputs)).digest('hex') };
+}
 const directory = resolve(root, '.local/kubernetes/demo'); mkdirSync(directory, { recursive: true });
 function group(name, contents) {
   const path = resolve(directory, name); mkdirSync(path, { recursive: true });
