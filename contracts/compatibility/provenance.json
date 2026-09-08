@@ -1,0 +1,17 @@
+{
+  "frozenSchemaCommit": "1b7f9a881a4333cf59b22b76870b5a830d803dd0",
+  "schemas": [
+    {
+      "name": "event-envelope.v1",
+      "source": "contracts/schemas/event-envelope.v1.json",
+      "sha256": "4b59f2d4fc3c0ae5ba0eea53e2fd0bd17cb914c4fec5319526080d5c6c152cd0"
+    },
+    {
+      "name": "movement.v1",
+      "source": "contracts/schemas/movement.v1.json",
+      "sha256": "4cf8874f0674571d5c6b5b213bda945ce7a5f8fae74f68e3cb56d01a36c2a42b"
+    }
+  ],
+  "fixtureOrigin": "Purpose-built synthetic producer fixtures. N adds optional envelope and movement fields; the deliberately breaking fixture changes integer quantity to a string.",
+  "scope": "MovementRequested.v1 contract consumer matrix. The actual cached predecessor application/schema rollout is verified separately."
+}
