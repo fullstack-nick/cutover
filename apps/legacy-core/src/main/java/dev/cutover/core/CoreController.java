@@ -35,4 +35,5 @@ class CoreController {
     @PostMapping("/api/v1/sites/{site}/tasks/{id}/recovery") JsonNode recover(@PathVariable String site,@PathVariable UUID id,@RequestHeader("Idempotency-Key") String key,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt){
         Access.role(jwt,"supervisor");return scheduler.resume(jwt.getSubject(),Access.site(jwt,site),id,key,body);
     }
+    @GetMapping("/api/v1/sites/{site}/tasks/{id}") JsonNode task(@PathVariable String site,@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"operator","supervisor","service");return scheduler.task(Access.site(jwt,site),id);}
 }

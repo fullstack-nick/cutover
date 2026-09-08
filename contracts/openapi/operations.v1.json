@@ -735,7 +735,14 @@
         "description": "Operator/supervisor read of the isolated shadow evidence database; latest 50 summaries and total/mismatch counts.",
         "responses": {
           "200": {
-            "description": "Comparison totals and retained summaries"
+            "description": "Comparison totals and retained summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/shadow-summary"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -1323,6 +1330,258 @@
           }
         },
         "summary": "Resume an exhausted returns transport investigation; physical uncertainty remains under adapter reconciliation"
+      }
+    },
+    "/api/v1/sites/{siteId}/audit/{owner}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "owner",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "core",
+              "adapter",
+              "execution",
+              "returns"
+            ]
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 25
+          }
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "resource",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "maxLength": 128
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read newest-first, site-scoped audit records from the selected service database. Internal diagnostic detail is omitted.",
+        "responses": {
+          "200": {
+            "description": "Read newest-first, site-scoped audit records from the selected service database. Internal diagnostic detail is omitted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/audit-page"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/commands/{id}/timeline": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read retained adapter transitions. An incomplete seven-day event history never invalidates or invents the lifetime command proof.",
+        "responses": {
+          "200": {
+            "description": "Read retained adapter transitions. An incomplete seven-day event history never invalidates or invents the lifetime command proof.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/command-timeline"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/tasks/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read one task from its owning service, scoped to the authenticated site.",
+        "responses": {
+          "200": {
+            "description": "Current owner task projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/task-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/execution-tasks/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read one task from its owning service, scoped to the authenticated site.",
+        "responses": {
+          "200": {
+            "description": "Current owner task projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/execution-task-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/return-tasks/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read one task from its owning service, scoped to the authenticated site.",
+        "responses": {
+          "200": {
+            "description": "Current owner task projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/return-task-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
       }
     }
   },
@@ -2325,6 +2584,478 @@
             "dispatchAcceptedAt"
           ],
           "additionalProperties": true
+        }
+      },
+      "audit-page": {
+        "type": "object",
+        "required": [
+          "owner",
+          "observedAt",
+          "items",
+          "nextCursor"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "enum": [
+              "core",
+              "adapter",
+              "execution",
+              "returns"
+            ]
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "actor",
+                "action",
+                "resourceId",
+                "reason",
+                "beforeVersion",
+                "afterVersion",
+                "outcome",
+                "occurredAt"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "actor": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                },
+                "resourceId": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "type": "string"
+                },
+                "beforeVersion": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "afterVersion": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "occurredAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "command-timeline": {
+        "type": "object",
+        "required": [
+          "commandId",
+          "movementId",
+          "siteId",
+          "observedAt",
+          "state",
+          "commandVersion",
+          "journalRecordedAt",
+          "retentionDays",
+          "historyComplete",
+          "events"
+        ],
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string"
+          },
+          "commandVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "journalRecordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "const": 7
+          },
+          "historyComplete": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "version",
+                "at",
+                "state"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "task-view": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zoneId": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "epoch": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "eligibleAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "transportFailures": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "transportPaused": {
+            "type": "boolean"
+          },
+          "dispatchAcceptedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "movementId",
+          "orderId",
+          "zoneId",
+          "state",
+          "owner",
+          "epoch",
+          "version",
+          "lastError",
+          "eligibleAt"
+        ],
+        "additionalProperties": true
+      },
+      "execution-task-view": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zoneId": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "eligibleAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "transportFailures": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "transportPaused": {
+            "type": "boolean"
+          },
+          "dispatchAcceptedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "movementId",
+          "allocationId",
+          "zoneId",
+          "state",
+          "owner",
+          "epoch",
+          "version",
+          "lastError",
+          "eligibleAt",
+          "transportFailures",
+          "transportPaused",
+          "dispatchAcceptedAt"
+        ],
+        "additionalProperties": true
+      },
+      "return-task-view": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "REUSABLE",
+              "NEEDS_CLEANING",
+              "DAMAGED"
+            ]
+          },
+          "zoneId": {
+            "type": "string",
+            "const": "returns"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "BLOCKED",
+              "DISPATCH_REQUESTED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "RECONCILIATION_REQUIRED"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "const": "returns-service"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transportFailures": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "transportPaused": {
+            "type": "boolean"
+          },
+          "dispatchAcceptedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "movementId",
+          "allocationId",
+          "receiptId",
+          "classification",
+          "zoneId",
+          "state",
+          "owner",
+          "epoch",
+          "version",
+          "lastError",
+          "transportFailures",
+          "transportPaused",
+          "dispatchAcceptedAt"
+        ],
+        "additionalProperties": true
+      },
+      "shadow-summary": {
+        "type": "object",
+        "required": [
+          "observedAt",
+          "compared",
+          "mismatches",
+          "items"
+        ],
+        "properties": {
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "compared": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mismatches": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": [
+                "roundId",
+                "inputHash",
+                "matches",
+                "ruleVersion",
+                "comparedAt"
+              ],
+              "properties": {
+                "roundId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "inputHash": {
+                  "type": "string"
+                },
+                "matches": {
+                  "type": "boolean"
+                },
+                "ruleVersion": {
+                  "type": "integer"
+                },
+                "comparedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
         }
       }
     },

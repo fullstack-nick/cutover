@@ -40,6 +40,9 @@ class AdapterController {
     @GetMapping({"/internal/v1/sites/{site}/equipment","/api/v1/sites/{site}/equipment"}) JsonNode equipment(@PathVariable String site,@AuthenticationPrincipal Jwt jwt) {
         Access.role(jwt,"service","operator","supervisor");return observations.forSite(Access.site(jwt,site));
     }
+    @GetMapping("/api/v1/sites/{site}/commands/{id}/timeline") JsonNode timeline(@PathVariable String site,@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt) {
+        Access.role(jwt,"operator","supervisor");return journal.timeline(Access.site(jwt,site),id);
+    }
     @GetMapping("/api/v1/sites/{site}/zones") JsonNode zones(@PathVariable String site,@AuthenticationPrincipal Jwt jwt) {
         Access.role(jwt,"operator","supervisor");return allocations.routes(Access.site(jwt,site));
     }

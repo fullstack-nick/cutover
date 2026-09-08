@@ -53,6 +53,20 @@ class CommandJournalTest {
     }
     void tick() { clock.advance(Duration.ofSeconds(2));simulator.advance();observations.refresh();journal.work(); }
 
+    @Test void retainedTimelineShowsActualTransitionsAndReportsCompactedHistoryWithoutChangingProof(){
+        UUID id=UUID.randomUUID();record(id,movement(id));journal.work();tick();
+        var command=journal.get("site-a",id);assertThat(command.path("state").asString()).isEqualTo("COMPLETED");
+        var timeline=journal.timeline("site-a",id);assertThat(timeline.path("historyComplete").asBoolean()).isTrue();
+        assertThat(timeline.path("events").get(0).path("type").asString()).isEqualTo("MovementAssigned.v1");
+        assertThat(timeline.path("events").get(timeline.path("events").size()-1).path("type").asString()).isEqualTo("MovementCompleted.v1");
+        assertThatThrownBy(()->journal.timeline("site-b",id)).isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).status()).isEqualTo(404));
+        // Isolated retention fixture: the lifetime command proof survives loss of the oldest published-payload range.
+        adapterDb.sql().execute("DELETE FROM outbox WHERE aggregate_id=? AND aggregate_version=1",id);
+        assertThat(journal.timeline("site-a",id).path("historyComplete").asBoolean()).isFalse();
+        assertThat(journal.get("site-a",id)).isEqualTo(command);
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isEqualTo(1);
+    }
+
     @Test void emptyEquipmentAndAssignmentPollsDoNotDirtyTheDurabilityGuard() {
         adapterDb.sql().transaction(configuration -> {
             var sql = org.jooq.impl.DSL.using(configuration); sql.execute("SET TRANSACTION READ ONLY");

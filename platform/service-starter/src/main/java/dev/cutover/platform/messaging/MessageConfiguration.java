@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import({MessagingController.class,DiagnosticController.class})
+@Import({MessagingController.class,DiagnosticController.class,AuditController.class})
 @ConditionalOnProperty(name = "cutover.messaging-enabled", havingValue = "true")
 public class MessageConfiguration {
     @Bean MessagingOperations messagingOperations(DSLContext database) { return new MessagingOperations(database); }

@@ -43,6 +43,20 @@
       "eligibleAt": {
         "type": "string",
         "format": "date-time"
+      },
+      "transportFailures": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "transportPaused": {
+        "type": "boolean"
+      },
+      "dispatchAcceptedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
       }
     },
     "required": [

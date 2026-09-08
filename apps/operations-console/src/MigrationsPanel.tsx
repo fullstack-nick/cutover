@@ -1,3 +1,4 @@
+import { ShadowPanel } from './ShadowPanel';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, get, identity, post, sitePath } from './api';
 import type { Migration, MigrationList, ZoneRoute } from './api';
@@ -88,5 +89,6 @@ export function MigrationsPanel({ site }: { site: string }) {
       {supervisor && !error && session.transportPaused && <SupervisorAction done={refresh} action={{ path: `${prefix}/migrations/${session.sessionId}/recovery`, version: session.version, title: 'Resume evidence collection', description: 'Use after repairing the unavailable dependency. The original session and movement identities are retained.' }}/>}
       {supervisor && !error && unswitched(session) && <details className="migration-evidence"><summary>Cancel this unswitched session</summary><SupervisorAction done={refresh} action={{ path: `${prefix}/migrations/${session.sessionId}/cancellation`, version: session.version, title: 'Cancel migration', description: 'Keep the current owner and epoch. Pending unassigned movements resume with that owner; allocated work is retained.' }}/></details>}
     </article>)}
+    <ShadowPanel site={site}/>
   </div>;
 }

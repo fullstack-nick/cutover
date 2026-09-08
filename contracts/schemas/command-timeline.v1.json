@@ -1,0 +1,16 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"urn:cutover:command-timeline:v1",
+  "type":"object",
+  "required":["commandId","movementId","siteId","observedAt","state","commandVersion","journalRecordedAt","retentionDays","historyComplete","events"],
+  "properties":{
+    "commandId":{"type":"string","format":"uuid"},"movementId":{"type":"string","format":"uuid"},"siteId":{"type":"string"},
+    "observedAt":{"type":"string","format":"date-time"},"state":{"type":"string"},"commandVersion":{"type":"integer","minimum":0},
+    "journalRecordedAt":{"type":"string","format":"date-time"},"retentionDays":{"type":"integer","const":7},"historyComplete":{"type":"boolean"},
+    "events":{"type":"array","maxItems":200,"items":{
+      "type":"object","required":["id","type","version","at","state"],
+      "properties":{"id":{"type":"string","format":"uuid"},"type":{"type":"string"},"version":{"type":"integer","minimum":1},"at":{"type":"string","format":"date-time"},"state":{"type":["string","null"]}},
+      "additionalProperties":true
+    }}
+  },"additionalProperties":true
+}

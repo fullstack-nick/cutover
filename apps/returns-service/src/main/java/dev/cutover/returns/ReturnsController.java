@@ -21,4 +21,5 @@ class ReturnsController {
     @GetMapping("/api/v1/sites/{site}/return-counters") JsonNode counters(@PathVariable String site,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"operator","supervisor","scenario","service");return receipts.counters(Access.site(jwt,site));}
     @GetMapping("/api/v1/sites/{site}/return-tasks") JsonNode tasks(@PathVariable String site,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"operator","supervisor","scenario","service");return coordinator.tasks(Access.site(jwt,site));}
     @PostMapping("/api/v1/sites/{site}/return-tasks/{id}/recovery") JsonNode recover(@PathVariable String site,@PathVariable UUID id,@RequestHeader("Idempotency-Key") String key,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"supervisor");return coordinator.resume(jwt.getSubject(),Access.site(jwt,site),id,key,body);}
+    @GetMapping("/api/v1/sites/{site}/return-tasks/{id}") JsonNode task(@PathVariable String site,@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"operator","supervisor","service");return coordinator.task(Access.site(jwt,site),id);}
 }

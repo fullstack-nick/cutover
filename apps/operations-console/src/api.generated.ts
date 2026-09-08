@@ -494,6 +494,235 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/audit/{owner}": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                resource?: string;
+            };
+            header?: never;
+            path: {
+                siteId: string;
+                owner: "core" | "adapter" | "execution" | "returns";
+            };
+            cookie?: never;
+        };
+        /** Read newest-first, site-scoped audit records from the selected service database. Internal diagnostic detail is omitted. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    resource?: string;
+                };
+                header?: never;
+                path: {
+                    siteId: string;
+                    owner: "core" | "adapter" | "execution" | "returns";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Read newest-first, site-scoped audit records from the selected service database. Internal diagnostic detail is omitted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["audit-page"];
+                    };
+                };
+                401: components["responses"]["problem"];
+                403: components["responses"]["problem"];
+                404: components["responses"]["problem"];
+                422: components["responses"]["problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/commands/{id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Read retained adapter transitions. An incomplete seven-day event history never invalidates or invents the lifetime command proof. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    siteId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Read retained adapter transitions. An incomplete seven-day event history never invalidates or invents the lifetime command proof. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["command-timeline"];
+                    };
+                };
+                401: components["responses"]["problem"];
+                403: components["responses"]["problem"];
+                404: components["responses"]["problem"];
+                422: components["responses"]["problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one task from its owning service, scoped to the authenticated site. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    siteId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current owner task projection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["task-view"];
+                    };
+                };
+                default: components["responses"]["problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/execution-tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one task from its owning service, scoped to the authenticated site. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    siteId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current owner task projection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["execution-task-view"];
+                    };
+                };
+                default: components["responses"]["problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/return-tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one task from its owning service, scoped to the authenticated site. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    siteId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current owner task projection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["return-task-view"];
+                    };
+                };
+                default: components["responses"]["problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -775,6 +1004,146 @@ export interface components {
         } & {
             [key: string]: unknown;
         })[];
+        "audit-page": {
+            /** @enum {string} */
+            owner: "core" | "adapter" | "execution" | "returns";
+            /** Format: date-time */
+            observedAt: string;
+            /** Format: uuid */
+            nextCursor: string | null;
+            items: ({
+                /** Format: uuid */
+                id: string;
+                actor: string;
+                action: string;
+                resourceId: string;
+                reason: string;
+                outcome: string;
+                beforeVersion: number | null;
+                afterVersion: number | null;
+                /** Format: date-time */
+                occurredAt: string;
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
+        };
+        "command-timeline": {
+            /** Format: uuid */
+            commandId: string;
+            /** Format: uuid */
+            movementId: string;
+            siteId: string;
+            /** Format: date-time */
+            observedAt: string;
+            state: string;
+            commandVersion: number;
+            /** Format: date-time */
+            journalRecordedAt: string;
+            /** @constant */
+            retentionDays: 7;
+            historyComplete: boolean;
+            events: ({
+                /** Format: uuid */
+                id: string;
+                type: string;
+                version: number;
+                /** Format: date-time */
+                at: string;
+                state: string | null;
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
+        };
+        "task-view": {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            orderId: string;
+            zoneId: string;
+            state: string;
+            owner: string;
+            epoch: number | null;
+            version: number;
+            lastError: string | null;
+            /** Format: date-time */
+            eligibleAt: string;
+            transportFailures?: number;
+            transportPaused?: boolean;
+            /** Format: date-time */
+            dispatchAcceptedAt?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        "execution-task-view": {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            allocationId: string;
+            zoneId: string;
+            state: string;
+            owner: string;
+            epoch: number;
+            version: number;
+            lastError: string | null;
+            /** Format: date-time */
+            eligibleAt: string;
+            transportFailures: number;
+            transportPaused: boolean;
+            /** Format: date-time */
+            dispatchAcceptedAt: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        "return-task-view": {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            allocationId: string;
+            /** Format: uuid */
+            receiptId: string;
+            /** @enum {string} */
+            classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+            /** @constant */
+            zoneId: "returns";
+            /** @enum {string} */
+            state: "READY" | "BLOCKED" | "DISPATCH_REQUESTED" | "IN_PROGRESS" | "COMPLETED" | "RECONCILIATION_REQUIRED";
+            /** @constant */
+            owner: "returns-service";
+            epoch: number;
+            version: number;
+            lastError: string | null;
+            transportFailures: number;
+            transportPaused: boolean;
+            /** Format: date-time */
+            dispatchAcceptedAt: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        "shadow-summary": {
+            /** Format: date-time */
+            observedAt: string;
+            compared: number;
+            mismatches: number;
+            items: {
+                /** Format: uuid */
+                roundId: string;
+                inputHash: string;
+                matches: boolean;
+                ruleVersion: number;
+                /** Format: date-time */
+                comparedAt: string;
+            }[];
+        };
         "order-page.v1": {
             items: ({
                 /** Format: uuid */
@@ -916,6 +1285,10 @@ export interface components {
             lastError: string | null;
             /** Format: date-time */
             eligibleAt: string;
+            transportFailures?: number;
+            transportPaused?: boolean;
+            /** Format: date-time */
+            dispatchAcceptedAt?: string | null;
         } & {
             [key: string]: unknown;
         })[];
@@ -1714,7 +2087,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["shadow-summary"];
+                };
             };
             default: components["responses"]["problem"];
         };

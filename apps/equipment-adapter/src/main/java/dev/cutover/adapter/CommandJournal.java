@@ -228,6 +228,22 @@ public final class CommandJournal {
         return response.path("completeHistory").asBoolean(false) && command.path("worldId").equals(response.path("worldId")) && command.path("journalGeneration").equals(response.path("journalGeneration"));
     }
     public JsonNode get(String site,UUID command) { return view(database,site,command); }
+    public JsonNode timeline(String site,UUID command) {
+        return Database.json(database,"""
+                SELECT jsonb_build_object('commandId',c.command_id,'movementId',c.movement_id,'siteId',c.site_id,
+                    'observedAt',now(),'state',c.state,'commandVersion',c.version,'journalRecordedAt',c.created_at,
+                    'retentionDays',7,'historyComplete',e.count=a.version AND e.first_version=1 AND e.last_version=a.version,
+                    'events',coalesce(e.events,'[]'::jsonb))
+                FROM command_journal c JOIN movement_allocations a ON a.allocation_id=c.allocation_id
+                LEFT JOIN LATERAL (
+                    SELECT count(*) AS count,min(aggregate_version) AS first_version,max(aggregate_version) AS last_version,
+                        jsonb_agg(jsonb_build_object('id',event_id,'type',event_type,'version',aggregate_version,'at',created_at,
+                            'state',envelope#>>'{payload,command,state}') ORDER BY aggregate_version) AS events
+                    FROM (SELECT * FROM outbox WHERE site_id=c.site_id AND source='equipment-adapter'
+                        AND aggregate_type='movement' AND aggregate_id=c.movement_id ORDER BY aggregate_version DESC LIMIT 200) retained
+                ) e ON true WHERE c.site_id=? AND c.command_id=?
+                """,site,command);
+    }
     static JsonNode view(DSLContext sql,String site,UUID command) {
         return Database.json(sql,"SELECT jsonb_build_object('commandId',command_id,'allocationId',allocation_id,'movementId',movement_id,'siteId',site_id,'owner',owner,'epoch',epoch,'state',state,'version',version,'attempts',attempts,'failureAttempts',failure_attempts,'payload',payload,'evidence',evidence,'lastObservation',last_observation,'evidenceVersion',evidence_version,'acceptedEver',accepted_ever,'lastError',last_error,'createdAt',created_at,'completedAt',completed_at) FROM command_journal WHERE site_id= ? AND command_id= ?",site,command);
     }

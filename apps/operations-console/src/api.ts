@@ -13,13 +13,17 @@ export type Receipt = components['schemas']['receipt-view'];
 export type ReceiptPage = components['schemas']['receipt-page'];
 export type ReturnCounters = components['schemas']['return-counters'];
 export type ReturnTask = components['schemas']['return-task-list'][number];
+export type AuditPage = components['schemas']['audit-page'];
+export type CommandTimeline = components['schemas']['command-timeline'];
+export type ShadowSummary = components['schemas']['shadow-summary'];
+export type ShadowComparison = components['schemas']['scheduling-comparison'];
 export const identity = new Keycloak({ url: '/identity', realm: 'cutover', clientId: 'operations-console' });
 export async function initializeIdentity() {
   const view = new URLSearchParams(location.search).get('view');
-  if (view && ['overview', 'orders', 'equipment', 'migrations', 'returns'].includes(view)) sessionStorage.setItem('cutover.view', view);
+  if (view && ['overview', 'orders', 'equipment', 'migrations', 'returns', 'tasks', 'recovery', 'audit'].includes(view)) sessionStorage.setItem('cutover.view', view);
   const authenticated = await identity.init({ onLoad: 'check-sso', pkceMethod: 'S256', checkLoginIframe: false, redirectUri: `${location.origin}/callback` });
   const remembered = sessionStorage.getItem('cutover.view');
-  if (authenticated && remembered && ['overview', 'orders', 'equipment', 'migrations', 'returns'].includes(remembered)) history.replaceState({}, '', `/?view=${remembered}`);
+  if (authenticated && remembered && ['overview', 'orders', 'equipment', 'migrations', 'returns', 'tasks', 'recovery', 'audit'].includes(remembered)) history.replaceState({}, '', `/?view=${remembered}`);
   return authenticated;
 }
 export class ApiError extends Error {

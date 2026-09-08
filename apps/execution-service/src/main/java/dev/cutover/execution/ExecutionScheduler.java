@@ -106,7 +106,9 @@ public final class ExecutionScheduler {
             return JsonSupport.MAPPER.createObjectNode().put("taskId",taskId.toString()).put("version",version+1).put("outcome","STATUS_INVESTIGATION_REQUESTED");
         });});
     }
-    public JsonNode tasks(String site){return Database.json(database,"SELECT COALESCE(jsonb_agg(jsonb_build_object('id',task_id,'movementId',movement_id,'allocationId',allocation_id,'zoneId',zone_id,'state',state,'owner','execution-service','epoch',epoch,'version',version,'lastError',last_error,'eligibleAt',eligible_at,'transportFailures',transport_failures,'transportPaused',transport_paused,'dispatchAcceptedAt',dispatch_accepted_at) ORDER BY priority DESC,eligible_at,movement_id),'[]'::jsonb) FROM (SELECT * FROM execution_tasks WHERE site_id=? ORDER BY priority DESC,eligible_at,movement_id LIMIT 100) t",site);}
+    public JsonNode tasks(String site){return taskRows(site,null);}
+    public JsonNode task(String site,UUID id){var rows=taskRows(site,id);if(rows.isEmpty())throw Problem.missing();return rows.get(0);}
+    private JsonNode taskRows(String site,UUID taskId){return Database.json(database,"SELECT COALESCE(jsonb_agg(jsonb_build_object('id',task_id,'movementId',movement_id,'allocationId',allocation_id,'zoneId',zone_id,'state',state,'owner','execution-service','epoch',epoch,'version',version,'lastError',last_error,'eligibleAt',eligible_at,'transportFailures',transport_failures,'transportPaused',transport_paused,'dispatchAcceptedAt',dispatch_accepted_at) ORDER BY (state IN ('COMPLETED','CANCELLED')),CASE WHEN state IN ('COMPLETED','CANCELLED') THEN eligible_at END DESC,priority DESC,eligible_at,movement_id),'[]'::jsonb) FROM (SELECT * FROM execution_tasks WHERE site_id=? AND (?::uuid IS NULL OR task_id=?::uuid) ORDER BY (state IN ('COMPLETED','CANCELLED')),CASE WHEN state IN ('COMPLETED','CANCELLED') THEN eligible_at END DESC,priority DESC,eligible_at,movement_id LIMIT 100) t",site,taskId,taskId);}
     private static String timestamp(Instant value){return value.truncatedTo(ChronoUnit.MICROS).toString();}
     private OffsetDateTime now(){return OffsetDateTime.ofInstant(clock.instant(),ZoneOffset.UTC);}
 }

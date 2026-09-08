@@ -1,0 +1,20 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"urn:cutover:audit-page:v1",
+  "type":"object",
+  "required":["owner","observedAt","items","nextCursor"],
+  "properties":{
+    "owner":{"type":"string","enum":["core","adapter","execution","returns"]},
+    "observedAt":{"type":"string","format":"date-time"},
+    "nextCursor":{"type":["string","null"],"format":"uuid"},
+    "items":{"type":"array","maxItems":100,"items":{
+      "type":"object","required":["id","actor","action","resourceId","reason","beforeVersion","afterVersion","outcome","occurredAt"],
+      "properties":{
+        "id":{"type":"string","format":"uuid"},"actor":{"type":"string"},"action":{"type":"string"},
+        "resourceId":{"type":"string"},"reason":{"type":"string"},"outcome":{"type":"string"},
+        "beforeVersion":{"type":["integer","null"]},"afterVersion":{"type":["integer","null"]},
+        "occurredAt":{"type":"string","format":"date-time"}
+      },"additionalProperties":true
+    }}
+  },"additionalProperties":true
+}
