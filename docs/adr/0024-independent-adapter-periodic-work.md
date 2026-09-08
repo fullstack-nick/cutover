@@ -1,6 +1,6 @@
 # ADR 0024: independent adapter periodic work
 
-Date: 8 September 2026. Status: implemented; focused regression passed; full repository and deployed qualification in progress.
+Date: 8 September 2026. Status: implemented; focused regression and full 197-check repository verification passed; deployed qualification in progress.
 
 The adapter has three periodic jobs: refresh equipment observations, investigate a bounded batch of commands, and release pending allocations. With no explicit scheduler, all three shared Spring's default single scheduling thread. A command batch can perform multiple durable transactions and equipment requests. Until that batch returns, observation refresh and allocation cannot run. A sufficiently long batch can therefore expire the five-second equipment observation used to authorize new dispatch, even while the simulator remains available.
 
@@ -10,6 +10,6 @@ The adapter now provides a `ThreadPoolTaskScheduler` with three threads, one ava
 
 On the preceding fair-selection runtime, `load-diagnostic-1788901257355` completed all 650 effects once with zero database deadlocks but reached only 91.167% of 600 measured movements within two seconds (p99 22,078.454 ms). The instrumented shorter `load-diagnostic-1788901595139` completed all 350 effects once and reached 100% of 300 measured movements within two seconds (p99 533.527 ms). Its 85 observation samples stayed below 1.101 seconds old and its task samples showed no errors. Both results are retained; neither qualifies the required ten-minute A50 run.
 
-The corrected focused reactor passed at **23:11:26 Europe/Berlin** in 41.746 seconds, including the real scheduled-worker regression. Freshness and route/epoch checks still decide whether dispatch is allowed. There is no new latency exclusion, eligibility timestamp change, workload reduction, durability relaxation, or invented completion. Full repository verification precedes new images and sustained deployed measurement.
+The corrected focused reactor passed at **23:11:26 Europe/Berlin** in 41.746 seconds, including the real scheduled-worker regression. Full offline verification of `b1e34dc` passed at **23:22:38**: 197 checks across 25 classes, zero failures/errors/skips, in 598 seconds. [Per-class evidence and the original log hash](../evidence/backend-checks.json) record the complete run. Freshness and route/epoch checks still decide whether dispatch is allowed. There is no new latency exclusion, eligibility timestamp change, workload reduction, durability relaxation, or invented completion. New images precede sustained deployed measurement.
 
 The configuration follows [Spring Boot's documented scheduling defaults and bounded pool configuration](https://docs.spring.io/spring-boot/reference/features/task-execution-and-scheduling.html) and [Spring Framework's fixed-delay scheduling contract](https://docs.spring.io/spring-framework/reference/integration/scheduling.html).
