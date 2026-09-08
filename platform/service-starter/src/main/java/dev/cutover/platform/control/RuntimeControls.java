@@ -25,6 +25,9 @@ public final class RuntimeControls {
             var sql=DSL.using(configuration);
             return Idempotency.execute(sql,actor,site,"runtime-control",key,request,()-> {
                 long before=lockVersion(sql,request);
+                // Hold the exclusive control lock before checking the freeze; two writers must not upgrade shared locks.
+                if (!Database.workersMayWrite(sql) && !(request.has("workersPaused") && !request.path("workersPaused").asBoolean()))
+                    throw new Problem(503,"WORKERS_PAUSED","Only an explicit worker resume can change controls during a checkpoint.");
                 var names=Map.of("intakePaused","intake_paused","dispatchPaused","dispatch_paused","workersPaused","workers_paused","criticalStorage","critical_storage","relayPaused","relay_paused","consumerPaused","consumer_paused");
                 for (var field:names.entrySet()) if (request.has(field.getKey())) sql.execute("UPDATE service_control SET "+field.getValue()+"=? WHERE singleton",request.path(field.getKey()).asBoolean());
                 sql.execute("UPDATE service_control SET version=version+1 WHERE singleton");
@@ -40,6 +43,7 @@ public final class RuntimeControls {
             var sql=DSL.using(configuration);
             return Idempotency.execute(sql,actor,site,"process-fault-arm",key,request,()-> {
                 long before=lockVersion(sql,request);
+                if (!Database.workersMayWrite(sql)) throw new Problem(503,"WORKERS_PAUSED","Fault changes are paused for the checkpoint.");
                 if (sql.fetchExists(sql.selectOne().from("process_faults").where("site_id=? AND checkpoint=? AND remaining=1",site,request.path("checkpoint").asString())))
                     throw Problem.conflict("FAULT_ALREADY_ARMED","Clear the existing one-shot fault before arming this checkpoint again.");
                 UUID id=UUID.randomUUID();
@@ -61,6 +65,7 @@ public final class RuntimeControls {
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             return Idempotency.execute(sql,actor,site,"process-fault-clear",key,Map.of("faultId",id,"request",request),()-> {
+                if (!Database.workersMayWrite(sql)) throw new Problem(503,"WORKERS_PAUSED","Fault changes are paused for the checkpoint.");
                 var row=sql.fetchOne("SELECT version FROM process_faults WHERE fault_id=? AND site_id=? FOR UPDATE",id,site);
                 if (row==null) throw Problem.missing();
                 long before=row.get(0,Long.class);

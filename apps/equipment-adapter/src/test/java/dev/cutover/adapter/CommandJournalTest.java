@@ -67,6 +67,24 @@ class CommandJournalTest {
         });
     }
 
+    @Test void checkpointFreezePreventsManualInvestigationAndRetainsTheSameCommandForResume() {
+        UUID id=UUID.randomUUID();record(id,movement(id));simulator.fault("BEFORE_ACCEPT",id,1,0);journal.work();
+        var before=journal.get("site-a",id);
+        var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",before.path("version").asLong(),"reason","Investigate the retained command after the checkpoint completes."));
+        adapterDb.sql().execute("UPDATE service_control SET workers_paused=true");
+        long audits=adapterDb.sql().fetchOne("SELECT count(*) FROM audit").get(0,Long.class);
+        assertThatThrownBy(()->journal.reconcile("supervisor","site-a",id,"investigate",request)).isInstanceOf(Problem.class)
+            .satisfies(error->assertThat(((Problem)error).status()).isEqualTo(503));
+        assertThat(journal.get("site-a",id)).isEqualTo(before);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM audit").get(0,Long.class)).isEqualTo(audits);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isZero();
+        adapterDb.sql().execute("UPDATE service_control SET workers_paused=false,dispatch_paused=true,critical_storage=true");
+        var resumed=journal.reconcile("supervisor","site-a",id,"investigate",request);
+        assertThat(resumed.path("state").asString()).isEqualTo("INVESTIGATION_RECORDED");
+        assertThat(journal.reconcile("supervisor","site-a",id,"investigate",request)).isEqualTo(resumed);
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isZero();
+    }
+
     @Test void acceptedAndCompletedAreSeparateAndTerminalStateIsRetained() {
         UUID id=UUID.randomUUID();var movement=movement(id);record(id,movement);journal.work();
         assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("ACCEPTED_BY_SIMULATOR");

@@ -12,7 +12,7 @@ Implementation goal started 7 September 2026. The implementation plan and all 54
 | 5. Extraction and shadow | Foundation verified | 1,000 real shadow comparisons; 33 original tasks retained through the guarded boundary; assignment-created execution tasks now operate after a real owner switch. |
 | 6. Cutover and rollback | Foundation verified | 105 full-suite checks; live drain/fencing, concurrency and uncertain-outcome reversal; all five actual process restarts; previous adapter image on V115. Failed measurements and repairs remain recorded. |
 | 7. Second product | Foundation verified | 121 full-suite checks including 16 returns checks; five deployed workflow checks, two browser checks, ten metric targets and 83 network-policy checks. Separate receipt/counter/task ownership is verified. |
-| 8. Full operations verification | In progress | Complete the final acceptance bundle, measured capacity, physical-volume pressure, checkpoint/restore and prepared offline operation. |
+| 8. Full operations verification | In progress | Six-database checkpoint capture and interrupted-process recovery verified. Fresh/stale restore, physical-volume pressure, measured capacity, prepared offline operation and the final acceptance bundle remain. |
 | 9. Portfolio finish | Pending | Console polish, documentation, reviewer walkthrough, evidence, and public repository. |
 
 ## Setup observations
@@ -158,3 +158,13 @@ The returns application was generated from the technical scaffold and given an o
 `returns-ui-1788838637610` passed two browser walkthroughs after wording polish: PKCE, current totals and receipt evidence, keyboard dismissal, a 390-pixel viewport, operator restrictions and supervisor reconciliation through the form. `telemetry-1788838441512` verified ten scrape targets plus retrievable traces and Grafana health. `policy-1788838595392` passed 83 actual DNS/TCP checks, including the new product and the explicit migration proof paths.
 
 Postflight found all six test receipts complete, ten single sorting effects, all crate counters reconciled and the same simulator world/generation at sequence 179. Site-a outbound owners/epochs remained unchanged. The public [returns evidence](../evidence/returns-2026-09-08.md), [onboarding guide](../onboarding/returns-service.md), [ADR 0012](../adr/0012-independent-crate-returns.md) and [runbook](../runbooks/returns.md) explain this milestone and its limits. Full mixed-product capacity, physical storage pressure, backup/restore, prepared offline operation and the final acceptance bundle remain phase-8 work.
+
+### Consistent application capture and interrupted maintenance — 8 September 2026
+
+The write-barrier audit found missing freeze checks in new idempotency records for an existing order reference, manual command investigation and fault controls. Those paths now reject writes while frozen, retain previously committed responses for reads, and allow an explicit versioned resume. All 125 backend checks passed at 06:09:41 Europe/Berlin in 9 minutes 5 seconds. The applications were rebuilt and deployed without resetting data.
+
+The checkpoint procedure freezes/stops five application writers plus Keycloak and captures six databases with 207 per-table fingerprints, source replay identities, image/schema/route metadata and current simulator journal observations. Atomic local recovery journals retain each intended control request and writer stop. Private artifact permissions, exact-resource checks, checksums and versioned cleanup are enforced.
+
+`checkpoint-1788841302213` passed three deployed checks at 06:24:09: complete capture/resume, corruption/path rejection, and real checkpoint-process termination at the stopped-writer boundary followed by journal-based recovery. Capture plus resume took 77.243 seconds; the stopped-writer dump/check interval took 16.400 seconds. All selected business rows and physical world/generation/sequence 179 remained unchanged; one existing adapter quarantine was preserved.
+
+An earlier export included controller-generated EndpointSlices. The corrected exporter excludes them and the verifier rejects the original artifact as unqualified for restoration. The full selected process run was repeated. See the [checkpoint evidence](../evidence/checkpoint-2026-09-08.md), [runbook](../runbooks/checkpoint.md) and [ADR 0013](../adr/0013-stopped-writer-application-checkpoints.md). This milestone is not full A46/A47 restoration or A52 stop/reset acceptance; those and the remaining phase-8/phase-9 work are still required.

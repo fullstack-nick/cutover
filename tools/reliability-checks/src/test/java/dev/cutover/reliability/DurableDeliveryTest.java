@@ -1,6 +1,7 @@
 package dev.cutover.reliability;
 
 import com.rabbitmq.client.ConnectionFactory;
+import dev.cutover.platform.Database;
 import dev.cutover.platform.Events;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
@@ -181,6 +182,27 @@ class DurableDeliveryTest {
             restarted.reached(checkpoint,id);
         }
         assertThat(db.sql().fetchOne("SELECT count(*) FROM audit WHERE action='process-fault-fired'").get(0,Integer.class)).isEqualTo(3);
+    }
+
+    @Test void checkpointControlsFreezeAllFaultMutationsUntilExplicitResume() {
+        var controls=new dev.cutover.platform.control.RuntimeControls(db.sql());
+        UUID event=append(UUID.randomUUID(),1);
+        var arm=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",0,"checkpoint","AFTER_BUSINESS_COMMIT","eventId",event,"reason","Verify the fault stays unchanged throughout the frozen checkpoint."));
+        var armed=controls.arm("scenario","site-a","arm",arm);
+        var pause=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"workersPaused",true,"reason","Freeze application writes while the checkpoint is exported."));
+        controls.change("scenario","site-a","freeze",pause);
+        long audits=count("audit"),requests=count("idempotency");
+        var next=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",2,"checkpoint","AFTER_BROKER_CONFIRM","reason","This new fault must wait until the checkpoint is released."));
+        var clear=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"reason","This clear must wait until the checkpoint is released."));
+        assertThatThrownBy(()->controls.arm("scenario","site-a","blocked-arm",next)).isInstanceOf(Problem.class);
+        assertThatThrownBy(()->controls.clear("scenario","site-a",Database.uuid(armed,"faultId"),"blocked-clear",clear)).isInstanceOf(Problem.class);
+        assertThatThrownBy(()->controls.change("scenario","site-a","blocked-control",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",2,"relayPaused",true,"reason","Do not write other controls during the frozen checkpoint.")))).isInstanceOf(Problem.class);
+        new dev.cutover.platform.control.ProcessFaults(db.sql(),clock,code->{throw new AssertionError("A frozen fault fired");}).reached("AFTER_BUSINESS_COMMIT",event);
+        assertThat(controls.arm("scenario","site-a","arm",arm)).isEqualTo(armed);
+        assertThat(count("audit")).isEqualTo(audits);assertThat(count("idempotency")).isEqualTo(requests);
+        assertThat(db.sql().fetchOne("SELECT remaining FROM process_faults").get(0,Integer.class)).isEqualTo(1);
+        controls.change("scenario","site-a","resume",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",2,"workersPaused",false,"reason","Resume application writes after all checkpoint dumps finish.")));
+        assertThat(controls.clear("scenario","site-a",Database.uuid(armed,"faultId"),"blocked-clear",clear).path("state").asString()).isEqualTo("CLEARED");
     }
 
     @Test void processControlsAreVersionedAndCannotAffectAnotherSite() {

@@ -27,6 +27,7 @@ public final class MigrationProcessFaults implements MigrationSessions.Checkpoin
             var sql = DSL.using(configuration);
             return Idempotency.execute(sql, actor, site, "arm-migration-fault", key, request, () -> {
                 long before = sql.fetchOne("SELECT version FROM service_control WHERE singleton FOR UPDATE").get(0, Long.class);
+                if (!Database.workersMayWrite(sql)) throw new Problem(503, "WORKERS_PAUSED", "Phase fault changes are paused for the checkpoint.");
                 if (before != request.path("expectedVersion").asLong()) throw Problem.conflict("VERSION_CONFLICT", "Refresh the process controls before arming a phase fault.");
                 if (sql.fetchOne("SELECT EXISTS(SELECT 1 FROM migration_process_faults WHERE site_id=? AND phase=? AND remaining=1)", site, request.path("phase").asString()).get(0, Boolean.class))
                     throw Problem.conflict("FAULT_ALREADY_ARMED", "Clear the existing fault for this phase first.");
@@ -69,6 +70,7 @@ public final class MigrationProcessFaults implements MigrationSessions.Checkpoin
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             return Idempotency.execute(sql, actor, site, "clear-migration-fault:" + id, key, request, () -> {
+                if (!Database.workersMayWrite(sql)) throw new Problem(503, "WORKERS_PAUSED", "Phase fault changes are paused for the checkpoint.");
                 var fault = sql.fetchOne("SELECT * FROM migration_process_faults WHERE site_id=? AND fault_id=? FOR UPDATE", site, id);
                 if (fault == null) throw Problem.missing();
                 long before = fault.get("version", Long.class);

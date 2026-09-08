@@ -3,6 +3,7 @@ param([switch]$TransferBaseline,[switch]$SkipImageLoad,[ValidateSet('latest','10
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $config=Join-Path $root '.local/kubeconfig'
+if(Test-Path -LiteralPath (Join-Path $root '.local/operations/maintenance.lock')){throw 'Cutover checkpoint or recovery maintenance is active. Inspect its private journal before deployment.'}
 function Invoke-Kubectl([string[]]$Arguments){
     & kubectl --kubeconfig $config --context kind-cutover @Arguments
     if($LASTEXITCODE -ne 0){throw "Cutover deployment operation failed: $($Arguments -join ' ')"}

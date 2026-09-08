@@ -30,6 +30,7 @@ public final class OrderService {
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             return Idempotency.execute(sql,caller,site,"create-order",key,request,()-> {
+                if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Order mutations are paused for the checkpoint.");
                 Database.lock(sql,"external-order",site,request.sourceSystem(),request.externalOrderRef());
                 var old=sql.fetchOne("SELECT order_id,payload_hash FROM orders WHERE site_id= ? AND source_system= ? AND external_ref= ?",site,request.sourceSystem(),request.externalOrderRef());
                 if(old!=null) {

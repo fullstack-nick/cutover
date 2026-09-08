@@ -82,6 +82,20 @@ class LegacyWorkflowTest {
         assertThat(coreDb.sql().fetchOne("SELECT sum(reserved_quantity),sum(shortage),sum(requested) FROM order_lines WHERE order_id=?",partial).intoArray()).containsExactly(2L,6L,8L);
         assertThat(coreDb.sql().fetchOne("SELECT on_hand FROM stock WHERE site_id='site-a' AND sku='SKU-100'").get(0,Integer.class)).isZero();
     }
+    @Test void checkpointFreezeKeepsRecordedResponsesReadableButRejectsNewRequestRecords(){
+        var body=request("checkpoint",new OrderService.Line("SKU-001",3));
+        var first=orders.accept("scenario","site-a","original",body);
+        coreDb.sql().execute("UPDATE service_control SET workers_paused=true");
+        assertThat(orders.accept("scenario","site-a","original",body)).isEqualTo(first);
+        for(String reference:List.of("checkpoint","new-reference"))
+            assertThatThrownBy(()->orders.accept("scenario","site-a","new-"+reference,request(reference,new OrderService.Line("SKU-001",3))))
+                .isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).status()).isEqualTo(503));
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isEqualTo(1);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*),sum(quantity) FROM reservations").intoArray()).containsExactly(1L,3L);
+        coreDb.sql().execute("UPDATE service_control SET workers_paused=false");
+        assertThat(orders.accept("scenario","site-a","new-checkpoint",body)).isEqualTo(first);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isEqualTo(2);
+    }
     @Test void idempotencyAndBusinessReferenceBothPreventDuplicateReservations(){
         var body=request("unique",new OrderService.Line("SKU-001",3));
         var first=orders.accept("scenario","site-a","key-1",body);

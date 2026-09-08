@@ -192,6 +192,7 @@ public final class CommandJournal {
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             return Idempotency.execute(sql,actor,site,"command-investigation",key,Map.of("commandId",id,"request",request),()-> {
+                if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Command investigation is paused for the checkpoint.");
                 Allocations.lockRoute(sql,site,id);
                 var row=sql.fetchOne("SELECT * FROM command_journal WHERE site_id=? AND command_id=? FOR UPDATE",site,id);
                 if (row==null) throw Problem.missing();

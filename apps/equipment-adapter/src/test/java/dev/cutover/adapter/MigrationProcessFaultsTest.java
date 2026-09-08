@@ -47,6 +47,25 @@ class MigrationProcessFaultsTest {
         clock.advance(Duration.ofSeconds(1)); UUID next = session(clock.instant());
         assertThatThrownBy(() -> faults.reached("DRAINING", next)).isInstanceOf(Exit.class);
     }
+    @Test void checkpointFreezePreventsArmingClearingAndConsumingPhaseFaults() {
+        UUID session=session(clock.instant());var body=request(session);
+        var armed=faults.arm("scenario-driver","site-a","original",body);
+        long audits=database.sql().fetchOne("SELECT count(*) FROM audit").get(0,Long.class);
+        database.sql().execute("UPDATE service_control SET workers_paused=true");
+        assertThat(faults.arm("scenario-driver","site-a","original",body)).isEqualTo(armed);
+        var next=(tools.jackson.databind.node.ObjectNode)request(session);next.put("expectedVersion",1).put("phase","RECONCILING");
+        var clear=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"reason","Clear only after the consistent checkpoint is released."));
+        assertThatThrownBy(()->faults.arm("scenario-driver","site-a","new",next)).isInstanceOf(Problem.class)
+            .satisfies(error->assertThat(((Problem)error).status()).isEqualTo(503));
+        assertThatThrownBy(()->faults.clear("scenario-driver","site-a",Database.uuid(armed,"faultId"),"clear",clear)).isInstanceOf(Problem.class)
+            .satisfies(error->assertThat(((Problem)error).status()).isEqualTo(503));
+        faults.reached("DRAINING",session);
+        assertThat(database.sql().fetchOne("SELECT remaining,version FROM migration_process_faults").intoArray()).containsExactly(1,1L);
+        assertThat(database.sql().fetchOne("SELECT count(*) FROM audit").get(0,Long.class)).isEqualTo(audits);
+        assertThat(database.sql().fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isEqualTo(1);
+        database.sql().execute("UPDATE service_control SET workers_paused=false");
+        assertThat(faults.clear("scenario-driver","site-a",Database.uuid(armed,"faultId"),"clear",clear).path("state").asString()).isEqualTo("CLEARED");
+    }
     @Test void clearingUsesTheFaultVersionAndCrossSiteRequestsStayOutsideTheControlSurface() {
         var armed = faults.arm("scenario-driver", "site-a", "clearable", request(null));
         var clear = JsonSupport.MAPPER.createObjectNode().put("expectedVersion", 1).put("reason", "Clear this phase fault before the next migration begins.");
