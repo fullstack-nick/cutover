@@ -61,7 +61,7 @@ try {
   assert.ok(evidence.worldBefore.lanes.filter(l=>l.siteId==='site-a').every(l=>!l.blocked));
   for(const owner of ['core','adapter','execution','returns','shadow'])assert.equal(query(owner,'SELECT workers_paused OR dispatch_paused OR critical_storage OR intake_paused FROM service_control;'),'f','Start with healthy owner controls.');
   assert.equal(query('adapter',"SELECT count(*) FROM migration_sessions WHERE phase IN ('DRAINING','RECONCILING','READY_TO_SWITCH','OBSERVING','REVERSING');"),'0');
-  assert.equal(query('adapter',"SELECT count(*) FROM command_journal WHERE state NOT IN ('COMPLETED','CANCELLED');"),'0');
+  assert.equal(query('adapter',"SELECT count(*) FROM command_journal WHERE state NOT IN ('COMPLETED','REJECTED_BEFORE_EXECUTION');"),'0');
   for(const owner of ['core','returns'])assert.equal(query(owner,'SELECT active_requests FROM admission;'),'0','Settle accepted work before this isolated outage run.');
   skus=JSON.parse(query('core',"SELECT jsonb_agg(sku ORDER BY temperature_class) FROM (SELECT DISTINCT ON(p.temperature_class) s.sku,p.temperature_class FROM stock s JOIN products p USING(site_id,sku) WHERE s.site_id='site-a' AND s.on_hand-s.reserved>=12 ORDER BY p.temperature_class,s.sku) s;"));assert.equal(skus.length,2);
   evidence.routesBefore=JSON.parse(query('adapter','SELECT jsonb_agg(row_to_json(z) ORDER BY site_id,zone_id) FROM zone_routes z;'));
