@@ -1,6 +1,6 @@
 # ADR 0022: bounded broker subscriptions
 
-Date: 8 September 2026. Status: implemented; all 193 full-repository checks, including 43 durable-delivery checks, passed; deployed qualification pending.
+Date: 8 September 2026. Status: implemented; all 193 full-repository checks, including 43 durable-delivery checks, and deployed crash/overflow/mandatory-return/causal-trace regressions passed; sustained performance qualification pending.
 
 After the adapter route-lock correction, `load-diagnostic-1788896182801` recorded no PostgreSQL deadlocks but reached only 73.5% within two seconds of original eligibility (p99 16,552.934 ms). A second, explicitly instrumented diagnostic, `load-diagnostic-1788896633958`, reached 88.5% (p99 7,802.391 ms), again without deadlocks. These two-minute diagnostics are not A50 qualification. The latter added 143 database-wait samples and 29 nonfatal adapter thread dumps; that extra diagnostic overhead is excluded from the formal workload procedure.
 
