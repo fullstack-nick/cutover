@@ -126,6 +126,74 @@ class DurableDeliveryTest {
         assertThat(count("effects")).isEqualTo(1);
     }
 
+    @Test void boundedRelayBatchesPreserveEveryStreamOrderAndSingleEffects() {
+        UUID first=UUID.randomUUID(),second=UUID.randomUUID();
+        for(UUID aggregate:java.util.List.of(first,second)){append(aggregate,1);append(aggregate,2);}
+        var sent=new java.util.ArrayList<Events.Envelope>();
+        var batching=new OutboxRelay(db.sql(),(exchange,type,id,body)->{
+            if(sent.isEmpty()){
+                assertThat(db.sql().fetchOne("SELECT count(*),count(DISTINCT xmin::text) FROM outbox WHERE lease_id IS NOT NULL").intoArray()).containsExactly(2L,1L);
+                assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE aggregate_version=2 AND lease_id IS NOT NULL").get(0,Integer.class)).isZero();
+            }
+            sent.add(JsonSupport.MAPPER.readValue(body,Events.Envelope.class));rabbit.publish(exchange,type,id,body);
+        },clock,DeliveryHooks.NONE);
+        assertThat(batching.poll(16)).isEqualTo(4);assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(4);assertThat(count("effects")).isEqualTo(4);
+        for(UUID aggregate:java.util.List.of(first,second))assertThat(sent.stream().filter(event->event.aggregateId().equals(aggregate)).map(Events.Envelope::aggregateVersion).toList()).containsExactly(1L,2L);
+        assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
+    }
+
+    @Test void partialRelayFailureMarksOnlyConfirmedEventsAndReleasesUnattemptedLeases() {
+        for(int n=0;n<3;n++)append(UUID.randomUUID(),1);
+        var sent=new java.util.ArrayList<UUID>();
+        var batching=new OutboxRelay(db.sql(),(exchange,type,id,body)->{
+            sent.add(id);if(sent.size()==2)throw DeliveryFailure.pending("PUBLISH_NACK");rabbit.publish(exchange,type,id,body);
+        },clock,DeliveryHooks.NONE);
+        assertThat(batching.poll(16)).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE published_at IS NOT NULL").get(0,Integer.class)).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT last_error,attempts,lease_id FROM outbox WHERE event_id=?",sent.get(1)).intoArray()).containsExactly("PUBLISH_NACK",1,null);
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE attempts=0 AND lease_id IS NULL AND published_at IS NULL").get(0,Integer.class)).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT unpublished_events,(unpublished_bytes=(SELECT sum(payload_bytes) FROM outbox WHERE published_at IS NULL)) FROM admission").intoArray()).containsExactly(2,true);
+        clock.advance(Duration.ofMinutes(2));assertThat(batching.poll(16)).isEqualTo(2);
+        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(3);assertThat(count("effects")).isEqualTo(3);
+        assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
+    }
+
+    @Test void crashInsideAConfirmedBatchRetainsEveryOriginalForDeduplicatedReplay() {
+        for(int n=0;n<3;n++)append(UUID.randomUUID(),1);
+        var confirmed=new java.util.concurrent.atomic.AtomicInteger();
+        var batching=relay((checkpoint,id)->{if(checkpoint.equals("AFTER_BROKER_CONFIRM")&&confirmed.incrementAndGet()==2)throw new Crash();});
+        assertThatThrownBy(()->batching.poll(16)).isInstanceOf(Crash.class);
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE published_at IS NULL AND attempts=1 AND lease_id IS NOT NULL").get(0,Integer.class)).isEqualTo(3);
+        clock.advance(Duration.ofSeconds(21));assertThat(relay(DeliveryHooks.NONE).poll(16)).isEqualTo(3);
+        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(5);assertThat(count("effects")).isEqualTo(3);assertThat(count("inbox")).isEqualTo(3);
+        assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
+    }
+
+    @Test void freezeAfterPublicationRetainsTheEntireUnsettledBatchUntilResume() {
+        for(int n=0;n<3;n++)append(UUID.randomUUID(),1);
+        var held=new AtomicBoolean();var controls=new dev.cutover.platform.control.RuntimeControls(db.sql());
+        var batching=new OutboxRelay(db.sql(),(exchange,type,id,body)->{
+            rabbit.publish(exchange,type,id,body);
+            if(held.compareAndSet(false,true))controls.change("supervisor","site-a","freeze-batch",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",0,"workersPaused",true,"reason","Freeze after an original broker confirmation and before the atomic delivery settlement.")));
+        },clock,DeliveryHooks.NONE);
+        assertThat(batching.poll(16)).isZero();
+        assertThat(db.sql().fetchOne("SELECT unpublished_events FROM admission").get(0,Integer.class)).isEqualTo(3);
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE published_at IS NULL AND lease_id IS NOT NULL").get(0,Integer.class)).isEqualTo(3);
+        controls.change("supervisor","site-a","resume-batch",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"workersPaused",false,"reason","Resume original-event delivery after preserving the frozen transaction boundary.")));
+        clock.advance(Duration.ofSeconds(21));assertThat(batching.poll(16)).isEqualTo(3);
+        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(6);assertThat(count("effects")).isEqualTo(3);
+        assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
+    }
+
+    @Test void slowConfirmedPublicationReleasesTheRestBeforeItsLeaseExpires() {
+        for(int n=0;n<3;n++)append(UUID.randomUUID(),1);
+        var batching=new OutboxRelay(db.sql(),(exchange,type,id,body)->{rabbit.publish(exchange,type,id,body);clock.advance(Duration.ofSeconds(11));},clock,DeliveryHooks.NONE);
+        assertThat(batching.poll(16)).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE published_at IS NULL AND attempts=0 AND lease_id IS NULL").get(0,Integer.class)).isEqualTo(2);
+        assertThat(batching.poll(16)).isEqualTo(1);assertThat(batching.poll(16)).isEqualTo(1);
+        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(3);assertThat(count("effects")).isEqualTo(3);
+    }
+
     @Test void publishedHistoryHasASeparateHardBudgetAndIntakeHeadroom() {
         db.sql().execute("UPDATE admission SET retained_outbox_limit=65536");
         int committed=0;
