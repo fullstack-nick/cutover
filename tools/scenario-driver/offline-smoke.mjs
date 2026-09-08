@@ -43,7 +43,12 @@ try {
   enabled=true;await run('egress-enable','scripts/offline-egress.mjs',['Enable']);
   await run('egress-probe-before','scripts/offline-egress.mjs',['Probe']);
   session=await humanSession('operator-a',{offline:true,onRequest:request=>evidence.browserRequests.push(request)});
-  await session.page.evaluate(async()=>{try{await fetch('https://1.1.1.1/cutover-offline-probe');return false;}catch{return true;}}).then(blocked=>assert.equal(blocked,true));
+  // A blank page has no application CSP that could reject fetch before the context route is exercised.
+  const probePage=await session.page.context().newPage();
+  try {
+    await assert.rejects(probePage.goto('https://1.1.1.1/cutover-offline-probe'),/ERR_INTERNET_DISCONNECTED/);
+    assert.ok(evidence.browserRequests.some(item=>!item.allowed&&item.path==='/cutover-offline-probe'));
+  } finally { await probePage.close(); }
   evidence.cases.push({status:'passed',name:'Local PKCE login under bridge denial and isolated browser external-request denial'});
   await gate(true);
   const bearer=await token(),reference=`${runId}-outbound`;
