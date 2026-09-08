@@ -39,7 +39,7 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A31 | `migration-crash-1788870805198`: five actual phase-specific adapter exits/restarts resume the durable session. |
 | A32 | `migration-reversal-1788831400131`: concurrent real supervisor sessions produce one transition and a version conflict. |
 | A33 | The same reversal run remains blocked on an identified unknown command; a timeout cannot authorize the switch. |
-| A34 | Actual predecessor adapter image operates on expanded schema in rollback/volume-observation runs. Prepared offline rollback repeat is pending. |
+| A34 | Actual predecessor adapter image operates on expanded schema in rollback/volume-observation runs. `offline-1788887275782` additionally verifies cached predecessor import, actual rollback and restoration of the current image under scoped external-egress denial. |
 | A35 | `migration-reversal-1788831400131`: old allocated work drains first; retained unassigned work receives the new epoch without duplication. |
 | A36 | [Frozen N−1 schemas and producer fixtures](../../contracts/compatibility/README.md): both optional-addition directions pass and a breaking quantity type fails. These are schema-consumer checks; actual image operation is A34. |
 | A37 | Full Maven generation from disposable empty databases, guarded previous-schema migrations, schema-readiness checks and actual runtime DDL/site/owner-boundary denials. [Boundary evidence](assignment-boundary-2026-09-08.md). |
@@ -57,8 +57,8 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A49 | `cache-1788887175088`: all 4,050 installed assets match, excluding mutable Chromium diagnostic logs. An isolated empty-file-cache fixture fails explicitly and identifies all missing tools, Maven/npm packages, image archives and browser revisions; existing caches/daemon images remain intact. |
 | A50 | **Failed.** `load-1788880017964`: 85.9% within two seconds, original-eligibility p99 8,340.798 ms; all 3,000 measured movements included, all 3,300 total effects single. Inbox batching requires a new full measurement. |
 | A51 | Actual order/returns/task/recovery/migration/audit workflows, mobile views, stale data, version conflicts, keyboard close and focus restoration are recorded. Final screenshots after the latest console build are pending. |
-| A52 | `demo-lifecycle-1788866307975` preserves data on stop/start. `reset-bootstrap-1788866919366` validates explicit checkpoint-backed new-world reset and fresh platform creation without changing unrelated containers. |
+| A52 | `demo-lifecycle-1788866307975` preserves data on stop/start. `reset-bootstrap-1788887847395` repeats explicit checkpoint-backed new-world reset and fresh platform creation without changing unrelated containers; prepared-image bootstrap took 604.419 seconds. |
 | A53 | Private archive exclusion, public source, MIT and disabled Actions are established. Final tracked/history/secret/asset review and publication remain pending. |
-| A54 | The exact documented six-command rehearsal and final console images are implemented but unexecuted. Prepared fresh-bootstrap rehearsal remains pending. |
+| A54 | The exact documented six-command rehearsal and final console images are implemented but unexecuted. `reset-bootstrap-1788887847395` establishes the separate prepared-image fresh bootstrap in 604.419 seconds. |
 
 All IDs are required. A failed latency target or missing runtime check prevents final completion, even when every component test passes.

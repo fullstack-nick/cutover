@@ -1,13 +1,13 @@
 {
   "command": "./mvnw.cmd -o verify",
-  "productionSource": "1f75e9e64e8213f6a1f17a80a15fc2a1779c46b8",
-  "finishedAt": "2026-09-08T17:53:26+02:00",
-  "durationSeconds": 731,
-  "tests": 186,
+  "productionSource": "c6486a6e7918d704192e68d10fd03a078d60de00",
+  "finishedAt": "2026-09-08T19:52:45+02:00",
+  "durationSeconds": 1027,
+  "tests": 190,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
-  "originalLogSha256": "d8c2fe1864085b6fc3f56fcc24bcca8444db6ba06e3a45824a2400bfc5adcae0",
+  "originalLogSha256": "0d68144ef38179195d94e4d4aa3e37ac295135557c323a325ca8b5f9c20dbe2d",
   "classes": [
     {
       "name": "dev.cutover.adapter.CommandJournalTest",
@@ -31,8 +31,29 @@
       "skipped": 0
     },
     {
-      "name": "dev.cutover.simulator.SimulatorEngineTest",
-      "tests": 8,
+      "name": "dev.cutover.compatibility.ContractEvolutionTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.compatibility.RuntimeCompatibilityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.core.LegacyBoundaryRegistrationTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.core.LegacyWorkflowTest",
+      "tests": 23,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -73,27 +94,6 @@
       "skipped": 0
     },
     {
-      "name": "dev.cutover.core.LegacyBoundaryRegistrationTest",
-      "tests": 10,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0
-    },
-    {
-      "name": "dev.cutover.core.LegacyWorkflowTest",
-      "tests": 23,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0
-    },
-    {
-      "name": "dev.cutover.returns.ReturnsWorkflowTest",
-      "tests": 19,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0
-    },
-    {
       "name": "dev.cutover.platform.JwtSecurityTest",
       "tests": 5,
       "failures": 0,
@@ -115,15 +115,8 @@
       "skipped": 0
     },
     {
-      "name": "dev.cutover.compatibility.ContractEvolutionTest",
-      "tests": 2,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0
-    },
-    {
-      "name": "dev.cutover.compatibility.RuntimeCompatibilityTest",
-      "tests": 3,
+      "name": "dev.cutover.platform.SecurityProblemResponseTest",
+      "tests": 4,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -157,6 +150,13 @@
       "skipped": 0
     },
     {
+      "name": "dev.cutover.returns.ReturnsWorkflowTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
       "name": "dev.cutover.shadow.IdenticalSnapshotTest",
       "tests": 1,
       "failures": 0,
@@ -166,6 +166,13 @@
     {
       "name": "dev.cutover.shadow.ShadowDeliveryTest",
       "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.simulator.SimulatorEngineTest",
+      "tests": 8,
       "failures": 0,
       "errors": 0,
       "skipped": 0
