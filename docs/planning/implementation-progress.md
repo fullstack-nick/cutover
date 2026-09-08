@@ -4,16 +4,16 @@ Implementation goal started 7 September 2026. The implementation plan and all 54
 
 | Phase | Status | Evidence / next work |
 | --- | --- | --- |
-| 0. Setup and compatibility | Initial compatibility verified | Git/public remote, checksums, backend, Kubernetes, identity, browser and telemetry smoke gates pass. Full clean/offline verification remains phase 8. |
-| 1. Walking legacy system | Baseline verified | Stored routines, trigger-created tasks, polling scheduler, adapter journal and independent ledger pass component and real process checks. |
-| 2. Reproducible packaging | Baseline verified | Clean Maven verification, reproducible generated SQL types, local images, JWT/mTLS workflow and process restart checks pass. |
-| 3. Local platform | Initial milestone verified | Dedicated kind/Calico, frozen baseline transfer, 44 traffic checks, authenticated console, seven metric targets and retrievable traces. |
-| 4. Reliability boundary | Foundation verified | Transactional messages, bounded admission/retries, uncertainty, cancellation and retained-history guards pass component/process checks. Physical-volume pressure and the full acceptance profiles remain phase-8 gates. |
-| 5. Extraction and shadow | Foundation verified | 1,000 real shadow comparisons; 33 original tasks retained through the guarded boundary; assignment-created execution tasks now operate after a real owner switch. |
-| 6. Cutover and rollback | Foundation verified | 105 full-suite checks; live drain/fencing, concurrency and uncertain-outcome reversal; all five actual process restarts; previous adapter image on V115. Failed measurements and repairs remain recorded. |
-| 7. Second product | Foundation verified | 121 full-suite checks including 16 returns checks; five deployed workflow checks, two browser checks, ten metric targets and 83 network-policy checks. Separate receipt/counter/task ownership is verified. |
-| 8. Full operations verification | In progress | Six-database capture, interrupted capture, fresh/stale restoration and preserved-copy restart verified. Actual bounded filesystem pressure and deployed observation expiry pass. Measured capacity, prepared offline operation and the final acceptance bundle remain. |
-| 9. Portfolio finish | In progress | Real console workflows and public source exist. The architecture guide, current README and reviewer path are written; final screenshots, complete evidence mapping and the timed walkthrough remain. |
+| 0. Setup and compatibility | Verified | Confirmed identity/MIT, public Git source, pinned local dependencies, explicit manual tooling and disabled Actions. |
+| 1. Walking legacy system | Verified | Stored routines, trigger-created tasks, polling scheduler, adapter journal and independent ledger pass component and actual baseline process checks. |
+| 2. Reproducible packaging | Verified | Offline full Maven verification, generated SQL types, local images, actual migrations, process restarts and fresh prepared-image bootstrap pass. |
+| 3. Local platform | Verified | Dedicated kind/Calico, 83 actual traffic assertions, real identity/site/mTLS boundaries, authenticated console, populated dashboards and causal traces. |
+| 4. Reliability boundary | Verified | Actual commit/publish/ack crashes, duplicate transport, mandatory returns, quorum overflow, uncertainty, cancellation, storage pressure and worker recovery pass. |
+| 5. Extraction and shadow | Verified | Guarded baseline transfer, 1,000 persisted identical-input comparisons, restricted shadow identity and assignment-created tasks under the extracted owner. |
+| 6. Cutover and rollback | Verified | Finite drain and epoch fencing, concurrent supervision, uncertain-outcome reversal, five actual migration process exits and cached predecessor image rollback. |
+| 7. Second product | Verified | Independent receipt/counter/task ownership, duplicate suppression, browser workflow, shared platform conventions and live coexistence under lane failure. |
+| 8. Full operations verification | In progress | Fresh/stale six-database restoration, volume pressure, observation expiry, real process failures and prepared offline operation pass. A50's unchanged sustained dispatch target remains open after a measured lock-order regression. |
+| 9. Portfolio finish | In progress | Architecture, ADRs, onboarding, runbooks, all-54 evidence mapping, five inspected screenshots and the complete timed reviewer rehearsal are recorded. Final performance evidence and publication review remain. |
 
 ## Setup observations
 
