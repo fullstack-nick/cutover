@@ -33,7 +33,7 @@ try {
   await dialog.getByText('execution-service · epoch',{exact:false}).waitFor();
   assert.equal(await dialog.getByRole('button',{name:/cancel/i}).count(),0,'The operator must not receive a supervisor cancellation control.');
   await page.screenshot({path:resolve(directory,'confirmed-shortage-detail.png'),fullPage:true});
-  await page.keyboard.press('Escape');await until(async()=>await dialog.count()===1 && !(await dialog.isVisible()),'Escape dismisses the order details',5000);
+  await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden',timeout:5000});
   assert.equal(await page.getByRole('button',{name:partial.externalOrderRef,exact:true}).evaluate(element=>element===document.activeElement),true,'Closing the native dialog restores the trigger focus.');
   const blocked='**/api/v1/sites/site-a/orders**';await page.route(blocked,route=>route.abort('failed'));
   await page.getByRole('button',{name:'Refresh',exact:true}).click();await page.getByText('Order observations are unavailable.',{exact:true}).waitFor();
