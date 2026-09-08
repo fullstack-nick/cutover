@@ -77,7 +77,7 @@ try {
   const claimsBefore=JSON.parse(platform.kube(['-n','cutover-platform','get','pvc','-o','json'])).items.map(p=>({name:p.metadata.name,uid:p.metadata.uid,volume:p.spec.volumeName}));
   const physicalHeld=await simulatorRead('/sim/v1/equipment'),cachedBearer=await token();
   await stop(resources[1]);
-  let refused;try{refused=await api(`${prefix}/orders`,{method:'POST',bearer:cachedBearer,key:`${id}-database-unavailable`,body:{...databaseRestart[0].body,externalOrderRef:`${id}-database-unavailable`}});assert.ok(refused.status>=500,'An unavailable database cannot durably accept a new request.');}catch(error){if(error.name==='AssertionError')throw error;refused={transportUnavailable:true};}
+  let refused;try{refused=await api(`${prefix}/orders`,{method:'POST',bearer:cachedBearer,key:`${id}-database-unavailable`,body:{...databaseRestart[0].body,externalOrderRef:`${id}-database-unavailable`}});evidence.databaseOutageResponse={status:refused.status,code:refused.body?.code};assert.ok(refused.status>=500,`An unavailable database must refuse intake: status ${refused.status}, code ${refused.body?.code}.`);}catch(error){if(error.name==='AssertionError')throw error;refused={transportUnavailable:true};}
   assert.equal((await simulatorRead('/sim/v1/equipment')).journalHighWater,physicalHeld.journalHighWater);
   await start(resources[1]);
   assert.notEqual(platform.get('pod','application-db-0','cutover-platform').metadata.uid,dbBefore.metadata.uid);

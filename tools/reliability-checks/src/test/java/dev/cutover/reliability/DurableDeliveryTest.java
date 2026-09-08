@@ -514,6 +514,64 @@ class DurableDeliveryTest {
         assertThat(db.sql().fetchOne("SELECT active_messages FROM message_storage").get(0, Integer.class)).isZero();
     }
 
+    @Test void committedInboxBatchSurvivesCrashBeforeItsFirstAcknowledgement() {
+        var events = java.util.List.of(append(UUID.randomUUID(), 1), append(UUID.randomUUID(), 1), append(UUID.randomUUID(), 1));
+        relay(DeliveryHooks.NONE).poll(16);
+        var crashing = new RabbitDelivery(template, (checkpoint, id) -> { if (checkpoint.equals("AFTER_EFFECT_BEFORE_ACK")) throw new Crash(); });
+        assertThatThrownBy(() -> crashing.consume(queue, inbox, 16)).isInstanceOf(Crash.class);
+        assertThat(count("effects")).isEqualTo(3);
+        assertThat(count("inbox")).isEqualTo(3);
+        for (UUID event : events) assertThat(state(event)).isEqualTo("APPLIED");
+        assertThat(rabbit.consume(queue, inbox, 16)).isEqualTo(3);
+        assertThat(count("effects")).isEqualTo(3);
+        assertThat(db.sql().fetch("SELECT deliveries FROM inbox").getValues(0, Integer.class)).containsOnly(2);
+    }
+
+    @Test void inboxBatchRollsBackEveryTransferWhenTheLastAdmissionCannotBeStored() throws Exception {
+        UUID first=append(UUID.randomUUID(),1),second=append(UUID.randomUUID(),1);
+        relay(DeliveryHooks.NONE).poll(16);
+        var effectAttempts=new java.util.concurrent.atomic.AtomicInteger();
+        inbox=new DurableInbox(db.sql(),(sql,event)->{EFFECT.apply(sql,event);effectAttempts.incrementAndGet();},clock,Set.of("producer"),Set.of("site-a"));
+        // Match the relay's exact jOOQ JSONB wire representation, not PostgreSQL's spaced text rendering.
+        long bytes=db.sql().fetch("SELECT envelope FROM outbox").stream()
+                .mapToLong(row->row.get(0).toString().getBytes(StandardCharsets.UTF_8).length).sum();
+        long original=268435456L-bytes+1;
+        db.sql().execute("UPDATE message_storage SET retained_bytes=?",original);
+        assertThatThrownBy(()->rabbit.consume(queue,inbox,16)).hasRootCauseInstanceOf(Problem.class);
+        assertThat(effectAttempts.get()).isEqualTo(1);
+        assertThat(count("inbox")).isZero();assertThat(count("effects")).isZero();assertThat(count("stream_entry")).isZero();
+        assertThat(db.sql().fetchOne("SELECT retained_bytes FROM message_storage").get(0,Long.class)).isEqualTo(original);
+        try(var channel=admin.createChannel()) {
+            var a=channel.basicGet(queue,false);var b=channel.basicGet(queue,false);
+            assertThat(a).isNotNull();assertThat(b).isNotNull();
+            assertThat(java.util.Set.of(a.getProps().getMessageId(),b.getProps().getMessageId())).containsExactlyInAnyOrder(first.toString(),second.toString());
+            channel.basicNack(a.getEnvelope().getDeliveryTag(),false,true);channel.basicNack(b.getEnvelope().getDeliveryTag(),false,true);
+        }
+        db.sql().execute("UPDATE message_storage SET retained_bytes=0");
+        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(2);assertThat(count("effects")).isEqualTo(2);
+    }
+
+    @Test void inboxBatchSeparatesPoisonRawOwnershipAndPendingHandlerSavepoints() {
+        var broken=new AtomicBoolean(true);
+        inbox=new DurableInbox(db.sql(),(sql,event)->{EFFECT.apply(sql,event);if(event.payload().path("value").asInt()==7&&broken.get())throw DeliveryFailure.pending("DEPENDENCY_UNAVAILABLE");},clock,Set.of("producer"),Set.of("site-a"));
+        var pending=event(UUID.randomUUID(),1,7);
+        var healthy=event(UUID.randomUUID(),1,8);
+        var deliveries=java.util.List.of(
+            new DurableInbox.Delivery(EXCHANGE,pending.eventId().toString(),JsonSupport.write(pending).getBytes(StandardCharsets.UTF_8)),
+            new DurableInbox.Delivery(EXCHANGE,"malformed-original","{not-json".getBytes(StandardCharsets.UTF_8)),
+            new DurableInbox.Delivery(EXCHANGE,healthy.eventId().toString(),JsonSupport.write(healthy).getBytes(StandardCharsets.UTF_8)));
+        var result=inbox.receiveBatch(deliveries);
+        assertThat(result.get(0)).isInstanceOf(DurableInbox.Admitted.class);assertThat(result.get(1)).isInstanceOf(DurableInbox.Quarantined.class);
+        assertThat(result.get(2)).isInstanceOf(DurableInbox.Admitted.class);
+        assertThat(state(pending.eventId())).isEqualTo("PENDING");assertThat(state(healthy.eventId())).isEqualTo("APPLIED");
+        assertThat(count("effects")).isEqualTo(1);assertThat(count("delivery_quarantine")).isEqualTo(1);
+        broken.set(false);clock.advance(Duration.ofSeconds(2));inbox.retry(16);
+        assertThat(count("effects")).isEqualTo(2);assertThat(state(pending.eventId())).isEqualTo("APPLIED");
+        inbox.receiveBatch(deliveries);assertThat(count("effects")).isEqualTo(2);assertThat(count("delivery_quarantine")).isEqualTo(1);
+        assertThatThrownBy(()->inbox.receiveBatch(java.util.Collections.nCopies(33,deliveries.getFirst()))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()->inbox.receiveBatch(java.util.List.of())).isInstanceOf(IllegalArgumentException.class);
+    }
+
     @Test void gapsWaitAndConflictingVersionsCannotRewriteHistory() {
         UUID aggregate = UUID.randomUUID(); var second = event(aggregate, 2, 2); deliver(second);
         assertThat(state(second.eventId())).isEqualTo("PENDING"); assertThat(count("effects")).isZero();

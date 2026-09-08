@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -26,6 +27,7 @@ public final class DurableInbox {
     public record Admitted(UUID id) implements Receipt {}
     /** Raw bytes remain in the separate quarantine namespace and have not transferred. */
     public record Quarantined(UUID id) implements Receipt {}
+    public record Delivery(String exchange, String messageId, byte[] body) {}
     private final DSLContext database;
     private final MessageHandler handler;
     private final Clock clock;
@@ -43,6 +45,23 @@ public final class DurableInbox {
 
     public Receipt receive(String exchange, String transportMessageId, byte[] body) {
         if (body.length > MAX_MESSAGE_BYTES) throw new Problem(503, "MESSAGE_TOO_LARGE", "Broker message-size enforcement must be repaired before consumption resumes.");
+        return database.transactionResult(configuration -> receiveWithin(DSL.using(configuration), exchange, transportMessageId, body));
+    }
+
+    /** One bounded ownership transfer, followed by broker acknowledgements only after this commit. */
+    public List<Receipt> receiveBatch(List<Delivery> deliveries) {
+        if (deliveries.isEmpty() || deliveries.size() > 32) throw new IllegalArgumentException("Inbox delivery batch must be 1..32");
+        var retained = deliveries.stream().map(delivery -> {
+            if (delivery.body().length > MAX_MESSAGE_BYTES) throw new Problem(503, "MESSAGE_TOO_LARGE", "Broker message-size enforcement must be repaired before consumption resumes.");
+            return new Delivery(delivery.exchange(), delivery.messageId(), delivery.body().clone());
+        }).toList();
+        return database.transactionResult(configuration -> {
+            var sql = DSL.using(configuration);
+            return retained.stream().map(delivery -> receiveWithin(sql, delivery.exchange(), delivery.messageId(), delivery.body())).toList();
+        });
+    }
+
+    private Receipt receiveWithin(DSLContext sql, String exchange, String transportMessageId, byte[] body) {
         Events.Envelope envelope;
         String json;
         try {
@@ -55,26 +74,23 @@ public final class DurableInbox {
             if (transportMessageId != null && !envelope.eventId().toString().equals(transportMessageId)) throw DeliveryFailure.permanent("TRANSPORT_ID_MISMATCH");
         } catch (Exception invalid) {
             String code = invalid instanceof DeliveryFailure ? invalid.getMessage() : "INVALID_EVENT_CONTRACT";
-            return database.transactionResult(configuration -> quarantineRaw(DSL.using(configuration), exchange, transportMessageId, body, code, trustedSite(exchange,body)));
+            return quarantineRaw(sql, exchange, transportMessageId, body, code, trustedSite(exchange,body));
         }
         var event = envelope;
         String hash = JsonSupport.hash(JsonSupport.read(json));
-        return database.transactionResult(configuration -> {
-            var sql = DSL.using(configuration);
-            lockStorage(sql);
-            var previous = sql.fetchOne("SELECT payload_hash,received_exchange FROM inbox WHERE event_id= ? FOR UPDATE", event.eventId());
-            if (previous != null) {
-                if (!hash.equals(previous.get("payload_hash", String.class)) || !exchange.equals(previous.get("received_exchange", String.class)))
-                    return quarantineRaw(sql, exchange, transportMessageId, body, "EVENT_ID_CONFLICT", event.siteId());
-                sql.execute("UPDATE inbox SET deliveries=deliveries+1 WHERE event_id= ?", event.eventId());
-                return new Admitted(event.eventId());
-            }
-            reserveStorage(sql, body.length);
-            sql.execute("INSERT INTO inbox(event_id,envelope,payload_hash,state,next_attempt_at,received_at,received_exchange,payload_bytes,raw_body,site_id) VALUES (?,?::jsonb,?,'RECEIVED',?::timestamptz,?::timestamptz,?,?,?,?)",
-                    event.eventId(), JsonSupport.write(event), hash, now(), now(), exchange, body.length, body, event.siteId());
-            attempt(sql, event);
+        lockStorage(sql);
+        var previous = sql.fetchOne("SELECT payload_hash,received_exchange FROM inbox WHERE event_id= ? FOR UPDATE", event.eventId());
+        if (previous != null) {
+            if (!hash.equals(previous.get("payload_hash", String.class)) || !exchange.equals(previous.get("received_exchange", String.class)))
+                return quarantineRaw(sql, exchange, transportMessageId, body, "EVENT_ID_CONFLICT", event.siteId());
+            sql.execute("UPDATE inbox SET deliveries=deliveries+1 WHERE event_id= ?", event.eventId());
             return new Admitted(event.eventId());
-        });
+        }
+        reserveStorage(sql, body.length);
+        sql.execute("INSERT INTO inbox(event_id,envelope,payload_hash,state,next_attempt_at,received_at,received_exchange,payload_bytes,raw_body,site_id) VALUES (?,?::jsonb,?,'RECEIVED',?::timestamptz,?::timestamptz,?,?,?,?)",
+                event.eventId(), JsonSupport.write(event), hash, now(), now(), exchange, body.length, body, event.siteId());
+        attempt(sql, event);
+        return new Admitted(event.eventId());
     }
 
     public int retry(int limit) {

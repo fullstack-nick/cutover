@@ -2,6 +2,8 @@ package dev.cutover.platform.messaging;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.ArrayList;
+import com.rabbitmq.client.GetResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.amqp.core.Message;
@@ -52,29 +54,45 @@ public final class RabbitDelivery implements OutboxRelay.Publisher {
         catch (Exception unavailable) { throw DeliveryFailure.pending("CONFIRM_UNAVAILABLE"); }
     }
 
-    /** A bounded pull loop has only one unacknowledged delivery at a time; QoS is not its bound. */
+    /** Basic-get has no prefetch bound: this explicit batch bounds memory and unacknowledged deliveries. */
     public int consume(String queue, DurableInbox inbox, int limit) {
         if (limit < 1 || limit > 32) throw new IllegalArgumentException("Consumer batch must be 1..32");
         Integer count = template.execute(channel -> {
-            int consumed = 0;
-            while (consumed < limit) {
-                var delivery = channel.basicGet(queue, false);
-                if (delivery == null) break;
-                long tag = delivery.getEnvelope().getDeliveryTag();
-                try {
-                    UUID id = inbox.receive(delivery.getEnvelope().getExchange(), delivery.getProps().getMessageId(), delivery.getBody()).id();
-                    hooks.reached("AFTER_EFFECT_BEFORE_ACK", id);
-                    channel.basicAck(tag, false);
-                    consumed++;
-                } catch (RuntimeException failure) {
-                    channel.basicNack(tag, false, true);
-                    throw failure; // Runtime applies a transport backoff before trying again.
-                } catch (Error crash) {
-                    // Test crash hooks model abrupt channel loss. A real process halt cannot acknowledge.
-                    channel.abort(); throw crash;
+            var deliveries = new ArrayList<GetResponse>(limit);
+            try {
+                while (deliveries.size() < limit) {
+                    var delivery = channel.basicGet(queue, false);
+                    if (delivery == null) break;
+                    deliveries.add(delivery);
                 }
+            } catch (java.io.IOException | RuntimeException unavailable) {
+                channel.abort(); throw unavailable;
             }
-            return consumed;
+            if (deliveries.isEmpty()) return 0;
+            int acknowledged = 0;
+            try {
+                var receipts = inbox.receiveBatch(deliveries.stream().map(delivery -> new DurableInbox.Delivery(
+                        delivery.getEnvelope().getExchange(), delivery.getProps().getMessageId(), delivery.getBody())).toList());
+                for (int index = 0; index < receipts.size(); index++) {
+                    hooks.reached("AFTER_EFFECT_BEFORE_ACK", receipts.get(index).id());
+                    channel.basicAck(deliveries.get(index).getEnvelope().getDeliveryTag(), false);
+                    acknowledged++;
+                }
+            } catch (RuntimeException failure) {
+                // No failed transfer is acknowledged. Already committed peers may redeliver safely.
+                try {
+                    for (int index = acknowledged; index < deliveries.size(); index++)
+                        channel.basicNack(deliveries.get(index).getEnvelope().getDeliveryTag(), false, true);
+                } catch (java.io.IOException unavailable) {
+                    failure.addSuppressed(unavailable); channel.abort();
+                }
+                throw failure; // Runtime applies a transport backoff before trying again.
+            } catch (Error crash) {
+                channel.abort(); throw crash;
+            } catch (java.io.IOException unavailable) {
+                channel.abort(); throw unavailable;
+            }
+            return acknowledged;
         });
         return count == null ? 0 : count;
     }

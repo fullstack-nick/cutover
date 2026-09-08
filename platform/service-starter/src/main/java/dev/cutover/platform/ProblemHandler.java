@@ -31,7 +31,9 @@ public final class ProblemHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class}) ResponseEntity<ProblemDetail> invalid() {
         return problem(Problem.invalid("The request violates the operation's contract."));
     }
-    @ExceptionHandler(DataAccessException.class) ResponseEntity<ProblemDetail> database() {
+    @ExceptionHandler({DataAccessException.class, org.springframework.dao.DataAccessException.class,
+            org.springframework.transaction.TransactionException.class})
+    ResponseEntity<ProblemDetail> database() {
         return problem(new Problem(503, "DATABASE_UNAVAILABLE", "The operation could not commit durably; retry with the same request key."));
     }
 }
