@@ -1,7 +1,7 @@
 {
   "format": 1,
   "description": "Selected executed runtime checks. Source/build/runtime revisions are distinct. Scenario mapping is reviewed against actual assertions, not inferred from case labels. Raw evidence is private; original result hashes permit local provenance checks. This file does not replace the acceptance status table.",
-  "generatedAt": "2026-09-08T17:32:12.088Z",
+  "generatedAt": "2026-09-08T17:35:33.851Z",
   "runs": [
     {
       "runId": "equipment-recovery-1788814389493",
@@ -6559,7 +6559,15 @@
           "archiveSha256": "328772d0d69e3fd59aec072d864aee5dc7ee463f8d6f239a98e1c170303fe86b"
         }
       },
-      "world": {}
+      "world": {
+        "worldId": "3b9c9c76-96ea-43e3-b009-af0c97939b35",
+        "journalGeneration": "d9f73d93-eff7-4cc7-a0db-238a6ff24571"
+      },
+      "worldAfter": {
+        "worldId": "3b9c9c76-96ea-43e3-b009-af0c97939b35",
+        "journalGeneration": "d9f73d93-eff7-4cc7-a0db-238a6ff24571",
+        "journalHighWater": 12102
+      }
     },
     {
       "runId": "order-register-1788866584899",
@@ -7538,7 +7546,15 @@
           "archiveSha256": "328772d0d69e3fd59aec072d864aee5dc7ee463f8d6f239a98e1c170303fe86b"
         }
       },
-      "world": {}
+      "world": {
+        "worldId": "3b9c9c76-96ea-43e3-b009-af0c97939b35",
+        "journalGeneration": "d9f73d93-eff7-4cc7-a0db-238a6ff24571"
+      },
+      "worldAfter": {
+        "worldId": "086194fe-9210-4ca1-b468-896d4a8e91b4",
+        "journalGeneration": "6c482662-f64c-4157-9b24-6ba45604c7b7",
+        "journalHighWater": 0
+      }
     },
     {
       "runId": "work-console-1788869826870",
@@ -8026,7 +8042,15 @@
           "archiveSha256": "44d2f5762777cf457559f62c06318dd80f08e39b5c84e51e5742f31cfafb382e"
         }
       },
-      "world": {}
+      "world": {
+        "worldId": "086194fe-9210-4ca1-b468-896d4a8e91b4",
+        "journalGeneration": "6c482662-f64c-4157-9b24-6ba45604c7b7"
+      },
+      "worldAfter": {
+        "worldId": "086194fe-9210-4ca1-b468-896d4a8e91b4",
+        "journalGeneration": "6c482662-f64c-4157-9b24-6ba45604c7b7",
+        "journalHighWater": 6
+      }
     },
     {
       "runId": "shadow-1788869933650",
@@ -14574,6 +14598,505 @@
       "world": {
         "worldId": "086194fe-9210-4ca1-b468-896d4a8e91b4",
         "journalGeneration": "6c482662-f64c-4157-9b24-6ba45604c7b7"
+      }
+    },
+    {
+      "runId": "reset-bootstrap-1788887847395",
+      "scenarioIds": [
+        "A52",
+        "A54"
+      ],
+      "reproduce": "node tools/scenario-driver/reset-bootstrap-smoke.mjs --destroy-cutover --new-world",
+      "recordedAt": "2026-09-08T17:32:09.257Z",
+      "profile": "demo",
+      "revision": "daa07190f4c527343d3444691efa2bea5b8e62d2",
+      "dirty": true,
+      "startedAt": "2026-09-08T17:17:27.506Z",
+      "endedAt": "2026-09-08T17:32:08.217Z",
+      "seed": {
+        "rows": 200,
+        "onHand": 19604,
+        "reserved": 0
+      },
+      "scope": "Verified checkpoint and archived old world, explicit/stale-flag safeguards, unrelated-resource preservation, 604.419-second prepared-image fresh bootstrap, real login and both legacy-owned products. The separate timed reviewer command sequence is not established by this run.",
+      "originalResultsSha256": "21450fc915fd48218e25077e9e014dda1320abae86f6c78508317f8e8c573a40",
+      "cases": [
+        {
+          "name": "Explicit reset preserves unrelated resources and private archives, refuses an old reset against a new demo, and the exact cached-image bootstrap creates a fresh seed/world with real login and both products",
+          "status": "passed",
+          "scope": "Fresh local bootstrap with prepared images; source build and the recorded reviewer walkthrough are separate checks."
+        }
+      ],
+      "applicationBuild": {
+        "builtAt": "2026-09-08T15:57:05.1831338Z",
+        "revision": "cacff2d0d2419dd5e346f4573f5cd21358fd7379",
+        "dirty": false,
+        "images": [
+          {
+            "service": "equipment-simulator",
+            "reference": "cutover/equipment-simulator:cacff2d0d241-1ca46dab0fbd",
+            "imageId": "sha256:657f88f64070d65b3bdbd1f1bd2c556ba52c3197367d0e0a130d1fb89caea048",
+            "jarSha256": "d1aa4bc2cb58f1761b5966b7695ec9dd89ab3174e908801bba3adf8e3be36fd1"
+          },
+          {
+            "service": "equipment-adapter",
+            "reference": "cutover/equipment-adapter:cacff2d0d241-3a38f2fc2b3b",
+            "imageId": "sha256:1d1163de12fdb0dbf44b091b5d016d42557cdf1a52fd016c5f9ee3dbe95751ea",
+            "jarSha256": "7c81a5fcd787f2c415fb43d4afde54e0a441cd18fea4d1a6da832855b94db824"
+          },
+          {
+            "service": "legacy-core",
+            "reference": "cutover/legacy-core:cacff2d0d241-c127443fe78a",
+            "imageId": "sha256:29b178792b24c16107cf625d18304c6fcddabf77cc36b3ee4977f0189e57ca01",
+            "jarSha256": "740a9d18508168ab57f82690deb811246d8d538a0117d41bbee5a8b918f9ff32"
+          },
+          {
+            "service": "execution-service",
+            "reference": "cutover/execution-service:cacff2d0d241-436326a94f14",
+            "imageId": "sha256:aa10bce30ee4c166d94dffaf08344e01ba931caa38aa3e520f79913feff06110",
+            "jarSha256": "9a3beecbda023ccfbea96104c3e67ff0d71ef5ed40daf87c4d53459b60b1e5e4"
+          },
+          {
+            "service": "returns-service",
+            "reference": "cutover/returns-service:cacff2d0d241-f7802c23097f",
+            "imageId": "sha256:ac7ca6313b9049982dc58bc8d77ddb92018bb0905c9b86ecdbb2489f622e4a09",
+            "jarSha256": "b7496167c7a5d3d3beba89498d68d7a709875eb81b2bba732e71b34912033bd5"
+          },
+          {
+            "service": "keycloak",
+            "reference": "cutover/keycloak:26.7.3-cacff2d0d241-15f0e185f9cb",
+            "imageId": "sha256:9862966bc28fa9408223c39573c728007098c8a614b15fbbae8fff8a3ba9f934"
+          },
+          {
+            "service": "operations-console",
+            "reference": "cutover/operations-console:cacff2d0d241-5c53e7d56cde",
+            "imageId": "sha256:34b93d16166fed9c9bf302ef681ab78813fa8644524799e812a6425dc251be08",
+            "builtAt": "2026-09-08T16:00:12.5662743Z",
+            "revision": "cacff2d0d2419dd5e346f4573f5cd21358fd7379",
+            "contentSha256": "5c53e7d56cde16db2733ecc33e8d9b1d9febceaf779a0df2a3f96fd9823d2d96"
+          }
+        ]
+      },
+      "running": {
+        "simulator": {
+          "imageId": "sha256:657f88f64070d65b3bdbd1f1bd2c556ba52c3197367d0e0a130d1fb89caea048",
+          "imageReference": "cutover/equipment-simulator:cacff2d0d241-1ca46dab0fbd",
+          "startedAt": "2026-09-08T17:22:08.620106828Z"
+        },
+        "pods": [
+          {
+            "namespace": "cutover-apps",
+            "name": "equipment-adapter-6ff78fd95-t28st",
+            "uid": "e44ee4bf-6783-478d-8069-7211dc51d153",
+            "containers": [
+              {
+                "name": "equipment-adapter",
+                "image": "docker.io/cutover/cache:equipment-adapter-ba6f5af8738b83e72e92",
+                "imageId": "docker.io/cutover/equipment-adapter@sha256:eff2a0186525beafbb582621876251660e7e5996d3da2e34b4f4f014a6ab5746",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "execution-service-7fc64d5949-4p2x6",
+            "uid": "5dd1ab26-2ecf-452a-a6dd-63061fc36cc7",
+            "containers": [
+              {
+                "name": "execution-service",
+                "image": "docker.io/cutover/cache:execution-service-c1e5da32bc60feb802bf",
+                "imageId": "docker.io/cutover/execution-service@sha256:c5eb4e852c3da7ae8d1dd116ffef7a361b9f3f30581a995a328a0817deb12fa7",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "legacy-core-687c646864-97khr",
+            "uid": "be5a20b6-8b8e-4d44-8be1-742f68f6df72",
+            "containers": [
+              {
+                "name": "legacy-core",
+                "image": "docker.io/cutover/cache:legacy-core-1234a3d557430f583c92",
+                "imageId": "docker.io/cutover/legacy-core@sha256:341cc98ff6eabd6420758b8fdfb724ea706d59f7144f96af69f7d4aa963ec738",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "migrate-equipment-adapter-pfzmk",
+            "uid": "e81e90d3-bd0c-4edb-b3ea-53cb6aedc334",
+            "containers": [
+              {
+                "name": "migrate",
+                "image": "docker.io/cutover/cache:equipment-adapter-ba6f5af8738b83e72e92",
+                "imageId": "docker.io/cutover/equipment-adapter@sha256:eff2a0186525beafbb582621876251660e7e5996d3da2e34b4f4f014a6ab5746",
+                "ready": false,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "migrate-execution-service-dp5cd",
+            "uid": "c7069137-22cd-44dc-a0c8-42f63be217d2",
+            "containers": [
+              {
+                "name": "migrate",
+                "image": "docker.io/cutover/cache:execution-service-c1e5da32bc60feb802bf",
+                "imageId": "docker.io/cutover/execution-service@sha256:c5eb4e852c3da7ae8d1dd116ffef7a361b9f3f30581a995a328a0817deb12fa7",
+                "ready": false,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "migrate-legacy-core-px8tk",
+            "uid": "51668c1f-8889-44a6-9c34-db1caa85fe3b",
+            "containers": [
+              {
+                "name": "migrate",
+                "image": "docker.io/cutover/cache:legacy-core-1234a3d557430f583c92",
+                "imageId": "docker.io/cutover/legacy-core@sha256:341cc98ff6eabd6420758b8fdfb724ea706d59f7144f96af69f7d4aa963ec738",
+                "ready": false,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "migrate-returns-service-8fh5d",
+            "uid": "71908708-92c6-4237-9429-fb971308dcb7",
+            "containers": [
+              {
+                "name": "migrate",
+                "image": "docker.io/cutover/cache:returns-service-e665dfd002526cf9bdd8",
+                "imageId": "docker.io/cutover/returns-service@sha256:068fa461be88191b1ef652c3a48bd9793285b11143aad2bff55a65d0f11223b9",
+                "ready": false,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "migrate-shadow-scheduler-6pz79",
+            "uid": "4e4e196b-e2d7-44ab-bc78-eba13851cff9",
+            "containers": [
+              {
+                "name": "migrate",
+                "image": "docker.io/cutover/cache:execution-service-c1e5da32bc60feb802bf",
+                "imageId": "docker.io/cutover/execution-service@sha256:c5eb4e852c3da7ae8d1dd116ffef7a361b9f3f30581a995a328a0817deb12fa7",
+                "ready": false,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "proxy-74cf6fd774-jbn84",
+            "uid": "e40c2666-6266-45d1-bbe2-7094fe694b8e",
+            "containers": [
+              {
+                "name": "proxy",
+                "image": "docker.io/cutover/cache:operations-console-b5b64c004a8e8bf3e568",
+                "imageId": "docker.io/cutover/operations-console@sha256:eed4d4cd80bd59fbf5bb7879495084e2b91f0c60af64f7544296d9f0de2c01be",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "returns-service-848bb4dc99-rg2zp",
+            "uid": "90f69b1d-a9d8-42c0-8040-80c98cb7ecde",
+            "containers": [
+              {
+                "name": "returns-service",
+                "image": "docker.io/cutover/cache:returns-service-e665dfd002526cf9bdd8",
+                "imageId": "docker.io/cutover/returns-service@sha256:068fa461be88191b1ef652c3a48bd9793285b11143aad2bff55a65d0f11223b9",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-apps",
+            "name": "shadow-scheduler-c56f9687-sdp25",
+            "uid": "84cec946-e0ee-407c-ba75-75c0f19d6734",
+            "containers": [
+              {
+                "name": "shadow-scheduler",
+                "image": "docker.io/cutover/cache:execution-service-c1e5da32bc60feb802bf",
+                "imageId": "docker.io/cutover/execution-service@sha256:c5eb4e852c3da7ae8d1dd116ffef7a361b9f3f30581a995a328a0817deb12fa7",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-platform",
+            "name": "application-db-0",
+            "uid": "8f25727a-47de-4b93-a88d-7d48d5d7c3b9",
+            "containers": [
+              {
+                "name": "application-db",
+                "image": "docker.io/cutover/cache:postgres-2ac3de5408c883ee5c38",
+                "imageId": "docker.io/library/import-2026-09-08@sha256:5c50bd820c9d1fb4b5a900db41c1c4ad221e394610b0f30072de5ab33719bc1f",
+                "ready": true,
+                "restartCount": 0
+              },
+              {
+                "name": "volume-probe",
+                "image": "docker.io/cutover/cache:postgres-2ac3de5408c883ee5c38",
+                "imageId": "docker.io/library/import-2026-09-08@sha256:5c50bd820c9d1fb4b5a900db41c1c4ad221e394610b0f30072de5ab33719bc1f",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-platform",
+            "name": "keycloak-99f59cc74-4w27z",
+            "uid": "b9b9abfd-0d9e-4c18-850a-039ce9ebce15",
+            "containers": [
+              {
+                "name": "keycloak",
+                "image": "docker.io/cutover/cache:keycloak-baf7102b3bf5231fe28b",
+                "imageId": "docker.io/cutover/keycloak@sha256:d71ff15e8c484b22aafba70b8a0df206de4e0e41fdf9f24301cb6c3e35945162",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-platform",
+            "name": "migrate-keycloak-t9n2g",
+            "uid": "2f768766-cb18-4d44-8a53-370c4140f97c",
+            "containers": [
+              {
+                "name": "migrate",
+                "image": "docker.io/cutover/cache:keycloak-baf7102b3bf5231fe28b",
+                "imageId": "docker.io/cutover/keycloak@sha256:d71ff15e8c484b22aafba70b8a0df206de4e0e41fdf9f24301cb6c3e35945162",
+                "ready": false,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-platform",
+            "name": "rabbitmq-0",
+            "uid": "58425d1b-3543-437f-9607-420fb0d07a50",
+            "containers": [
+              {
+                "name": "rabbitmq",
+                "image": "docker.io/cutover/cache:rabbitmq-eeb472f2498ac741f2bf",
+                "imageId": "docker.io/library/import-2026-09-08@sha256:c518054359e77dba0f4cb070d709d1fd6e3b20ea304935e05b923cb9216779c6",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-observability",
+            "name": "collector-786fdff745-vr4q2",
+            "uid": "788a3894-d2b2-45b4-9a9f-ff7540507f74",
+            "containers": [
+              {
+                "name": "collector",
+                "image": "docker.io/cutover/cache:collector-a9d072e6b82fbca3e405",
+                "imageId": "docker.io/library/import-2026-09-08@sha256:c8f9abc5a313330b313463d3e797e29cf6f105c9c2386881c7ba6f6a38647859",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-observability",
+            "name": "grafana-0",
+            "uid": "a53907f3-4f9d-4844-820e-57360fb0d575",
+            "containers": [
+              {
+                "name": "grafana",
+                "image": "docker.io/cutover/cache:grafana-20e537cbd88e7de087dd",
+                "imageId": "docker.io/grafana/grafana@sha256:1dec240d14e232597dce9bfa56dae55f4397b138cdc91e3ee92ac6b157e2fc49",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-observability",
+            "name": "prometheus-0",
+            "uid": "449bffb1-0d46-4a1b-966b-69819908b45a",
+            "containers": [
+              {
+                "name": "prometheus",
+                "image": "docker.io/cutover/cache:prometheus-2ec2b8947673cb5b79b4",
+                "imageId": "docker.io/library/import-2026-09-08@sha256:27386dde2efaf2ff81ce43d3d0d5ed5032c16d97dfc69cd51bcd16c26624ce7a",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          },
+          {
+            "namespace": "cutover-observability",
+            "name": "tempo-0",
+            "uid": "6a1cb1a1-2315-4a7b-a8ba-648682c11520",
+            "containers": [
+              {
+                "name": "tempo",
+                "image": "docker.io/cutover/cache:tempo-ed0145b4f14f79e890b6",
+                "imageId": "docker.io/grafana/tempo@sha256:05321ebf1f191fde34282b3dc86e68f511d489133df7963cd1670a2e1e11b33c",
+                "ready": true,
+                "restartCount": 0
+              }
+            ]
+          }
+        ]
+      },
+      "imageArchives": {
+        "calicoCni": {
+          "source": "quay.io/calico/cni:v3.32.2@sha256:0ef740bc587f25565905adf1d1f61a7faff0d571c449c6bdd789feed743d3ef7",
+          "sourceImageId": "sha256:0ef740bc587f25565905adf1d1f61a7faff0d571c449c6bdd789feed743d3ef7",
+          "platform": "linux/amd64",
+          "runtimeReference": "quay.io/calico/cni@sha256:8de23af2a36514e5027cf3f8577be61c577ae21664d19bd726bb9ccedb9e0d5a",
+          "manifestDigest": "sha256:8de23af2a36514e5027cf3f8577be61c577ae21664d19bd726bb9ccedb9e0d5a",
+          "archiveSha256": "759c6ddd0c82651775bf87fdf98e8e26ae42972d1b0c3883b817c17937b2aa7d"
+        },
+        "calicoNode": {
+          "source": "quay.io/calico/node:v3.32.2@sha256:99b03fe91e8bfbcb153ae65ef4b701b24ce541ffdd74ff314eb041096008f7fd",
+          "sourceImageId": "sha256:99b03fe91e8bfbcb153ae65ef4b701b24ce541ffdd74ff314eb041096008f7fd",
+          "platform": "linux/amd64",
+          "runtimeReference": "quay.io/calico/node@sha256:d7a9b58573b165caa8128d2735a19b788434547064b2b4af2abf68cea24f7ec3",
+          "manifestDigest": "sha256:d7a9b58573b165caa8128d2735a19b788434547064b2b4af2abf68cea24f7ec3",
+          "archiveSha256": "6fed3f2c8c26a503a3e7c41f495e3fcee5700c4116efee21e02f7552163f4760"
+        },
+        "calicoControllers": {
+          "source": "quay.io/calico/kube-controllers:v3.32.2@sha256:7870b67ebb13fabc3005252b44fe6e78b21635649bd3072b80afa1684b6565d0",
+          "sourceImageId": "sha256:7870b67ebb13fabc3005252b44fe6e78b21635649bd3072b80afa1684b6565d0",
+          "platform": "linux/amd64",
+          "runtimeReference": "quay.io/calico/kube-controllers@sha256:f241490840083743e747389af8d5067c961370bd5e2e2af6538db2f7e183f60b",
+          "manifestDigest": "sha256:f241490840083743e747389af8d5067c961370bd5e2e2af6538db2f7e183f60b",
+          "archiveSha256": "a0e69f785bbc634ca750a6c9a141853782d409778077096e16b9fadd57566e01"
+        },
+        "postgres": {
+          "source": "postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af",
+          "sourceImageId": "sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/library/postgres@sha256:a10c981235b4f635e65df0cfb66a5598064628128505dbc6a3ed4ca303717521",
+          "manifestDigest": "sha256:a10c981235b4f635e65df0cfb66a5598064628128505dbc6a3ed4ca303717521",
+          "archiveSha256": "7a01b6a50de12a68f73483e80b3b69002cd3af3f566dcef861a585c1ef9fc13b"
+        },
+        "rabbitmq": {
+          "source": "rabbitmq:4.3.5-management@sha256:ffd1b50c522ad20172ffd6716a2f41db375c7269560c8f3fb9a694e210ef0852",
+          "sourceImageId": "sha256:ffd1b50c522ad20172ffd6716a2f41db375c7269560c8f3fb9a694e210ef0852",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/library/rabbitmq@sha256:17e61a9b064066c87368f33cf80b0b05749cbacebf204ed0b674a4a7bcd05c38",
+          "manifestDigest": "sha256:17e61a9b064066c87368f33cf80b0b05749cbacebf204ed0b674a4a7bcd05c38",
+          "archiveSha256": "509ce3f8e795a04bbe31a53c77537b4399a818dc9b0856e2f6f41c09ceb9ff67"
+        },
+        "proxy": {
+          "source": "nginxinc/nginx-unprivileged:1.30.0-alpine@sha256:808f7846d21a9c94cf53833e8807a00a33fd0b65cc47fb05b79efe366c2d201f",
+          "sourceImageId": "sha256:808f7846d21a9c94cf53833e8807a00a33fd0b65cc47fb05b79efe366c2d201f",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/nginxinc/nginx-unprivileged@sha256:55465f646e63d7fb34be8cc17fdedbc89864f0f824d0d1906cdc5d81de093e12",
+          "manifestDigest": "sha256:55465f646e63d7fb34be8cc17fdedbc89864f0f824d0d1906cdc5d81de093e12",
+          "archiveSha256": "5c8de75cf01179745cc48f9aaa69df6b155de4e487e5e61f804423011b2ddbe5"
+        },
+        "collector": {
+          "source": "otel/opentelemetry-collector-contrib:0.160.0@sha256:799dc6cf12c96192af37b5bdba804da8c10b3bc563b43cb90c3f3c58d9572ad6",
+          "sourceImageId": "sha256:799dc6cf12c96192af37b5bdba804da8c10b3bc563b43cb90c3f3c58d9572ad6",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/otel/opentelemetry-collector-contrib@sha256:5b66b0dc6921f2a439cf50b942ccb9e2a4375f136239a9fdf709ef33e4bfc668",
+          "manifestDigest": "sha256:5b66b0dc6921f2a439cf50b942ccb9e2a4375f136239a9fdf709ef33e4bfc668",
+          "archiveSha256": "71a75a30c88acc0cef755738cb864fc16250159a120449a4b1eb0d000893f80a"
+        },
+        "prometheus": {
+          "source": "prom/prometheus:v3.14.0@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0",
+          "sourceImageId": "sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/prom/prometheus@sha256:e906cef998316bbe319f98711e1b4d8613ad37e14b08ff831d7036e77b7464f9",
+          "manifestDigest": "sha256:e906cef998316bbe319f98711e1b4d8613ad37e14b08ff831d7036e77b7464f9",
+          "archiveSha256": "5187e3d02e580e03e094a72dd0da912e8dea822464aea75a08256eaac3c046d2"
+        },
+        "grafana": {
+          "source": "grafana/grafana:13.2.1@sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283",
+          "sourceImageId": "sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/grafana/grafana@sha256:1dec240d14e232597dce9bfa56dae55f4397b138cdc91e3ee92ac6b157e2fc49",
+          "manifestDigest": "sha256:1dec240d14e232597dce9bfa56dae55f4397b138cdc91e3ee92ac6b157e2fc49",
+          "archiveSha256": "9a85484b966960cd4b4fdef47faeb33d9c4e65774be73c000061306bd659bd08"
+        },
+        "tempo": {
+          "source": "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5",
+          "sourceImageId": "sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/grafana/tempo@sha256:05321ebf1f191fde34282b3dc86e68f511d489133df7963cd1670a2e1e11b33c",
+          "manifestDigest": "sha256:05321ebf1f191fde34282b3dc86e68f511d489133df7963cd1670a2e1e11b33c",
+          "archiveSha256": "77373bf16c43dd9f5717e1bed7368fcf3168367bf37e08bc105abaabaa5162ac"
+        },
+        "equipment-adapter": {
+          "source": "cutover/equipment-adapter:cacff2d0d241-3a38f2fc2b3b",
+          "sourceImageId": "sha256:1d1163de12fdb0dbf44b091b5d016d42557cdf1a52fd016c5f9ee3dbe95751ea",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/cutover/equipment-adapter@sha256:eff2a0186525beafbb582621876251660e7e5996d3da2e34b4f4f014a6ab5746",
+          "manifestDigest": "sha256:eff2a0186525beafbb582621876251660e7e5996d3da2e34b4f4f014a6ab5746",
+          "archiveSha256": "5b1c79d5d76cabfce7b620712a6ede527250c04fcdc1d675af8c177f6c234516"
+        },
+        "legacy-core": {
+          "source": "cutover/legacy-core:cacff2d0d241-c127443fe78a",
+          "sourceImageId": "sha256:29b178792b24c16107cf625d18304c6fcddabf77cc36b3ee4977f0189e57ca01",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/cutover/legacy-core@sha256:341cc98ff6eabd6420758b8fdfb724ea706d59f7144f96af69f7d4aa963ec738",
+          "manifestDigest": "sha256:341cc98ff6eabd6420758b8fdfb724ea706d59f7144f96af69f7d4aa963ec738",
+          "archiveSha256": "fb5950112ad81a48fda4f05a90b033bf112ab68694a4d172bb77c6ccac5c8cbc"
+        },
+        "keycloak": {
+          "source": "cutover/keycloak:26.7.3-cacff2d0d241-15f0e185f9cb",
+          "sourceImageId": "sha256:9862966bc28fa9408223c39573c728007098c8a614b15fbbae8fff8a3ba9f934",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/cutover/keycloak@sha256:d71ff15e8c484b22aafba70b8a0df206de4e0e41fdf9f24301cb6c3e35945162",
+          "manifestDigest": "sha256:d71ff15e8c484b22aafba70b8a0df206de4e0e41fdf9f24301cb6c3e35945162",
+          "archiveSha256": "fe375858bbc9357ca7a618fbd5e1afc6556b8b4ab193836f39c6e126d745c4d8"
+        },
+        "operations-console": {
+          "source": "cutover/operations-console:cacff2d0d241-5c53e7d56cde",
+          "sourceImageId": "sha256:34b93d16166fed9c9bf302ef681ab78813fa8644524799e812a6425dc251be08",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/cutover/operations-console@sha256:eed4d4cd80bd59fbf5bb7879495084e2b91f0c60af64f7544296d9f0de2c01be",
+          "manifestDigest": "sha256:eed4d4cd80bd59fbf5bb7879495084e2b91f0c60af64f7544296d9f0de2c01be",
+          "archiveSha256": "e068ed59943636d985c5bf400cb629b3292eac5710123200dcd1522aaa8f69fe"
+        },
+        "execution-service": {
+          "source": "cutover/execution-service:cacff2d0d241-436326a94f14",
+          "sourceImageId": "sha256:aa10bce30ee4c166d94dffaf08344e01ba931caa38aa3e520f79913feff06110",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/cutover/execution-service@sha256:c5eb4e852c3da7ae8d1dd116ffef7a361b9f3f30581a995a328a0817deb12fa7",
+          "manifestDigest": "sha256:c5eb4e852c3da7ae8d1dd116ffef7a361b9f3f30581a995a328a0817deb12fa7",
+          "archiveSha256": "492e9226d6006a010dc4daaf9b11ceea34ebbf24cf6b82adc1d55290d1e2f6dc"
+        },
+        "returns-service": {
+          "source": "cutover/returns-service:cacff2d0d241-f7802c23097f",
+          "sourceImageId": "sha256:ac7ca6313b9049982dc58bc8d77ddb92018bb0905c9b86ecdbb2489f622e4a09",
+          "platform": "linux/amd64",
+          "runtimeReference": "docker.io/cutover/returns-service@sha256:068fa461be88191b1ef652c3a48bd9793285b11143aad2bff55a65d0f11223b9",
+          "manifestDigest": "sha256:068fa461be88191b1ef652c3a48bd9793285b11143aad2bff55a65d0f11223b9",
+          "archiveSha256": "49590df586c7a9e5b777ce7736529d47c22ebe07ca93bff74c4964097f69d29d"
+        }
+      },
+      "world": {
+        "worldId": "086194fe-9210-4ca1-b468-896d4a8e91b4",
+        "journalGeneration": "6c482662-f64c-4157-9b24-6ba45604c7b7"
+      },
+      "worldAfter": {
+        "worldId": "07388079-4c97-4ea4-bbba-64c8f7b6455b",
+        "journalGeneration": "702c2dc7-7bb0-4dd4-88a5-b7644f350978",
+        "journalHighWater": 0
       }
     }
   ]
