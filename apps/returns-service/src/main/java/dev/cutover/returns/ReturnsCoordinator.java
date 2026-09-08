@@ -24,7 +24,11 @@ public final class ReturnsCoordinator {
         if(!database.fetchOne("SELECT EXISTS(SELECT 1 FROM return_tasks WHERE state NOT IN ('COMPLETED','RECONCILIATION_REQUIRED') AND NOT transport_paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz))",now(),now()).get(0,Boolean.class))return 0;
         var tasks=database.transactionResult(configuration->{var sql=DSL.using(configuration);
             if(!Database.workersMayWrite(sql))return sql.fetch("SELECT t.*,m.movement,m.receipt_id FROM return_tasks t JOIN return_movements m USING(movement_id) WHERE false");
-            var rows=sql.fetch("SELECT t.*,m.movement,m.receipt_id FROM return_tasks t JOIN return_movements m USING(movement_id) WHERE t.state NOT IN ('COMPLETED','RECONCILIATION_REQUIRED') AND NOT t.transport_paused AND t.next_attempt_at<=?::timestamptz AND (t.lease_until IS NULL OR t.lease_until<?::timestamptz) ORDER BY t.created_at,t.movement_id LIMIT 16 FOR UPDATE OF t SKIP LOCKED",now(),now());
+            String candidates="SELECT t.*,m.movement,m.receipt_id FROM return_tasks t JOIN return_movements m USING(movement_id) WHERE t.state NOT IN ('COMPLETED','RECONCILIATION_REQUIRED') AND NOT t.transport_paused AND t.next_attempt_at<=?::timestamptz AND (t.lease_until IS NULL OR t.lease_until<?::timestamptz)";
+            String fresh="t.dispatch_accepted_at IS NULL AND t.state='READY'";
+            // FIFO applies to new receipts without letting already recorded commands consume every turn.
+            var rows=sql.fetch(candidates+" AND ("+fresh+") ORDER BY t.created_at,t.movement_id LIMIT 12 FOR UPDATE OF t SKIP LOCKED",now(),now());
+            rows.addAll(sql.fetch(candidates+" AND NOT ("+fresh+") ORDER BY t.next_attempt_at,t.created_at,t.movement_id LIMIT ? FOR UPDATE OF t SKIP LOCKED",now(),now(),16-rows.size()));
             for(var task:rows){UUID lease=UUID.randomUUID();task.set(DSL.field("lease_id",UUID.class),lease);sql.execute("UPDATE return_tasks SET lease_id=?,lease_until=?::timestamptz WHERE task_id=?",lease,now().plusSeconds(60),task.get("task_id"));}
             return rows;
         });

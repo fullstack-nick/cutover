@@ -62,6 +62,24 @@ class LegacyWorkflowTest {
     void tick(){clock.advance(Duration.ofMillis(500));observations.refresh();scheduler.poll();journal.work();simulator.advance();}
     void finish(UUID id,String expected){for(int i=0;i<20&&!orders.get("site-a",id).path("state").asString().equals(expected);i++)tick();assertThat(orders.get("site-a",id).path("state").asString()).isEqualTo(expected);}
 
+    @Test void recordedLegacyCommandsCannotStarveANewEligibleMovement(){
+        clock.advance(Duration.ofSeconds(30));observations.refresh();
+        for(int n=0;n<16;n++)accept("pending-legacy-"+n,new OrderService.Line("SKU-001",1));
+        for(int n=0;n<4 && adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)<16;n++){
+            clock.advance(Duration.ofMillis(500));observations.refresh();scheduler.poll();
+        }
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isEqualTo(16);
+        clock.advance(Duration.ofMillis(100));UUID order=accept("new-legacy-turn",new OrderService.Line("SKU-003",1));
+        UUID movement=coreDb.sql().fetchOne("SELECT movement_id FROM movement_intents WHERE order_id=?",order).get(0,UUID.class);
+        clock.advance(Duration.ofMillis(500));observations.refresh();
+        long previous=coreDb.sql().fetchOne("SELECT sum(version) FROM legacy_tasks WHERE movement_id<>?",movement).get(0,Long.class);
+        assertThat(scheduler.poll()).isLessThanOrEqualTo(16);
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal WHERE command_id=?",movement).get(0,Integer.class)).isEqualTo(1);
+        assertThat(coreDb.sql().fetchOne("SELECT sum(version) FROM legacy_tasks WHERE movement_id<>?",movement).get(0,Long.class)).isGreaterThan(previous);
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isZero();
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM inventory_ledger").get(0,Integer.class)).isZero();
+    }
+
     @Test void reviewerOrderPagingSurvivesNewArrivalsAndFiltersShortagesWithinTheSite(){
         UUID oldest=Database.uuid(orders.accept("scenario","site-a","page-oldest",request("Find ME ordinary",new OrderService.Line("SKU-001",1))),"id");clock.advance(Duration.ofSeconds(1));
         UUID empty=Database.uuid(orders.accept("scenario","site-a","page-empty",request("Find me empty",new OrderService.Line("SKU-099",1))),"id");

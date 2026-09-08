@@ -30,7 +30,11 @@ public final class LegacyScheduler {
         var tasks=database.transactionResult(configuration->{
             var sql=DSL.using(configuration);
             if(!Database.workersMayWrite(sql))return sql.fetch("SELECT t.*,m.movement FROM legacy_tasks t JOIN movement_intents m ON m.movement_id=t.movement_id WHERE false");
-            var rows=sql.fetch("SELECT t.*,m.movement FROM legacy_tasks t JOIN movement_intents m ON m.movement_id=t.movement_id JOIN orders o ON o.order_id=t.order_id WHERE t.state NOT IN ('COMPLETED','CANCELLED') AND NOT t.transport_paused AND NOT o.cancellation_pending AND t.next_attempt_at<=?::timestamptz AND (t.lease_until IS NULL OR t.lease_until<?::timestamptz) ORDER BY t.priority DESC,t.eligible_at,t.movement_id LIMIT 16 FOR UPDATE OF t SKIP LOCKED",now(),now());
+            String candidates="SELECT t.*,m.movement FROM legacy_tasks t JOIN movement_intents m ON m.movement_id=t.movement_id JOIN orders o ON o.order_id=t.order_id WHERE t.state NOT IN ('COMPLETED','CANCELLED') AND NOT t.transport_paused AND NOT o.cancellation_pending AND t.next_attempt_at<=?::timestamptz AND (t.lease_until IS NULL OR t.lease_until<?::timestamptz)";
+            String fresh="t.dispatch_accepted_at IS NULL AND t.state IN ('PLANNED','READY')";
+            // Preserve the SQL proposal's priority order for new work, with a separate bounded observation share.
+            var rows=sql.fetch(candidates+" AND ("+fresh+") ORDER BY t.priority DESC,t.eligible_at,t.movement_id LIMIT 12 FOR UPDATE OF t SKIP LOCKED",now(),now());
+            rows.addAll(sql.fetch(candidates+" AND NOT ("+fresh+") ORDER BY t.next_attempt_at,t.priority DESC,t.eligible_at,t.movement_id LIMIT ? FOR UPDATE OF t SKIP LOCKED",now(),now(),16-rows.size()));
             for(var row:rows){UUID lease=UUID.randomUUID();row.set(DSL.field("lease_id",UUID.class),lease);sql.execute("UPDATE legacy_tasks SET lease_id=?,lease_until=?::timestamptz WHERE task_id=?",lease,now().plusSeconds(60),row.get("task_id"));}
             return rows;
         });

@@ -64,6 +64,28 @@ class ExecutionWorkflowTest {
     void finish(UUID order){for(int n=0;n<40&&!orders.get("site-a",order).path("state").asString().equals("COMPLETED");n++)tick();assertThat(orders.get("site-a",order).path("state").asString()).isEqualTo("COMPLETED");}
     UUID movement(UUID order){return core.sql().fetchOne("SELECT movement_id FROM movement_intents WHERE order_id=?",order).get(0,UUID.class);}
     int count(DatabaseFixture db,String table){return db.sql().fetchOne("SELECT count(*) FROM "+table).get(0,Integer.class);}
+    @Test void recordedCommandsCannotStarveANewEligibleMovement() {
+        clock.advance(Duration.ofSeconds(30));observations.refresh();
+        for(int n=0;n<16;n++)accept("pending-command-"+n,new OrderService.Line("SKU-001",1));
+        messages();
+        for(int n=0;n<4 && count(adapter,"command_journal")<16;n++){
+            clock.advance(Duration.ofMillis(500));observations.refresh();scheduler.poll();
+        }
+        assertThat(count(adapter,"command_journal")).isEqualTo(16);
+        assertThat(count(physical,"execution_ledger")).isZero();
+        clock.advance(Duration.ofMillis(100));
+        UUID order=accept("new-work-behind-recorded-commands",new OrderService.Line("SKU-003",1));messages();
+        UUID movement=movement(order);
+        clock.advance(Duration.ofMillis(500));observations.refresh();
+        var previous=execution.sql().fetchOne("SELECT sum(version) FROM execution_tasks WHERE movement_id<>?",movement).get(0,Long.class);
+        assertThat(scheduler.poll()).isLessThanOrEqualTo(16);
+        assertThat(adapter.sql().fetchOne("SELECT count(*) FROM command_journal WHERE command_id=?",movement).get(0,Integer.class))
+                .as("A new eligible movement must get a dispatch turn while older commands await equipment").isEqualTo(1);
+        assertThat(execution.sql().fetchOne("SELECT sum(version) FROM execution_tasks WHERE movement_id<>?",movement).get(0,Long.class))
+                .as("Existing command observation also keeps a bounded share of the work cycle").isGreaterThan(previous);
+        assertThat(count(physical,"execution_ledger")).isZero();
+        assertThat(count(core,"inventory_ledger")).isZero();
+    }
     @Test void twoOwnersConsumeAssignmentsAndCompleteOneInventoryEffectPerPhysicalMovement(){
         UUID order=accept("two-owners",new OrderService.Line("SKU-001",2),new OrderService.Line("SKU-002",3));
         assertThat(count(core,"legacy_tasks")).isZero();assertThat(count(execution,"execution_tasks")).isZero();messages();

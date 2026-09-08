@@ -106,6 +106,23 @@ class ReturnsWorkflowTest {
     UUID movement(UUID receipt){return returns.sql().fetchOne("SELECT movement_id FROM return_movements WHERE receipt_id=?",receipt).get(0,UUID.class);}
     int count(DatabaseFixture db,String table){return db.sql().fetchOne("SELECT count(*) FROM "+table).get(0,Integer.class);}
     long total(String column){return returns.sql().fetchOne("SELECT sum("+column+") FROM crate_counters").get(0,Long.class);}
+    @Test void recordedSortingCommandsCannotStarveANewReceipt(){
+        clock.advance(Duration.ofSeconds(30));observations.refresh();
+        for(int n=0;n<16;n++)register("pending-sort-"+n,1,0,0);
+        messages();
+        for(int n=0;n<4 && count(adapter,"command_journal")<16;n++){
+            clock.advance(Duration.ofMillis(500));observations.refresh();coordinator.poll();
+        }
+        assertThat(count(adapter,"command_journal")).isEqualTo(16);
+        clock.advance(Duration.ofMillis(100));UUID receipt=register("new-sorting-turn",0,1,0);messages();
+        UUID movement=movement(receipt);
+        clock.advance(Duration.ofMillis(500));observations.refresh();
+        long previous=returns.sql().fetchOne("SELECT sum(version) FROM return_tasks WHERE movement_id<>?",movement).get(0,Long.class);
+        assertThat(coordinator.poll()).isLessThanOrEqualTo(16);
+        assertThat(adapter.sql().fetchOne("SELECT count(*) FROM command_journal WHERE command_id=?",movement).get(0,Integer.class)).isEqualTo(1);
+        assertThat(returns.sql().fetchOne("SELECT sum(version) FROM return_tasks WHERE movement_id<>?",movement).get(0,Long.class)).isGreaterThan(previous);
+        assertThat(count(physical,"execution_ledger")).isZero();assertThat(total("sorted")).isZero();
+    }
     ObjectNode newEvent(String type,UUID movement,long version){
         var event=(ObjectNode)JsonSupport.read(adapter.sql().fetchOne("SELECT envelope FROM outbox WHERE aggregate_id=? ORDER BY aggregate_version DESC LIMIT 1",movement).get(0).toString()).deepCopy();
         return event.put("eventId",UUID.randomUUID().toString()).put("eventType",type).put("aggregateVersion",version);

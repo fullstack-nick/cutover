@@ -20,7 +20,12 @@ public final class ExecutionScheduler {
         if(!database.fetchOne("SELECT EXISTS(SELECT 1 FROM execution_tasks WHERE state NOT IN ('COMPLETED','CANCELLED') AND NOT transport_paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz))",now(),now()).get(0,Boolean.class))return 0;
         var tasks=database.transactionResult(configuration->{var sql=DSL.using(configuration);
             if(!Database.workersMayWrite(sql))return sql.fetch("SELECT * FROM execution_tasks WHERE false");
-            var rows=sql.fetch("SELECT * FROM execution_tasks WHERE state NOT IN ('COMPLETED','CANCELLED') AND NOT transport_paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz) ORDER BY priority DESC,eligible_at,movement_id LIMIT 16 FOR UPDATE SKIP LOCKED",now(),now());
+            String candidates="SELECT * FROM execution_tasks WHERE state NOT IN ('COMPLETED','CANCELLED') AND NOT transport_paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz)";
+            String fresh="dispatch_accepted_at IS NULL AND state IN ('PLANNED','READY')";
+            // Old recorded or blocked work must not monopolize the candidate window.
+            // Keep at least four places for retries/observation; lend unused fresh places to that cohort.
+            var rows=sql.fetch(candidates+" AND ("+fresh+") ORDER BY priority DESC,eligible_at,movement_id LIMIT 12 FOR UPDATE SKIP LOCKED",now(),now());
+            rows.addAll(sql.fetch(candidates+" AND NOT ("+fresh+") ORDER BY next_attempt_at,priority DESC,eligible_at,movement_id LIMIT ? FOR UPDATE SKIP LOCKED",now(),now(),16-rows.size()));
             for(var row:rows){UUID lease=UUID.randomUUID();row.set(DSL.field("lease_id",UUID.class),lease);sql.execute("UPDATE execution_tasks SET lease_id=?,lease_until=?::timestamptz WHERE task_id=?",lease,now().plusSeconds(60),row.get("task_id"));}return rows;
         });
         var groups=new LinkedHashMap<String,List<Record>>();
