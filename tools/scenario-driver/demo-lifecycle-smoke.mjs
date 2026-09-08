@@ -15,7 +15,7 @@ const containers=()=>JSON.parse(call('docker',['inspect',...names])).map(box=>({
 const counts=()=>({core:JSON.parse(query('core',"SELECT jsonb_build_object('orders',(SELECT count(*) FROM orders),'reservations',(SELECT count(*) FROM reservations),'effects',(SELECT count(*) FROM inventory_ledger),'stock',(SELECT sum(on_hand) FROM stock),'reserved',(SELECT sum(reserved) FROM stock));")),returns:JSON.parse(query('returns',"SELECT jsonb_build_object('receipts',(SELECT count(*) FROM receipts),'effects',(SELECT count(*) FROM sorting_ledger),'received',(SELECT sum(received) FROM crate_counters),'sorted',(SELECT sum(sorted) FROM crate_counters));"))});
 async function step(action){
   const file=openSync(resolve(directory,`${action.toLowerCase()}-${evidence.steps.length}.log`),'w',0o600),startedAt=new Date().toISOString();
-  try{await new Promise((done,failed)=>{const child=spawn(process.execPath,['scripts/demo.mjs',action],{cwd:root,windowsHide:true,stdio:['ignore',file,file]});child.once('error',failed);child.once('exit',code=>code===0?done():failed(new Error(`Demo ${action} failed (${code}); inspect the retained lifecycle log.`)));});}
+  try{await new Promise((done,failed)=>{const child=spawn(process.execPath,['scripts/demo.mjs',action,...(offlineBrowser?['--preserve-offline-denial']:[])],{cwd:root,windowsHide:true,stdio:['ignore',file,file]});child.once('error',failed);child.once('exit',code=>code===0?done():failed(new Error(`Demo ${action} failed (${code}); inspect the retained lifecycle log.`)));});}
   finally{closeSync(file);evidence.steps.push({action,startedAt,endedAt:new Date().toISOString()});}
 }
 let stopped=false,session,failure;

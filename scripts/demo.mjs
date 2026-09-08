@@ -5,7 +5,10 @@ import { spawn } from 'node:child_process';
 import { root, call, jsonFile, writeJson, privateDirectory, maintenanceLock, target, until, simulatorRead, request, maintenanceToken } from './lib/local-platform.mjs';
 import { refreshEquipmentEndpoint } from './lib/equipment-endpoint.mjs';
 
-const action=process.argv[2];assert.equal(process.argv.length,3);assert.ok(['Start','Stop','Status'].includes(action),'Use Start, Stop or Status.');
+const action=process.argv[2],options=process.argv.slice(3);
+assert.ok(options.length<=1&&options.every(value=>value==='--preserve-offline-denial'),'The only optional lifecycle flag is --preserve-offline-denial.');
+const preserveOffline=options.includes('--preserve-offline-denial');
+assert.ok(['Start','Stop','Status'].includes(action),'Use Start, Stop or Status.');
 const names=['cutover-control-plane','cutover-dev-equipment-simulator-1','cutover-dev-simulator-db-1','cutover-dev-equipment-volume-probe-1'];
 const path=resolve(root,'.local/operations/demo-lifecycle.json');privateDirectory(resolve(root,'.local/operations'));
 let journal=existsSync(path)?jsonFile(path):null;
@@ -58,8 +61,23 @@ try {
     console.log(JSON.stringify({state:journal?.state??'UNRECORDED',containers:names.map(name=>{const box=inspect(name);return {name,present:Boolean(box),running:box?.State.Running??false,health:box?.State.Health?.Status??null};})},null,2));
   }else{
     otherProfile();
-    if(existsSync(resolve(root,'.local/offline/egress.json')))assert.equal(jsonFile(resolve(root,'.local/offline/egress.json')).state,'DISABLED','Complete or disable the recorded offline walkthrough before normal lifecycle operations.');
     const current=boxes();
+    const denialPath=resolve(root,'.local/offline/egress.json');
+    const denial=existsSync(denialPath)?jsonFile(denialPath):null;
+    if(preserveOffline){
+      assert.equal(denial?.state,'ENABLED','The offline lifecycle flag requires an active recorded denial.');
+      assert.equal(denial.protocol,1);assert.match(denial.chain,/^CUTOVER_OFF_[a-f0-9]{8}$/);
+      const expectedNames=names.slice(0,3).sort();
+      assert.deepEqual(denial.containers.map(box=>box.name).sort(),expectedNames);
+      for(const recorded of denial.containers)assert.equal(current.find(box=>box.Name.slice(1)===recorded.name)?.Id,recorded.id,'Offline container identity changed.');
+      assert.deepEqual(denial.networks.map(network=>network.name).sort(),['cutover-equipment','cutover-equipment-access','cutover-kind']);
+      const networks=JSON.parse(call('docker',['network','inspect',...denial.networks.map(network=>network.name)]));
+      for(const network of networks){
+        assert.equal(network.Id,denial.networks.find(recorded=>recorded.name===network.Name).id,'Offline bridge identity changed.');
+        assert.equal(network.Labels['dev.cutover.project'],'cutover');assert.equal(network.Driver,'bridge');assert.equal(network.EnableIPv6,false);
+        for(const member of Object.values(network.Containers??{}))assert.ok(expectedNames.includes(member.Name),'An unrelated container joined an offline bridge.');
+      }
+    }else if(denial)assert.equal(denial.state,'DISABLED','Complete or disable the recorded offline walkthrough before normal lifecycle operations.');
     if(action==='Stop'){
       if(!current.some(box=>box.State.Running)){console.log('Cutover is already stopped; its containers and volumes remain preserved.');}
       else{

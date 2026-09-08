@@ -42,6 +42,8 @@ A temporary pinned helper has only `NET_ADMIN`, no host filesystem/PID mount and
 
 Passing `Check` and `Probe` alone does not qualify A48. That requires actual local login, both products, recovery, restart, compatible cached rollback and dashboard evidence while denial is active. Browser checks must also deny external destinations in their own isolated browser context; the Windows browser is outside the Docker bridge boundary.
 
+The automated walkthrough also exercises the whole-lab lifecycle with `node scripts/demo.mjs Stop --preserve-offline-denial` and the corresponding `Start` command. This explicit mode requires an ENABLED journal and unchanged identities for all three isolated containers and dedicated bridges; it also rejects a foreign network member. It preserves the installed rules. The walkthrough probes actual external rejection again after restart and uses a fresh browser context with its own external-request denial for the restarted login.
+
 ## Separate cached source build
 
 With the warmed inventory available, Maven's `-o` and npm's `--offline` make missing packages fail explicitly:
