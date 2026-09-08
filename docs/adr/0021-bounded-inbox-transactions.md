@@ -1,6 +1,6 @@
 # ADR 0021: bounded inbox ownership transfers
 
-Date: 8 September 2026. Status: implemented; component regressions passed; runtime qualification pending.
+Date: 8 September 2026. Status: implemented; component, deployed process-crash and queue-overflow regressions passed; sustained-load qualification pending.
 
 The full `968cad5` load run completed all 3,300 physical/business effects once, but only 85.9% of the 3,000 measured movements reached durable adapter acceptance within two seconds of original eligibility (p99 8,340.798 ms). Individual task-created latency was much lower and does not replace that denominator. Slow intervals included publication confirmation and consumption waits; one retained trace overlaps a database checkpoint. Checkpoint overlap is evidence of shared storage contention, not proof that every delayed delivery has the same cause.
 

@@ -16,10 +16,10 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A08 | `cancellation-1788817068207`: unstarted cancellation releases once; started/unknown work retains its reservation. |
 | A09 | PostgreSQL checks reject regressing/conflicting observations; `storage-repair-1788819273019` exposes a sequence gap and repairs it through original-event replay. |
 | A10 | Bounded input/site/enum checks in owner components and actual returns APIs. Expanded deployed malformed-input driver pending. |
-| A11 | `process-crash-1788870086499`: actual process exit after business commit. Repeat on the new inbox-batch runtime pending. |
-| A12 | The same process run exits after publisher confirmation and records duplicate transport with single effects. Repeat pending. |
-| A13 | The same process run exits after effect commit before acknowledgement. New multi-message commit/crash component checks pass; deployed repeat pending. |
-| A14 | `mandatory-return-1788870649419`: positive confirm with mandatory return retains the original; routing repair succeeds. Repeat after publisher changes pending. |
+| A11 | `process-crash-1788884703569`: the current runtime exits after business commit and completes the retained original after restart. |
+| A12 | The same run exits after publisher confirmation and records duplicate delivery with single effects. |
+| A13 | The same run exits after effect commit before acknowledgement, then deduplicates the repeated delivery. Separate real PostgreSQL/quorum checks cover multi-message crash and transaction rollback. |
+| A14 | `mandatory-return-1788884905155`: actual positive confirm with mandatory return retains the original business outbox; restoring the exact binding delivers the same IDs and one physical/sorting effect. |
 | A15 | `broker-capacity-1788870391246`: actual broker absence, 800 accepted requests/1,600 events, controlled refusals and 802 single effects after recovery. |
 | A16 | `queue-overflow-1788884331159`: actual critical/shadow quorum limits reject publication, retain the original head/source bytes, and drain 10,001/1,001 duplicate deliveries with single effects. Both products continue while shadow is full; audited original replay succeeds. |
 | A17 | `storage-repair-1788819273019`: poison exhaustion, retained bytes, predecessor correction and audited reprocessing; typed raw-quarantine ownership regressions pass in components. |
