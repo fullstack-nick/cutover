@@ -30,6 +30,8 @@ function deployment() {
   const d = JSON.parse(capture('kubectl', [...scope, 'get', 'deployment', 'equipment-adapter', '-o', 'json']));
   assert.equal(d.metadata.labels['app.kubernetes.io/part-of'], 'cutover');
   assert.equal(d.spec.template.spec.containers.length, 1);
+  assert.equal(d.spec.replicas, 1);
+  assert.equal(d.spec.strategy.type, 'Recreate', 'Compatible control protocols are replaced without overlapping old and new owner processes.');
   assert.equal(d.spec.template.spec.containers[0].imagePullPolicy, 'Never'); return d;
 }
 async function forward() { await run('pwsh', ['-NoProfile', '-File', resolve(root, 'scripts/forward.ps1'), '-Target', 'adapter-api']); }
