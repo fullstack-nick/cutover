@@ -53,6 +53,54 @@ class CommandJournalTest {
     }
     void tick() { clock.advance(Duration.ofSeconds(2));simulator.advance();observations.refresh();journal.work(); }
 
+    @Test void mixedZoneInboxBatchDoesNotInvertRouteAndOutboxBudgetLocks() throws Exception {
+        var otherRouteHeld=new java.util.concurrent.CountDownLatch(1);
+        var publishOther=new java.util.concurrent.CountDownLatch(1);
+        var otherPid=new java.util.concurrent.atomic.AtomicInteger();
+        var batchPid=new java.util.concurrent.atomic.AtomicInteger();
+        var ambient=movement(UUID.randomUUID());
+        var chilled=((tools.jackson.databind.node.ObjectNode)movement(UUID.randomUUID())).put("zoneId","chilled");
+        var concurrent=((tools.jackson.databind.node.ObjectNode)movement(UUID.randomUUID())).put("zoneId","chilled");
+        java.util.function.Function<JsonNode,dev.cutover.platform.messaging.DurableInbox.Delivery> delivery=body->{
+            var id=Database.uuid(body,"movementId");
+            var event=new dev.cutover.platform.Events.Envelope(UUID.randomUUID(),"MovementRequested.v1",1,clock.instant(),"site-a","legacy-core","movement",id,1,id,null,null,body);
+            return new dev.cutover.platform.messaging.DurableInbox.Delivery("cutover.legacy-core.v1",event.eventId().toString(),JsonSupport.write(event).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        };
+        try(var threads=java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+            var other=threads.submit(()->adapterDb.sql().transaction(configuration->{
+                var sql=org.jooq.impl.DSL.using(configuration);
+                otherPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                sql.fetch("SELECT * FROM zone_routes WHERE site_id='site-a' AND zone_id='chilled' FOR UPDATE");
+                otherRouteHeld.countDown();
+                try {if(!publishOther.await(10,java.util.concurrent.TimeUnit.SECONDS))throw new AssertionError("The competing writer was not released.");}
+                catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new AssertionError(interrupted);}
+                new Allocations(sql,clock).register("site-a","legacy-core",concurrent);
+            }));
+            try {
+                assertThat(otherRouteHeld.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                var batch=threads.submit(()->adapterDb.sql().transactionResult(configuration->{
+                    var sql=org.jooq.impl.DSL.using(configuration);
+                    batchPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                    return new dev.cutover.platform.messaging.DurableInbox(sql,new AdapterMessages(clock),clock,java.util.Set.of("legacy-core"),java.util.Set.of("site-a"))
+                            .receiveBatch(java.util.List.of(delivery.apply(ambient),delivery.apply(chilled)));
+                }));
+                long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+                boolean waiting=false;
+                while(System.nanoTime()<deadline){
+                    if(batchPid.get()!=0 && adapterDb.sql().fetchOne("SELECT ?=ANY(pg_blocking_pids(?))",otherPid.get(),batchPid.get()).get(0,Boolean.class)){waiting=true;break;}
+                    Thread.sleep(10);
+                }
+                assertThat(waiting).as("The batch reaches the competing chilled route before its owner publishes").isTrue();
+                publishOther.countDown();
+                other.get(10,java.util.concurrent.TimeUnit.SECONDS);
+                assertThat(batch.get(10,java.util.concurrent.TimeUnit.SECONDS)).hasSize(2);
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM inbox WHERE state='APPLIED'").get(0,Integer.class)).isEqualTo(2);
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM movement_allocations").get(0,Integer.class)).isEqualTo(3);
+                assertThat(adapterDb.sql().fetchOne("SELECT unpublished_events FROM admission").get(0,Integer.class)).isEqualTo(3);
+            } finally {publishOther.countDown();}
+        }
+    }
+
     @Test void retainedTimelineShowsActualTransitionsAndReportsCompactedHistoryWithoutChangingProof(){
         UUID id=UUID.randomUUID();record(id,movement(id));journal.work();tick();
         var command=journal.get("site-a",id);assertThat(command.path("state").asString()).isEqualTo("COMPLETED");
