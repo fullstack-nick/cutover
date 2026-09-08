@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
+import { until } from './lib/local-platform.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const lock = JSON.parse(readFileSync(resolve(root, 'infra/versions.lock.json'), 'utf8'));
@@ -56,8 +57,12 @@ for (const { name, reference } of images.filter(image => !only || image.name ===
   const runtimeReference = `${repository}@${descriptor.digest}`;
   const importedAlias = descriptor.annotations['io.containerd.image.name'];
   await run('docker', ['exec', 'cutover-control-plane', 'ctr', '--namespace', 'k8s.io', 'images', 'tag', '--force', importedAlias, runtimeReference]);
-  const verified = capture('docker', ['exec', 'cutover-control-plane', 'crictl', 'inspecti', runtimeReference]);
-  if (!JSON.parse(verified).status) throw new Error(`CRI image lookup failed for ${name}.`);
+  // Containerd's tag operation can complete before the CRI image cache observes it.
+  // Wait for this exact digest, as the cached rollback loader does; never substitute a tag.
+  await until(() => {
+    const result = spawnSync('docker', ['exec', 'cutover-control-plane', 'crictl', 'inspecti', runtimeReference], { encoding: 'utf8', windowsHide: true, timeout: 2000 });
+    return result.status === 0 && JSON.parse(result.stdout).status?.repoDigests?.includes(runtimeReference);
+  }, `CRI recognizes the exact imported ${name} digest`, 15000);
   inventory[name] = { source: reference, sourceImageId: imageId, platform: 'linux/amd64', runtimeReference, manifestDigest: descriptor.digest, archive, archiveSha256: sha(readFileSync(archive)) };
   writeFileSync(manifestPath, JSON.stringify(inventory, null, 2) + '\n');
   console.log(`Loaded and verified ${name} (${descriptor.digest.slice(0, 23)}).`);
