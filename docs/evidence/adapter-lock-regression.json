@@ -1,0 +1,80 @@
+{
+  "command": "./mvnw.cmd -o -pl apps/equipment-adapter -am verify",
+  "productionSource": "8160ece9868c111e815e4ed75d9322f35fc0e3ad",
+  "finishedAt": "2026-09-08T21:29:02+02:00",
+  "durationSeconds": 156,
+  "tests": 56,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "originalLogSha256": "887fc71021235a049d79573c3199320043fcd27e83dd66d56b7a316a4797b0d0",
+  "classes": [
+    {
+      "name": "dev.cutover.adapter.CommandJournalTest",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.adapter.MigrationProcessFaultsTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.adapter.RestoreReconciliationTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.platform.JwtSecurityTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.platform.OperationTraceTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.platform.ProblemHandlerTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.platform.SecurityProblemResponseTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "dev.cutover.simulator.SimulatorEngineTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "regression": {
+    "name": "mixedZoneInboxBatchDoesNotInvertRouteAndOutboxBudgetLocks",
+    "before": {
+      "result": "failed as expected; one of two inbox effects remained pending",
+      "originalLogSha256": "74e9bb682b5e1b50b899cfbfcbf4ccec28a485379737a2ba274ae91d1e523b8a"
+    },
+    "after": {
+      "result": "passed; both inbox effects and the competing allocation committed",
+      "originalLogSha256": "76240ef3a8d44f75074c906d7625df870de51e0c82ba4d5e32d32796954a90af"
+    }
+  }
+}

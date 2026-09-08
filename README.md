@@ -77,6 +77,8 @@ Run `./mvnw.cmd -B -ntp verify` for backend, schema, contract and real PostgreSQ
 
 The full offline backend verification passed **190 checks** across 24 test classes, with zero failures, errors or skips, in **17 minutes 7 seconds**. It covers shared messaging/security, every product-owner workflow, storage pressure, bounded inbox commits, database/authentication error responses and [N/N−1 contract consumers](contracts/compatibility/README.md). [Per-class results](docs/evidence/backend-checks.json) remain separate from platform acceptance.
 
+After the adapter lock-order correction, its complete reactor passed **56 checks** across eight classes, including the new deterministic concurrency regression. [Scoped verification](docs/evidence/adapter-lock-regression.json) records the exact source and before/after test evidence.
+
 The latest full load qualification on the `c6486a6` runtime offered two two-line orders and one receipt per second for ten minutes after 60 seconds of warm-up. All 3,000 measured movements were included: **6.1% reached durable adapter acceptance within two seconds; p99 was 156,213.575 ms**. All 3,300 total movements eventually completed once. PostgreSQL logs identified repeated adapter lock-order deadlocks introduced by inbox batching. A deterministic regression passes with the correction; deployed load qualification remains open. The target stays at least 99% within two seconds, measured from original movement eligibility.
 
 The development host has an Intel Core i9-13900H, 32 GiB host RAM and an approximately 15.4 GiB Docker VM. Other local workloads share its CPU and disk. Recorded quiescent-checkpoint restoration took **10 minutes 49 seconds**. These are local experiments, not production guarantees.
