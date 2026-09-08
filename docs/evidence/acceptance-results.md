@@ -1,6 +1,6 @@
 # Acceptance status
 
-Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, remaining deployed inbox-batch regressions, prepared offline operation, renewed functional HTTP checks and the timed reviewer path remain open.
+Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, prepared offline operation, renewed functional HTTP checks and the timed reviewer path remain open.
 
 The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
 
@@ -54,7 +54,7 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A46 | `restore-1788849841860`: six databases, 211 fingerprints, 1,207 original replay events and 183 matching physical/command records. Release took 648.572 seconds. |
 | A47 | `stale-restore-1788848295108`: one later known completion and three absent intents are distinguished without repeated physical work. RPO gap 516.516 seconds. |
 | A48 | Prepared runtime login, both products, recovery, restart, cached rollback and dashboards under scoped external-egress denial: pending. |
-| A49 | `cache-1788884948814`: all 4,051 recorded files match. An isolated empty-file-cache fixture fails explicitly and identifies all missing tools, Maven/npm packages, image archives and browser revisions; existing caches/daemon images remain intact. |
+| A49 | `cache-1788887175088`: all 4,050 installed assets match, excluding mutable Chromium diagnostic logs. An isolated empty-file-cache fixture fails explicitly and identifies all missing tools, Maven/npm packages, image archives and browser revisions; existing caches/daemon images remain intact. |
 | A50 | **Failed.** `load-1788880017964`: 85.9% within two seconds, original-eligibility p99 8,340.798 ms; all 3,000 measured movements included, all 3,300 total effects single. Inbox batching requires a new full measurement. |
 | A51 | Actual order/returns/task/recovery/migration/audit workflows, mobile views, stale data, version conflicts, keyboard close and focus restoration are recorded. Final screenshots after the latest console build are pending. |
 | A52 | `demo-lifecycle-1788866307975` preserves data on stop/start. `reset-bootstrap-1788866919366` validates explicit checkpoint-backed new-world reset and fresh platform creation without changing unrelated containers. |
