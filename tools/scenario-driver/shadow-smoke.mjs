@@ -30,6 +30,8 @@ function probe(body) {
 }
 try {
   provisionObservers();
+  assert.equal(query('adapter', "SELECT count(*) FROM zone_routes WHERE site_id='site-a' AND zone_id IN ('ambient','chilled') AND owner='legacy-core' AND state='ACTIVE';"), '2', 'Both outbound zones must be active under legacy ownership.');
+  const retainedExecutionTasks = query('execution', "SELECT coalesce(jsonb_agg(task_id ORDER BY task_id),'[]') FROM execution_tasks;");
   for (const target of ['core-api', 'adapter-api']) assert.equal(spawnSync('pwsh', ['-NoProfile', '-File', resolve(root, 'scripts/forward.ps1'), '-Target', target], { encoding: 'utf8', windowsHide: true, timeout: 45000 }).status, 0);
   const capacity = JSON.parse(query('core', "SELECT row_to_json(c) FROM shadow_observation_capacity c;"));
   assert.ok(capacity.retained_count + 1100 < 4096, 'This run needs retained comparison headroom; do not erase accepted evidence to make it pass.');
@@ -69,7 +71,7 @@ try {
   writeFileSync(resolve(directory, 'comparisons.jsonl'), exported);
   assert.equal((await api('/api/v1/sites/site-b/shadow-comparisons/' + rounds[0].roundId, { bearer })).status, 404);
   cases.push({ candidate: 'A27', status: 'passed', name: '1,000 persisted SQL decisions traverse the separate broker queue and compare in the isolated Java shadow process', seed: 840271, rounds: 1000, mismatches: 0, evidenceSha256: createHash('sha256').update(exported).digest('hex'), fixtureCoverage: JSON.parse(readFileSync(resolve(root, 'tools/shadow-checks/target/shadow-evidence/manifest.json'), 'utf8')).reasons });
-  assert.equal(query('execution', 'SELECT count(*) FROM execution_tasks;'), '0', 'The legacy route has not granted execution ownership.');
+  assert.equal(query('execution', "SELECT coalesce(jsonb_agg(task_id ORDER BY task_id),'[]') FROM execution_tasks;"), retainedExecutionTasks, 'Shadow comparison adds no execution tasks and preserves any completed history from an earlier owner epoch.');
   assert.equal(query('shadow', 'SELECT count(*) FROM execution_tasks;'), '0', 'The shadow handler writes no execution tasks.');
 
   const orderBody = { sourceSystem: 'scenario-driver', externalOrderRef: runId + '-live', storeId: 'store-08', priority: 7, lines: [{ sku: 'SKU-055', quantity: 1 }, { sku: 'SKU-056', quantity: 1 }] };
@@ -81,7 +83,9 @@ try {
     await until(() => Number(query('shadow', "SELECT count(*) FROM shadow_comparisons WHERE input->'candidates' @> '[{\"movementId\":\"" + movement.movementId + "\"}]'::jsonb;")) >= 1, 'a live decision also reaches shadow comparison');
     assert.equal(query('core', "SELECT count(*) FROM inventory_ledger WHERE movement_id='" + movement.movementId + "';"), '1');
     assert.equal(query('simulator', "SELECT count(*) FROM execution_ledger WHERE movement_id='" + movement.movementId + "';"), '1');
+    assert.equal(query('execution', "SELECT count(*) FROM execution_tasks WHERE movement_id='" + movement.movementId + "';"), '0', 'A live legacy-owned movement must not create an extracted execution task.');
   }
+  assert.equal(query('execution', "SELECT coalesce(jsonb_agg(task_id ORDER BY task_id),'[]') FROM execution_tasks;"), retainedExecutionTasks);
   cases.push({ candidate: 'A01/A27', status: 'passed', name: 'live SQL dispatch also emits identical snapshots while both temperature classes complete once', orderId: order.id, movements: order.movements.map(item => item.movementId) });
   const movement = order.movements[0];
   const allocation = await api('/internal/v1/sites/site-a/allocations/' + movement.movementId, { target: 'adapter', bearer: await token('legacy-core') }); assert.equal(allocation.status, 200);
