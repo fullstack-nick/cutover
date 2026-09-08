@@ -29,8 +29,8 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A21 | The same equipment run verifies adapter and simulator rejection of changed immutable payloads. |
 | A22 | The same equipment run and [restoration checks](restore-2026-09-08.md) retain explicit evidence gaps rather than inventing physical history. |
 | A23 | `returns-1788838277326`: alternate compatible outbound work and independent returns continue during one outbound-lane fault. |
-| A24 | Two scoped runs pass adapter process absence with both products retained. The complete resilience run remains open after a database-response fault. |
-| A25 | Finite telemetry configuration is deployed. Actual monitoring-process outage/recovery qualification is pending. |
+| A24 | `platform-resilience-1788883850354`: both products accept retained work while the adapter process is absent; its return produces five original single effects. |
+| A25 | The same resilience run stops all four monitoring processes while both products commit 25 single movements. Business pods survive and scrapes recover; deployed telemetry queues and exporter timeouts are bounded. |
 | A26 | `volume-pressure-1788851160214` applies actual bounded filesystem pressure; `volume-observation-1788851871227` expires observations across all five database owners. |
 | A27 | `shadow-1788869933650`: 1,000 persisted identical-input comparisons with zero unexplained differences and real observation delivery. |
 | A28 | The same shadow run denies dispatch independently of the mode flag. `authentication-1788880772251` additionally denies business intake while preserving permitted snapshot reads. |
@@ -50,7 +50,7 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A42 | The same authentication run denies ordinary core publication on the adapter exchange and quarantines spoofed source claims without state changes. |
 | A43 | The same authentication run rejects absent/untrusted client certificates and accepts the retained adapter certificate. Secret-file ACL/public-source checks are separate. |
 | A44 | `policy-1788852008554`: 83 actual traffic assertions covering DNS, product/service boundaries, equipment and telemetry. |
-| A45 | Separate application and broker restarts pass. The database process restart exposed an incorrect 403; the 503 correction passes MVC checks and awaits deployment/retest. |
+| A45 | Separate application and broker restarts pass. `platform-resilience-1788883850354` replaces the database pod on its existing PVCs, preserves recorded responses and five accepted effects, and verifies unavailable intake returns 503 without creating an order. |
 | A46 | `restore-1788849841860`: six databases, 211 fingerprints, 1,207 original replay events and 183 matching physical/command records. Release took 648.572 seconds. |
 | A47 | `stale-restore-1788848295108`: one later known completion and three absent intents are distinguished without repeated physical work. RPO gap 516.516 seconds. |
 | A48 | Prepared runtime login, both products, recovery, restart, cached rollback and dashboards under scoped external-egress denial: pending. |
