@@ -39,6 +39,10 @@ This path uses a fresh, healthy bootstrap with legacy-owned outbound zones. The 
 
 The drivers add synthetic records and deliberately exercise the stated faults or ownership changes. They use authorized APIs for business actions and owner-specific observer credentials for assertions. Do not run them during a checkpoint, restore, load benchmark or another fault experiment.
 
+The same six commands can be rehearsed with `node tools/scenario-driver/reviewer-walkthrough.mjs`. It checks the starting ownership, records each command's duration and result, and captures the current console. It refuses to qualify an incomplete or failed sequence. Its timed acceptance result is still pending.
+
+For a prepared lab whose local image build is already verified, `./scripts/bootstrap.ps1 -SkipBuild` exercises platform creation with those recorded images. This is the bootstrap variant used by the checkpoint-backed fresh-dataset rehearsal. Initial acquisition and source building remain separate from the short reviewer path.
+
 ## Stop, resume and rebuild
 
 ```powershell
