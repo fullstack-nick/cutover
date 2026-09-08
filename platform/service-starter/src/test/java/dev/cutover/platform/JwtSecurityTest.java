@@ -59,4 +59,18 @@ class JwtSecurityTest {
         String unknown=token(claims(),"not-in-the-cached-keyset",key);assertThatThrownBy(()->decoder.decode(unknown)).isInstanceOf(JwtException.class);
         var cold=new JwtSecurityConfiguration().jwtDecoder(issuer,jwks,"cutover-core");assertThatThrownBy(()->cold.decode(valid)).isInstanceOf(JwtException.class);
     }
+    @Test void trustedServiceTokensNeedAnExplicitIntakeClientAndCannotCarryShadowAuthority() throws Exception {
+        for(String client:List.of("scenario-driver","legacy-core","equipment-adapter","execution-service","returns-service")) {
+            var allowed=claims();allowed.put("azp",client);allowed.put("realm_access",Map.of("roles",List.of("service")));
+            Access.intake(decoder.decode(token(allowed)));
+        }
+        for(String client:List.of("shadow-scheduler","unregistered-source")) {
+            var denied=claims();denied.put("azp",client);denied.put("realm_access",Map.of("roles",List.of("service")));
+            var jwt=decoder.decode(token(denied));
+            assertThatThrownBy(()->Access.intake(jwt)).isInstanceOfSatisfying(Problem.class,p->assertThat(p.status()).isEqualTo(403));
+        }
+        var shadow=claims();shadow.put("azp","legacy-core");shadow.put("realm_access",Map.of("roles",List.of("service","shadow")));
+        var jwt=decoder.decode(token(shadow));assertThatThrownBy(()->Access.intake(jwt)).isInstanceOfSatisfying(Problem.class,p->assertThat(p.status()).isEqualTo(403));
+        var operator=decoder.decode(token(claims()));assertThatThrownBy(()->Access.intake(operator)).isInstanceOfSatisfying(Problem.class,p->assertThat(p.status()).isEqualTo(403));
+    }
 }

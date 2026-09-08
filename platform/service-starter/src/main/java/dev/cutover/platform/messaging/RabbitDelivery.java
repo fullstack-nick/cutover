@@ -3,6 +3,7 @@ package dev.cutover.platform.messaging;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessageProperties;
@@ -17,6 +18,19 @@ public final class RabbitDelivery implements OutboxRelay.Publisher {
         template.setMandatory(true);
     }
     @Override public void publish(String exchange, String routingKey, UUID id, String body) {
+        try { publishAsync(exchange,routingKey,id,body).get(4,TimeUnit.SECONDS); }
+        catch (InterruptedException interrupted) { Thread.currentThread().interrupt();throw DeliveryFailure.pending("CONFIRM_INTERRUPTED"); }
+        catch (DeliveryFailure known) { throw known; }
+        catch (Exception unavailable) {
+            if(unavailable.getCause() instanceof DeliveryFailure known)throw known;
+            throw DeliveryFailure.pending("CONFIRM_UNAVAILABLE");
+        }
+    }
+    @Override public void inBatch(Runnable work) {
+        // Keep the bounded burst on one publisher channel while each original retains its own correlation.
+        template.invoke(operations->{work.run();return null;});
+    }
+    @Override public CompletableFuture<Void> publishAsync(String exchange,String routingKey,UUID id,String body) {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         if (bytes.length > DurableInbox.MAX_MESSAGE_BYTES) throw DeliveryFailure.permanent("EVENT_SIZE_LIMIT");
         var properties = new MessageProperties();
@@ -28,11 +42,12 @@ public final class RabbitDelivery implements OutboxRelay.Publisher {
         var correlation = new CorrelationData(id + ":" + UUID.randomUUID());
         try {
             template.send(exchange, routingKey, new Message(bytes, properties), correlation);
-            var confirmation = correlation.getFuture().get(4, TimeUnit.SECONDS);
-            if (correlation.getReturned() != null) throw DeliveryFailure.pending("MANDATORY_RETURN");
-            if (!confirmation.ack()) throw DeliveryFailure.pending("PUBLISH_NACK");
-        } catch (InterruptedException interrupted) {
-            Thread.currentThread().interrupt(); throw DeliveryFailure.pending("CONFIRM_INTERRUPTED");
+            return correlation.getFuture().orTimeout(4,TimeUnit.SECONDS).thenApply(confirmation->{
+                // Spring populates a mandatory return before completing this event's confirmation future.
+                if (correlation.getReturned() != null) throw DeliveryFailure.pending("MANDATORY_RETURN");
+                if (!confirmation.ack()) throw DeliveryFailure.pending("PUBLISH_NACK");
+                return null;
+            });
         } catch (DeliveryFailure known) { throw known; }
         catch (Exception unavailable) { throw DeliveryFailure.pending("CONFIRM_UNAVAILABLE"); }
     }
@@ -47,7 +62,7 @@ public final class RabbitDelivery implements OutboxRelay.Publisher {
                 if (delivery == null) break;
                 long tag = delivery.getEnvelope().getDeliveryTag();
                 try {
-                    UUID id = inbox.receive(delivery.getEnvelope().getExchange(), delivery.getProps().getMessageId(), delivery.getBody());
+                    UUID id = inbox.receive(delivery.getEnvelope().getExchange(), delivery.getProps().getMessageId(), delivery.getBody()).id();
                     hooks.reached("AFTER_EFFECT_BEFORE_ACK", id);
                     channel.basicAck(tag, false);
                     consumed++;

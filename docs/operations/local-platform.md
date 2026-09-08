@@ -1,24 +1,20 @@
-# Local platform milestone
+# Operating the local platform
 
-Run commands from the repository root in PowerShell. This is the current development platform procedure; the final clean-bootstrap and offline walkthrough remain under development.
+Run commands from the repository root in PowerShell 7. Start with the [quickstart and reviewer path](../onboarding/quickstart.md) for a new demo. A fresh bootstrap and preserved lifecycle have recorded runtime evidence; complete offline and reviewer qualification remain separate final gates.
 
 Prerequisites: Java 21, Node 24/npm, Docker's Linux engine, Git and kubectl. `scripts/bootstrap-tools.ps1` supplies the checksummed project-local kind binary and Maven Wrapper supplies Maven. Use `scripts/doctor.ps1` to inspect capacity and ports before starting. Do not run the Compose application profile and kind application profile simultaneously against the same physical world.
 
 ```powershell
-./scripts/bootstrap-tools.ps1
-./mvnw.cmd -B -ntp clean verify
-./scripts/build-images.ps1
-node scripts/bootstrap-assets.mjs
-./scripts/cluster.ps1 Create
-./scripts/deploy.ps1
+./scripts/bootstrap.ps1
+./scripts/demo.ps1 Status
 node tools/scenario-driver/platform-smoke.mjs
 node tools/scenario-driver/network-policy-smoke.mjs
 node tools/scenario-driver/messaging-smoke.mjs
 ```
 
-The independently running simulator and its database are required before rendering the demo. The development baseline guide describes their Compose profile. `deploy.ps1` renders secrets privately, runs owner migration Jobs, applies Kustomize output, waits for rollout, and starts the console forward. The ordinary deployment command does not restore or overwrite databases.
+Bootstrap creates the independent simulator and its database before rendering the demo. `deploy.ps1` renders secrets privately, runs owner migration Jobs, applies Kustomize output, waits for rollout, and starts the console forward. The ordinary deployment command does not restore or overwrite databases. Use `./mvnw.cmd -B -ntp verify`, then `./scripts/build-images.ps1 -SkipCompile`, `node scripts/update-simulator.mjs` and `./scripts/deploy.ps1` for a verified source update.
 
-The current extraction stage adds a passive execution application and its shadow mode. Shadow uses a separate credential and `cutover_shadow` evidence database on the same application PostgreSQL server. `ensure-databases.mjs` verifies fixed owner identities, creates missing databases and preserves existing data/passwords. Run `configure-local.mjs` when acquiring this stage's additional local credentials, then rebuild/deploy. The two outbound routes still belong to the legacy coordinator until a verified migration changes them.
+The execution application owns extracted outbound tasks. Its shadow deployment uses a separate restricted credential and `cutover_shadow` evidence database on the same application PostgreSQL server. `ensure-databases.mjs` verifies fixed owner identities, creates missing databases and preserves existing data/passwords. Both outbound routes start legacy-owned; a verified migration changes owner and epoch. Normal deployment and restart preserve those route decisions.
 
 Use the [shadow comparison runbook](../runbooks/shadow-comparison.md) for the component and running-process comparison checks. Its synthetic scheduling endpoint is internal and scenario-only; comparison details are site-authorized reads through the normal console origin.
 
@@ -26,11 +22,11 @@ On this development host, the first platform deployment used `transfer-baseline.
 
 Open `http://localhost:8780` and sign in as `operator-a`. Its generated password is in the ignored `.local/secrets/credentials.json`, under `passwords.operator_a`. Never copy that file to a public issue or commit. Seeded human profiles contain fictional names and `.invalid` addresses; no real email service is involved.
 
-The current console shows overview, orders, reservation detail, command evidence and equipment. Supervisor migration/reconciliation and the returns product are later implementation phases. Page counters are explicitly limited to the displayed order page.
+The console includes overview, orders/shortages, tasks, equipment, command recovery, migration, shadow comparisons, returns and owner audit. It displays stale/error states with last-known records after a failed refresh. Page counters are explicitly limited to the displayed order page; reference/shortage search queries the site-wide register.
 
 The messaging smoke waits for the retained source streams to apply in their receiving owners, submits an order, and checks inboxes, inventory and the physical ledger. `node tools/scenario-driver/messaging-smoke.mjs --broker-outage` also briefly scales only the labelled Cutover RabbitMQ StatefulSet to zero and restores it, preserving its PVC. It requires the legacy milestone's otherwise-settled data; do not run it during another fault experiment. Retry exhaustion remains visible and requires an audited supervisor replay after the underlying cause is corrected.
 
-The next fault checks are `node tools/scenario-driver/process-crash-smoke.mjs` and `node tools/scenario-driver/equipment-recovery-smoke.mjs`. Run them sequentially on settled demonstration data. They deliberately halt/restart owned application processes or the simulator, preserve data, and retain raw evidence locally. The recovery check uses the pinned Playwright browser for real PKCE logins as fictional operator/supervisor accounts; passwords and tokens stay out of reports. It verifies direct API denial and audited recovery, although the recovery console screen is still pending.
+Process fault checks include `node tools/scenario-driver/process-crash-smoke.mjs` and `node tools/scenario-driver/equipment-recovery-smoke.mjs`. Run them sequentially on settled demonstration data. They deliberately halt/restart owned application processes or the simulator, preserve data, and retain raw evidence locally. Recovery checks use the pinned Playwright browser for real PKCE logins as fictional operator/supervisor accounts; passwords and tokens stay out of reports. `work-console-smoke.mjs` exercises the recovery screen, version conflict, reasoned investigation and exact physical/business effects.
 
 These drivers start authenticated internal forwards through `forward.ps1 -Target core-api` (8784) or `-Target adapter-api` (8785). Starting a forward grants no API role. Only the scenario-driver client with test-control role can arm internal process faults; business recovery requires a supervisor instead. Both forwards remain loopback-only and can be stopped with `-Action Stop`. Ordinary console proxy paths never expose fault controls. See [the internal API](../../contracts/openapi/internal.v1.json) and [equipment protocol](../../contracts/openapi/simulator.v1.json).
 
@@ -47,6 +43,6 @@ node tools/scenario-driver/telemetry-smoke.mjs
 
 Prometheus uses port 8781, Tempo 8782 and Grafana 8783. Grafana's generated administrator credential is local. The forward helper records and verifies its own process identity. Re-running it tests HTTP health and reconnects after the forwarded pod changes. Stop a diagnostic with the same command and `Stop` in place of `Start`; this closes only that recorded forward.
 
-All Kubernetes commands use `.local/kubeconfig` and `kind-cutover`. `cluster.ps1 Status` reports the dedicated cluster. Do not delete the cluster as a normal stop operation: its local-path volumes belong to the node. Full stop/reset and recovery procedures will be verified separately before release.
+All Kubernetes commands use `.local/kubeconfig` and `kind-cutover`. `cluster.ps1 Status` reports the dedicated cluster. Use `./scripts/demo.ps1 Stop` and `Start` for the preserved lifecycle. Do not delete the cluster as a normal stop operation: its local-path volumes belong to the node. The [lifecycle/reset](../runbooks/demo-lifecycle.md), [checkpoint](../runbooks/checkpoint.md) and [separate restoration](../runbooks/restore.md) procedures have different guarantees and explicit resource checks.
 
 Troubleshooting: inspect `.local/operations/` and `.local/processes/` for a failed build, migration, rollout or forward. These logs and rendered manifest diffs may include private configuration and remain ignored. A failed migration must be investigated before rerunning; do not bypass Flyway checksums or clear data to hide it. A changed simulator endpoint requires rerendering its EndpointSlice and policy. A changed simulator world requires business reconciliation, not merely endpoint repair.

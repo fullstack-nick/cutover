@@ -67,7 +67,8 @@
           "default": {
             "$ref": "#/components/responses/problem"
           }
-        }
+        },
+        "description": "Requires an authorized intake client (scenario-driver, legacy-core, equipment-adapter, execution-service or returns-service), a scenario/service role and signed site membership. Shadow identities cannot submit business work. Fresh keys allocate metadata and respect storage admission even for repeated business references; recorded keys return their retained response without a new allocation."
       },
       "get": {
         "operationId": "listOrders",
@@ -217,7 +218,8 @@
           "default": {
             "$ref": "#/components/responses/problem"
           }
-        }
+        },
+        "description": "Requires an authorized intake client (scenario-driver, legacy-core, equipment-adapter, execution-service or returns-service), a scenario/service role and signed site membership. Shadow identities cannot submit business work. Fresh keys allocate metadata and respect storage admission even for repeated business references; recorded keys return their retained response without a new allocation."
       },
       "get": {
         "operationId": "listReturnReceipts",

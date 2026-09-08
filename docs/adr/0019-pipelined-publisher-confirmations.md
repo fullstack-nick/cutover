@@ -1,0 +1,13 @@
+# ADR 0019: bounded sends with individual publisher confirmations
+
+Date: 8 September 2026. Status: implemented; runtime latency qualification pending.
+
+The database batching in ADR 0018 reduced relay transaction overhead, but the complete `26ac729` healthy-load run still missed the latency target. All 3,300 movements had matching single physical and business effects. Only 78.067% of measured movements reached durable adapter acceptance within two seconds of their original eligibility; p99 was 18,117.047 ms. Traces showed long publication and consumption queue waits while individual business handlers completed quickly.
+
+The relay now issues the bounded set of independent leased-stream events before awaiting confirmations. Each original still has its own attempt correlation, mandatory routing, persistent delivery and positive-confirm requirement. A Spring template scope keeps those sends on one publisher channel. Spring documents both scoped channel use and the guarantee that a returned message is attached to its correlation before the acknowledgement future completes. [Spring AMQP reference](https://docs.spring.io/spring-amqp/reference/amqp/template.html)
+
+There are at most 16 sends in the runtime batch and at most one leased event per aggregate stream. The existing 20-second lease and 10-second remaining-lease guard stay in force. Confirmation waits share a four-second deadline; they do not multiply that deadline by the number of events. A mandatory return, negative confirmation, timeout or connection failure retains the corresponding original for retry. Positively confirmed peers can settle independently of a failed peer, in the same database settlement transaction and with exact retained-byte accounting. An unopened channel charges one attempt and releases untouched claims.
+
+A process exit before settlement leaves the original leases and payloads available for fenced replay. Because a burst may already have sent every member before a confirmation crash hook fires, a crash may repeat more transport deliveries than the previous serial loop. Inbox and business uniqueness must still produce one effect. Paused workers cannot settle a batch; later resume reuses original identities. No database durability setting or latency denominator changes.
+
+Verification covers multiple outstanding confirmations, an out-of-order confirmation release, a lost confirmation among successful peers, actual quorum delivery and duplicate suppression, per-stream order, mandatory return, reject-publish, lease fencing, freeze and crash recovery. Component checks do not establish the ten-minute runtime target; the next measured run must qualify that separately.

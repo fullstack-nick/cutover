@@ -31,12 +31,13 @@ public final class ReceiptService {
             return Idempotency.execute(sql,caller,site,"register-return-receipt",key,body,()->{
                 if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Receipt writes are paused for a checkpoint.");
                 Database.lock(sql,"external-return-receipt",site,source,reference);
+                // A fresh key allocates response metadata even when the business reference already exists.
+                Database.requireDurability(sql,true);
                 var old=sql.fetchOne("SELECT receipt_id,payload_hash FROM receipts WHERE site_id=? AND source_system=? AND external_ref=?",site,source,reference);
                 if(old!=null){
                     if(!JsonSupport.hash(body).equals(old.get("payload_hash",String.class)))throw Problem.conflict("RECEIPT_REFERENCE_CONFLICT","This external receipt reference already has different contents.");
                     return accepted(site,old.get("receipt_id",UUID.class));
                 }
-                Database.requireDurability(sql,true);
                 if(!sql.fetchExists(sql.selectOne().from("return_sites").where("site_id=?",site)))throw Problem.missing();
                 var quota=sql.fetchOne("SELECT * FROM admission WHERE singleton FOR UPDATE");
                 if(quota.get("active_requests",Integer.class)>=800 || quota.get("unpublished_events",Integer.class)>=8000 || quota.get("unpublished_bytes",Long.class)>=53687091)

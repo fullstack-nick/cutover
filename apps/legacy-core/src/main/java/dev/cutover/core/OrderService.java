@@ -36,12 +36,13 @@ public final class OrderService {
             return Idempotency.execute(sql,caller,site,"create-order",key,request,()-> {
                 if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Order mutations are paused for the checkpoint.");
                 Database.lock(sql,"external-order",site,request.sourceSystem(),request.externalOrderRef());
+                // A fresh key allocates response metadata even when the business reference already exists.
+                Database.requireDurability(sql,true);
                 var old=sql.fetchOne("SELECT order_id,payload_hash FROM orders WHERE site_id= ? AND source_system= ? AND external_ref= ?",site,request.sourceSystem(),request.externalOrderRef());
                 if(old!=null) {
                     if(!JsonSupport.hash(request).equals(old.get("payload_hash",String.class))) throw Problem.conflict("ORDER_REFERENCE_CONFLICT","This external order reference already has different contents.");
                     return accepted(site,old.get("order_id",UUID.class));
                 }
-                Database.requireDurability(sql,true);
                 var quota=sql.fetchOne("SELECT * FROM admission WHERE singleton FOR UPDATE");
                 if(quota.get("active_requests",Integer.class)>=800 || quota.get("unpublished_events",Integer.class)>=8000 || quota.get("unpublished_bytes",Long.class)>=53687091)
                     throw new Problem(503,"ADMISSION_CAPACITY","Accepted work is near the configured capacity; retry after backlog recovery.");

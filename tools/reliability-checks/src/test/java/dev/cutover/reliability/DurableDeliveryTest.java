@@ -142,6 +142,50 @@ class DurableDeliveryTest {
         assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
     }
 
+    @Test void relayStartsEveryIndependentSendBeforeWaitingForItsConfirmation() throws Exception {
+        assertPipelinedConfirmations(false);
+    }
+    @Test void oneLostConfirmationDoesNotDiscardOtherPositiveConfirmations() throws Exception {
+        assertPipelinedConfirmations(true);
+    }
+    void assertPipelinedConfirmations(boolean loseOne) throws Exception {
+        for(int n=0;n<3;n++)append(UUID.randomUUID(),1);
+        var sent=new java.util.concurrent.CopyOnWriteArrayList<UUID>();
+        var gates=new java.util.concurrent.ConcurrentHashMap<UUID,java.util.concurrent.CompletableFuture<Void>>();
+        var submitted=new java.util.concurrent.CountDownLatch(3);
+        var publisher=new OutboxRelay.Publisher(){
+            public void publish(String exchange,String type,UUID id,String body){throw new AssertionError("The relay must use per-event asynchronous confirmations.");}
+            public void inBatch(Runnable work){rabbit.inBatch(work);}
+            public java.util.concurrent.CompletableFuture<Void> publishAsync(String exchange,String type,UUID id,String body){
+                var gate=new java.util.concurrent.CompletableFuture<Void>();gates.put(id,gate);sent.add(id);
+                var actual=rabbit.publishAsync(exchange,type,id,body);submitted.countDown();
+                return actual.thenCompose(ignored->gate);
+            }
+        };
+        var relay=new OutboxRelay(db.sql(),publisher,clock,DeliveryHooks.NONE);
+        var executor=java.util.concurrent.Executors.newSingleThreadExecutor();
+        try {
+            var work=executor.submit(()->relay.poll(16));
+            assertThat(submitted.await(3,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            assertThat(sent).hasSize(3);assertThat(work.isDone()).isFalse();
+            gates.get(sent.get(2)).complete(null);
+            if(loseOne)gates.get(sent.get(1)).completeExceptionally(DeliveryFailure.pending("CONFIRM_UNAVAILABLE"));
+            else gates.get(sent.get(1)).complete(null);
+            assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE published_at IS NOT NULL").get(0,Integer.class)).isZero();
+            gates.get(sent.getFirst()).complete(null);
+            assertThat(work.get(5,java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(loseOne?2:3);
+            assertThat(db.sql().fetchOne("SELECT unpublished_events FROM admission").get(0,Integer.class)).isEqualTo(loseOne?1:0);
+            assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(3);assertThat(count("effects")).isEqualTo(3);
+            if(loseOne){
+                assertThat(db.sql().fetchOne("SELECT published_at,last_error,attempts FROM outbox WHERE event_id=?",sent.get(1)).intoArray()).containsExactly(null,"CONFIRM_UNAVAILABLE",1);
+                clock.advance(Duration.ofMinutes(2));assertThat(relay(DeliveryHooks.NONE).poll(16)).isEqualTo(1);
+                assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(1);assertThat(count("effects")).isEqualTo(3);
+            }
+            assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
+        } finally {
+            gates.values().forEach(gate->gate.complete(null));executor.shutdownNow();assertThat(executor.awaitTermination(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+        }
+    }
     @Test void partialRelayFailureMarksOnlyConfirmedEventsAndReleasesUnattemptedLeases() {
         for(int n=0;n<3;n++)append(UUID.randomUUID(),1);
         var sent=new java.util.ArrayList<UUID>();
@@ -165,7 +209,8 @@ class DurableDeliveryTest {
         assertThatThrownBy(()->batching.poll(16)).isInstanceOf(Crash.class);
         assertThat(db.sql().fetchOne("SELECT count(*) FROM outbox WHERE published_at IS NULL AND attempts=1 AND lease_id IS NOT NULL").get(0,Integer.class)).isEqualTo(3);
         clock.advance(Duration.ofSeconds(21));assertThat(relay(DeliveryHooks.NONE).poll(16)).isEqualTo(3);
-        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(5);assertThat(count("effects")).isEqualTo(3);assertThat(count("inbox")).isEqualTo(3);
+        // All three sends precede the second confirmation hook; all originals therefore replay after the crash.
+        assertThat(rabbit.consume(queue,inbox,16)).isEqualTo(6);assertThat(count("effects")).isEqualTo(3);assertThat(count("inbox")).isEqualTo(3);
         assertThat(db.sql().fetchOne("SELECT unpublished_events,unpublished_bytes FROM admission").intoArray()).containsExactly(0,0L);
     }
 
@@ -237,7 +282,7 @@ class DurableDeliveryTest {
     @Test void sourceConfigurationRepairTransfersOriginalQuarantineBytesThroughTheInboxOnce() {
         var event=event(UUID.randomUUID(),1,42);byte[] original=JsonSupport.write(event).getBytes(StandardCharsets.UTF_8);
         var misconfigured=new DurableInbox(db.sql(),EFFECT,clock,Set.of("other-source"),Set.of("site-a"));
-        UUID raw=misconfigured.receive(EXCHANGE,event.eventId().toString(),original);
+        UUID raw=misconfigured.receive(EXCHANGE,event.eventId().toString(),original).id();
         assertThat(count("effects")).isZero();
         var operations=new QuarantineOperations(db.sql(),EFFECT,new MessageSubscription(queue,Set.of("producer"),Set.of("site-a")),clock);
         assertThat(operations.untrustedDiagnostics()).hasSize(1);
@@ -255,10 +300,42 @@ class DurableDeliveryTest {
         deliver(event);assertThat(count("effects")).isEqualTo(1);
     }
 
+    @Test void invalidEnvelopeCannotTransferThroughAnUnrelatedInboxEventWithItsQuarantineId() {
+        assertQuarantineIdentityCannotEstablishAdmission(false);
+    }
+    @Test void conflictingEnvelopeCannotTransferThroughAnUnrelatedInboxEventWithItsQuarantineId() {
+        assertQuarantineIdentityCannotEstablishAdmission(true);
+    }
+    void assertQuarantineIdentityCannotEstablishAdmission(boolean identityConflict) {
+        var event=event(UUID.randomUUID(),1,42);
+        var invalid=(tools.jackson.databind.node.ObjectNode)JsonSupport.MAPPER.valueToTree(event);
+        if(identityConflict){deliver(event);((tools.jackson.databind.node.ObjectNode)invalid.path("payload")).put("value",43);}
+        else invalid.put("schemaVersion",2);
+        byte[] original=JsonSupport.write(invalid).getBytes(StandardCharsets.UTF_8);
+        var rejected=inbox.receive(EXCHANGE,event.eventId().toString(),original);
+        assertThat(rejected).isInstanceOf(DurableInbox.Quarantined.class);UUID raw=rejected.id();
+        var separate=(tools.jackson.databind.node.ObjectNode)JsonSupport.MAPPER.valueToTree(event(UUID.randomUUID(),1,7));
+        separate.put("eventId",raw.toString());
+        assertThat(inbox.receive(EXCHANGE,raw.toString(),JsonSupport.write(separate).getBytes(StandardCharsets.UTF_8))).isInstanceOf(DurableInbox.Admitted.class);
+        int effects=count("effects");var operations=new QuarantineOperations(db.sql(),EFFECT,new MessageSubscription(queue,Set.of("producer"),Set.of("site-a")),clock);
+        for(long version=1;version<=2;version++) {
+            var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",version,"reason","Recheck the original rejected bytes without trusting an unrelated inbox identity."));
+            var result=operations.reprocess("supervisor","site-a",raw,"retry-"+version,request);
+            assertThat(result.path("state").asString()).isEqualTo("QUARANTINED");
+            assertThat(operations.reprocess("supervisor","site-a",raw,"retry-"+version,request)).isEqualTo(result);
+            assertThat(db.sql().fetchOne("SELECT active_messages,active_bytes FROM message_storage").intoArray()).containsExactly(1,(long)original.length);
+            assertThat(db.sql().fetchOne("SELECT transferred_event_id,transferred_at FROM delivery_quarantine WHERE delivery_id=?",raw).intoArray()).containsExactly(null,null);
+            assertThat(count("effects")).isEqualTo(effects);
+        }
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM audit WHERE outcome='QUARANTINED'").get(0,Integer.class)).isEqualTo(2);
+        clock.advance(Duration.ofDays(8));new MessageRetention(db.sql(),clock).compact();
+        assertThat(db.sql().fetchOne("SELECT raw_body FROM delivery_quarantine WHERE delivery_id=?",raw).get(0,byte[].class)).containsExactly(original);
+        assertThat(db.sql().fetchOne("SELECT retained_bytes FROM message_storage").get(0,Long.class)).isEqualTo(original.length);
+    }
     @Test void untrustedSiteAndMalformedQuarantineCannotBeReinterpretedAsLocalWork() {
         var wrongSite=new Events.Envelope(UUID.randomUUID(),"Changed.v1",1,clock.instant(),"site-b","producer","thing",UUID.randomUUID(),1,UUID.randomUUID(),null,null,JsonSupport.MAPPER.valueToTree(Map.of("value",1)));
-        UUID raw=inbox.receive(EXCHANGE,wrongSite.eventId().toString(),JsonSupport.write(wrongSite).getBytes(StandardCharsets.UTF_8));
-        UUID malformed=inbox.receive(EXCHANGE,"untrusted",new byte[]{(byte)0xc3,(byte)0x28});
+        UUID raw=inbox.receive(EXCHANGE,wrongSite.eventId().toString(),JsonSupport.write(wrongSite).getBytes(StandardCharsets.UTF_8)).id();
+        UUID malformed=inbox.receive(EXCHANGE,"untrusted",new byte[]{(byte)0xc3,(byte)0x28}).id();
         var operations=new QuarantineOperations(db.sql(),EFFECT,new MessageSubscription(queue,Set.of("producer"),Set.of("site-a")),clock);
         var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",1,"reason","Inspect the original delivery without changing its claimed site or bytes."));
         for(UUID id:java.util.List.of(raw,malformed))for(String site:java.util.List.of("site-a","site-b"))assertThatThrownBy(()->operations.reprocess("supervisor",site,id,"probe-"+id+site,request)).isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).status()).isEqualTo(404));
@@ -468,7 +545,7 @@ class DurableDeliveryTest {
 
     @Test void malformedSourceSiteAndMajorVersionRemainInDurableQuarantine() {
         byte[] invalid = "{not-json".getBytes(StandardCharsets.UTF_8);
-        UUID id = inbox.receive(EXCHANGE, "original-transport-id", invalid);
+        UUID id = inbox.receive(EXCHANGE, "original-transport-id", invalid).id();
         inbox.receive(EXCHANGE, "original-transport-id", invalid);
         assertThat(db.sql().fetchOne("SELECT raw_body FROM delivery_quarantine WHERE delivery_id=?", id).get(0, byte[].class)).containsExactly(invalid);
         var event = event(UUID.randomUUID(), 1, 1);

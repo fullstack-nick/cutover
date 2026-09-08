@@ -1,0 +1,15 @@
+# ADR 0020: explicit intake authority and recovery ownership
+
+Date: 8 September 2026. Status: implemented; component regressions passed, deployed verification pending.
+
+A static review of all 430 tracked files at `9ee083b` identified three constrained, authenticated-local issues: a fresh-key duplicate could allocate response metadata after storage admission closed; a raw quarantine identifier could be confused with an admitted event identifier; and a shadow token presented to the localhost proxy could originate business intake. The review kept the effective site, broker, network, command and physical-ledger controls in its assessment.
+
+Both intake controllers now require a scenario/service role and an explicitly admitted client: `scenario-driver`, `legacy-core`, `equipment-adapter`, `execution-service` or `returns-service`. Shadow authority is refused even if it accompanies a broadly privileged service role. New source clients need an intentional grant; the generic service role still supports existing read paths. The network restrictions and direct adapter identity fences remain independently enforced.
+
+An unused intake idempotency key allocates durable metadata, including when its external business reference already exists. Both owners therefore apply storage admission before that early return. A previously recorded key returns its saved response without allocating another row, including during intake closure. Deduplication identities are retained, and business uniqueness still prevents duplicate reservations or crate counters.
+
+Inbox admission now returns a typed `Admitted` or `Quarantined` receipt. Recovery transfers raw-delivery responsibility only on `Admitted`, after the original bytes have passed the current source, site, transport identity, schema and payload-conflict checks. A separate inbox row with an equal UUID does not prove admission. Pending or handler-quarantined inbox work is already under durable inbox ownership; its receipt describes that transfer, not business completion. Unresolved raw quarantine continues to consume active quota and retain its evidence.
+
+Regression cases use real owner databases and a trusted ephemeral JWT signer. They cover storage closure with fresh versus original keys, controller rejection before business writes, identifier confusion for both invalid and conflicting envelopes, repeat recovery, retained evidence after the horizon and legitimate repaired-source transfer. The deployed authentication driver also presents the real shadow token to both intake routes and verifies unchanged owner records while snapshot reads succeed.
+
+The review also left host permission inheritance and baseline identity provisioning as explicit environment questions. Initial setup now restricts the ignored local directory before writing secrets or kubeconfigs, including Windows ACLs for the current account and SYSTEM. The development baseline runs the same admin-only site-membership profile provisioning as the full local platform. Permission readback and actual runtime checks are separate evidence from the static review.

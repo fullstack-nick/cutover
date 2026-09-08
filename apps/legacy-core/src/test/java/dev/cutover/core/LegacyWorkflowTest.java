@@ -118,6 +118,43 @@ class LegacyWorkflowTest {
         assertThat(orders.accept("scenario","site-a","new-checkpoint",body)).isEqualTo(first);
         assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isEqualTo(2);
     }
+    @Test void freshKeyBusinessDuplicatesRespectEveryStorageAdmissionGate(){
+        var body=request("metadata-headroom",new OrderService.Line("SKU-001",3));
+        var first=orders.accept("scenario","site-a","original",body);var sql=coreDb.sql();
+        long budget=sql.fetchOne("SELECT database_budget_bytes FROM admission").get(0,Long.class);
+        String volume=sql.fetchOne("SELECT pg_get_functiondef('cutover_ops.volume_status()'::regprocedure)").get(0,String.class);
+        for(String gate:List.of("UPDATE service_control SET critical_storage=true","UPDATE service_control SET intake_paused=true",
+                "UPDATE admission SET database_budget_bytes=16777216","CREATE OR REPLACE FUNCTION cutover_ops.volume_status() RETURNS jsonb LANGUAGE sql AS $$ SELECT '{\"state\":\"STALE\"}'::jsonb $$")) {
+            try {
+                if(gate.contains("database_budget_bytes")) {
+                    sql.execute("CREATE TABLE admission_pressure_fixture(payload text NOT NULL)");
+                    sql.execute("ALTER TABLE admission_pressure_fixture ALTER COLUMN payload SET STORAGE PLAIN");
+                    sql.execute("INSERT INTO admission_pressure_fixture SELECT repeat(md5(i::text),64) FROM generate_series(1,8192) i");
+                    assertThat(sql.fetchOne("SELECT pg_database_size(current_database())").get(0,Long.class)).isGreaterThan(16777216L);
+                }
+                sql.execute(gate);
+                assertThat(orders.accept("scenario","site-a","original",body)).isEqualTo(first);
+                assertThatThrownBy(()->orders.accept("scenario","site-a","fresh-key",body)).isInstanceOfSatisfying(Problem.class,p->assertThat(p.status()).isEqualTo(503));
+                assertThat(sql.fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isEqualTo(1);
+                assertThat(sql.fetchOne("SELECT count(*),sum(quantity) FROM reservations").intoArray()).containsExactly(1L,3L);
+            } finally {sql.execute("UPDATE service_control SET critical_storage=false,intake_paused=false");sql.execute("UPDATE admission SET database_budget_bytes=?",budget);sql.execute(volume);sql.execute("DROP TABLE IF EXISTS admission_pressure_fixture");}
+        }
+        assertThat(orders.accept("scenario","site-a","fresh-key",body)).isEqualTo(first);
+        assertThat(sql.fetchOne("SELECT count(*) FROM idempotency").get(0,Integer.class)).isEqualTo(2);
+    }
+    @Test void intakeControllerRejectsRestrictedClientsBeforeBusinessWrites(){
+        var controller=new CoreController(orders,scheduler,null);var body=request("client-boundary",new OrderService.Line("SKU-001",1));
+        for(String client:List.of("shadow-scheduler","unregistered-source")) {
+            var jwt=org.springframework.security.oauth2.jwt.Jwt.withTokenValue("component-claims").header("alg","test").subject(client)
+                    .claim("azp",client).claim("sites",List.of("site-a")).claim("realm_access",Map.of("roles",List.of("service"))).build();
+            assertThatThrownBy(()->controller.create("site-a","restricted",body,jwt)).isInstanceOfSatisfying(Problem.class,p->assertThat(p.status()).isEqualTo(403));
+        }
+        assertThat(coreDb.sql().fetchOne("SELECT (SELECT count(*) FROM orders)+(SELECT count(*) FROM idempotency)").get(0,Long.class)).isZero();
+        var allowed=org.springframework.security.oauth2.jwt.Jwt.withTokenValue("component-claims").header("alg","test").subject("scenario")
+                .claim("azp","scenario-driver").claim("sites",List.of("site-a")).claim("realm_access",Map.of("roles",List.of("scenario"))).build();
+        assertThat(controller.create("site-a","allowed",body,allowed).getStatusCode().value()).isEqualTo(202);
+        assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM orders").get(0,Integer.class)).isEqualTo(1);
+    }
     @Test void idempotencyAndBusinessReferenceBothPreventDuplicateReservations(){
         var body=request("unique",new OrderService.Line("SKU-001",3));
         var first=orders.accept("scenario","site-a","key-1",body);

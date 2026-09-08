@@ -100,7 +100,7 @@ public final class OperationTrace implements AutoCloseable {
     public static void annotate(String key, String value) {
         if (value != null) { Span.current().setAttribute(key, value); MDC.put(key, value); }
     }
-    public void failed(RuntimeException failure) {
+    public void failed(Throwable failure) {
         // Exception messages, bodies and credentials are deliberately not exported.
         span.setStatus(StatusCode.ERROR); field("error.type", failure.getClass().getSimpleName());
     }

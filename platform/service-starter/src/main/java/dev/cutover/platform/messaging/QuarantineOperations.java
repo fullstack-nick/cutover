@@ -41,10 +41,10 @@ public final class QuarantineOperations {
                 long before=row.get("version",Long.class);
                 if(before!=request.path("expectedVersion").asLong())throw Problem.conflict("VERSION_CONFLICT","The quarantine entry changed; inspect its latest state.");
                 if(!"QUARANTINED".equals(row.get("state",String.class)))throw Problem.conflict("DELIVERY_STATE","The original delivery has already transferred to the durable inbox.");
-                UUID received=receiver.receive(row.get("received_exchange",String.class),row.get("transport_message_id",String.class),bytes);
-                boolean transferred=sql.fetchExists(sql.selectOne().from("inbox").where("event_id=? AND site_id=?",received,site));
+                var received=receiver.receive(row.get("received_exchange",String.class),row.get("transport_message_id",String.class),bytes);
+                boolean transferred=received instanceof DurableInbox.Admitted;
                 String outcome=transferred?"TRANSFERRED":"QUARANTINED";
-                sql.execute("UPDATE delivery_quarantine SET site_id=?,state=?,version=version+1,reprocess_attempts=reprocess_attempts+1,transferred_event_id=?,transferred_at=CASE WHEN ? THEN now() ELSE NULL END WHERE delivery_id=?",site,outcome,transferred?received:null,transferred,id);
+                sql.execute("UPDATE delivery_quarantine SET site_id=?,state=?,version=version+1,reprocess_attempts=reprocess_attempts+1,transferred_event_id=?,transferred_at=CASE WHEN ? THEN now() ELSE NULL END WHERE delivery_id=?",site,outcome,transferred?received.id():null,transferred,id);
                 if(transferred)sql.execute("UPDATE message_storage SET active_messages=active_messages-1,active_bytes=active_bytes-? WHERE singleton",row.get("payload_bytes"));
                 var response=JsonSupport.MAPPER.valueToTree(Map.of("deliveryId",id,"state",outcome,"version",before+1));
                 sql.execute("INSERT INTO audit(audit_id,site_id,actor,action,resource_id,reason,before_version,after_version,outcome,detail) VALUES (?,?,?,'reprocess-quarantine',?,?,?,?,?,?::jsonb)",UUID.randomUUID(),site,actor,id.toString(),reason,before,before+1,outcome,JsonSupport.write(response));

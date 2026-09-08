@@ -11,13 +11,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
 public final class OutboxRelay {
-    @FunctionalInterface public interface Publisher { void publish(String exchange, String routingKey, UUID id, String body); }
+    @FunctionalInterface public interface Publisher {
+        void publish(String exchange, String routingKey, UUID id, String body);
+        default CompletableFuture<Void> publishAsync(String exchange,String routingKey,UUID id,String body) {
+            publish(exchange,routingKey,id,body);return CompletableFuture.completedFuture(null);
+        }
+        default void inBatch(Runnable work) { work.run(); }
+    }
     public record Claimed(UUID eventId, UUID leaseId, String exchange, String type, String body, int attempt) {}
     private record Batch(List<Claimed> rows, OffsetDateTime leaseUntil) {}
+    private record Failed(Claimed row,String code) {}
+    private record Pending(Claimed row,Events.Envelope event,CompletableFuture<Void> confirmation) {}
+    private static final class Publication {
+        final List<Claimed> confirmed=new ArrayList<>();
+        final List<Failed> failed=new ArrayList<>();
+        int attempted;
+        boolean expiring;
+    }
     private final DSLContext database;
     private final Publisher publisher;
     private final Clock clock;
@@ -72,31 +88,58 @@ public final class OutboxRelay {
         int count = 0;
         while (count < limit) {
             Batch batch=claimBatch(limit-count);if(batch.rows().isEmpty())break;
-            var confirmed=new ArrayList<Claimed>();Claimed failed=null;String error=null;int attempted=0;boolean expiring=false;
-            for(Claimed row:batch.rows()) {
-                // Bound the transport burst as well as the count. An expired/replaced lease can never mark delivery.
-                if(!clock.instant().plusSeconds(10).isBefore(batch.leaseUntil().toInstant())){expiring=true;break;}
-                hooks.reached("AFTER_BUSINESS_COMMIT",row.eventId());attempted++;
-                try(var trace=OperationTrace.event("cutover.event.publish",JsonSupport.MAPPER.readValue(row.body(),Events.Envelope.class))){
-                    publisher.publish(row.exchange(),row.type(),row.eventId(),row.body());
-                    hooks.reached("AFTER_BROKER_CONFIRM",row.eventId());confirmed.add(row);consecutivePublishFailures=0;
-                }catch(RuntimeException unavailable){
-                    failed=row;error=unavailable instanceof DeliveryFailure?unavailable.getMessage():"BROKER_UNAVAILABLE";break;
-                }
+            var publication=new Publication();
+            try { publisher.inBatch(()->publish(batch,publication)); }
+            catch(RuntimeException unavailable) {
+                // Opening the scoped channel may fail before any send. Charge one attempt and release the untouched originals.
+                if(publication.attempted!=0)throw unavailable;
+                publication.attempted=1;publication.failed.add(new Failed(batch.rows().getFirst(),failureCode(unavailable)));
             }
             // A real crash/Error deliberately skips settlement; every leased original event remains replayable.
-            int marked=settle(confirmed,failed,error,batch.rows().subList(attempted,batch.rows().size()));count+=marked;
-            if(failed!=null){
+            int marked=settle(publication.confirmed,publication.failed,batch.rows().subList(publication.attempted,batch.rows().size()));count+=marked;
+            if(!publication.failed.isEmpty()){
                 consecutivePublishFailures=Math.min(consecutivePublishFailures+1,RetryDelay.MAX_ATTEMPTS);
-                nextPublishAttempt=clock.instant().plus(RetryDelay.after(failed.eventId(),consecutivePublishFailures));break;
+                nextPublishAttempt=clock.instant().plus(RetryDelay.after(publication.failed.getFirst().row().eventId(),consecutivePublishFailures));break;
             }
-            if(expiring || marked==0)break;
+            consecutivePublishFailures=0;
+            if(publication.expiring || marked==0)break;
         }
         return count;
     }
 
     public void confirmed(Claimed row) {
-        settle(List.of(row),null,null,List.of());
+        settle(List.of(row),List.of(),List.of());
+    }
+
+    private void publish(Batch batch,Publication publication) {
+        var pending=new ArrayList<Pending>();
+        for(Claimed row:batch.rows()) {
+            if(!clock.instant().plusSeconds(10).isBefore(batch.leaseUntil().toInstant())){publication.expiring=true;break;}
+            hooks.reached("AFTER_BUSINESS_COMMIT",row.eventId());publication.attempted++;
+            var event=JsonSupport.MAPPER.readValue(row.body(),Events.Envelope.class);
+            try(var trace=OperationTrace.event("cutover.event.publish",event)) {
+                try {pending.add(new Pending(row,event,publisher.publishAsync(row.exchange(),row.type(),row.eventId(),row.body())));}
+                catch(RuntimeException unavailable){trace.failed(unavailable);publication.failed.add(new Failed(row,failureCode(unavailable)));break;}
+            }
+        }
+        // A common deadline bounds the entire confirmation wait, not four seconds multiplied by the batch size.
+        long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
+        for(Pending sent:pending) {
+            try(var trace=OperationTrace.event("cutover.event.confirm",sent.event())) {
+                try {
+                    sent.confirmation().get(Math.max(1,deadline-System.nanoTime()),TimeUnit.NANOSECONDS);
+                    hooks.reached("AFTER_BROKER_CONFIRM",sent.row().eventId());publication.confirmed.add(sent.row());
+                } catch(InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();trace.failed(interrupted);publication.failed.add(new Failed(sent.row(),"CONFIRM_INTERRUPTED"));
+                } catch(Exception unavailable) {
+                    trace.failed(unavailable);publication.failed.add(new Failed(sent.row(),failureCode(unavailable)));
+                }
+            }
+        }
+    }
+    private static String failureCode(Throwable failure) {
+        while((failure instanceof java.util.concurrent.ExecutionException || failure instanceof java.util.concurrent.CompletionException) && failure.getCause()!=null)failure=failure.getCause();
+        return failure instanceof DeliveryFailure?failure.getMessage():"CONFIRM_UNAVAILABLE";
     }
 
     private static String leaseMatches(List<Claimed> rows,List<Object> bindings){
@@ -106,7 +149,7 @@ public final class OutboxRelay {
     }
 
     /** Only positively confirmed originals are marked; all budget changes share their settlement transaction. */
-    private int settle(List<Claimed> confirmed,Claimed failed,String code,List<Claimed> unattempted) {
+    private int settle(List<Claimed> confirmed,List<Failed> failed,List<Claimed> unattempted) {
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             if (!Database.workersMayWrite(sql)) return 0;
@@ -118,8 +161,8 @@ public final class OutboxRelay {
                 count=changed.size();long bytes=changed.stream().mapToLong(row->row.get(0,Integer.class)).sum();
                 if(count>0)sql.execute("UPDATE admission SET unpublished_events=unpublished_events-?,unpublished_bytes=unpublished_bytes-? WHERE singleton",count,bytes);
             }
-            if(failed!=null)sql.execute("UPDATE outbox SET lease_id=NULL,lease_until=NULL,last_error=?,next_attempt_at=?::timestamptz,paused=?,version=version+1 WHERE event_id=? AND lease_id=? AND published_at IS NULL",
-                code,now().plus(RetryDelay.after(failed.eventId(),failed.attempt())),failed.attempt()>=RetryDelay.MAX_ATTEMPTS,failed.eventId(),failed.leaseId());
+            for(var failure:failed){var row=failure.row();sql.execute("UPDATE outbox SET lease_id=NULL,lease_until=NULL,last_error=?,next_attempt_at=?::timestamptz,paused=?,version=version+1 WHERE event_id=? AND lease_id=? AND published_at IS NULL",
+                failure.code(),now().plus(RetryDelay.after(row.eventId(),row.attempt())),row.attempt()>=RetryDelay.MAX_ATTEMPTS,row.eventId(),row.leaseId());}
             if(!unattempted.isEmpty()){
                 var bindings=new ArrayList<Object>();String match=leaseMatches(unattempted,bindings);
                 sql.execute("UPDATE outbox SET lease_id=NULL,lease_until=NULL,attempts=attempts-1,version=version+1 WHERE published_at IS NULL AND "+match,bindings.toArray());

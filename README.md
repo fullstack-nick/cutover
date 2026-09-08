@@ -1,76 +1,86 @@
 # Cutover
 
-A local modernization lab for grocery fulfilment and reusable-crate returns.
+**Move scheduling out of a working legacy system while warehouse work continues.**
 
-Cutover explores a practical architecture problem: how to move task coordination out of a database-heavy legacy system while warehouse work keeps flowing, then reuse the platform for a second product.
+Cutover is a local portfolio lab for grocery fulfilment and reusable-crate returns. Orders reserve synthetic stock, then move through independently owned tasks to simulated equipment. Returns reuse the platform with their own receipts, coordinator and database.
 
-**Current status: implementation in progress.** The latest full backend run passed 155 component checks, including 1,000 persisted SQL/Java scheduling comparisons, durable migration proof, real filesystem-pressure guards and a concurrent database freeze. Real process checks demonstrate zone migration, reversal and an independent returns product. [Application restoration](docs/evidence/restore-2026-09-08.md) verifies six database imports, original-event replay and guarded release in 10 minutes 49 seconds; an older checkpoint correctly quarantines later physical work with missing intent. The latest full load run completed all 3,300 movements once but missed the dispatch target. Prepared offline operation and the final acceptance bundle remain in development. Follow the [implementation ledger](docs/planning/implementation-progress.md) for measured results, retained failures and limits.
+Java 21 · Spring Boot · jOOQ/PostgreSQL · RabbitMQ · React/TypeScript · Keycloak · kind/Calico · OpenTelemetry
 
-The project will run entirely on one development machine. Equipment and business data are synthetic. GitHub hosts the source; builds, tests, and deployments are invoked locally, with no CI/CD.
+**Status: final implementation and acceptance verification in progress.** Working runtime evidence covers owner migration and reversal, independent returns, unknown-command recovery, process failures and application restoration. The latest full load completed all 3,300 movements once but missed the dispatch target. Prepared offline qualification and the complete reviewer evidence bundle remain open. The [implementation ledger](docs/planning/implementation-progress.md) records passed checks, failed measurements and remaining work.
 
-## What the project will demonstrate
+The application runs entirely on one machine with synthetic data and equipment. GitHub hosts source; builds, tests and deployment are invoked locally. There is no cloud runtime, CI/CD or hosted authentication.
 
-| Architectural question | Planned evidence |
+## What to review
+
+| Engineering problem | Implemented behavior and evidence |
 | --- | --- |
-| How do you modernize incrementally? | A working legacy baseline, characterization tests, extracted task service, and deterministic shadow comparison. |
-| How do you change ownership safely? | A zone drains before cutover; an adapter rejects stale owners; business rollback is separate from image rollback. |
-| What happens when equipment executes but its response is lost? | Stable command IDs, an independent simulator journal, and reconciliation without a duplicate movement. |
-| Can a second product reuse the platform? | A smaller crate-returns service with its own business data and shared operating conventions. |
-| Can the system explain failures? | Operational dashboards, durable recovery audit, failure scenarios, and backup/restore evidence. |
-| Can a reviewer reproduce it? | A tested local quickstart and an offline prepared demonstration, once implemented. |
+| Preserve a working legacy system | Characterized SQL reservation/priority routines, retained task identities and a guarded [task-creation boundary](docs/evidence/assignment-boundary-2026-09-08.md). |
+| Extract scheduling without guessing equivalence | [1,000 persisted identical-input comparisons](docs/evidence/shadow-2026-09-08.md) between SQL and Java; a separate shadow identity cannot dispatch. |
+| Switch one zone safely | Finite allocated-work drain, reconciled proof, atomic owner/epoch change and stale-owner rejection. [Migration evidence](docs/evidence/zone-migration-2026-09-08.md). |
+| Handle a lost equipment response | Immutable command IDs, an independent physical journal and [supervised investigation](docs/operations/command-investigation.md) with one physical/business effect. |
+| Reuse the platform for another product | [Returns](docs/evidence/returns-2026-09-08.md) owns its tables and models; it continues through an unrelated outbound-lane fault. |
+| Recover older application data honestly | [Six-database restoration](docs/evidence/restore-2026-09-08.md), original-event replay and reconciliation against unchanged physical history. Missing later intent stays quarantined. |
 
-## Architecture at a glance
+## Two-minute architecture
 
 ```mermaid
 flowchart LR
-  Orders[Store orders] --> Core[Legacy core: stock and reservations]
-  Core --> MQ[Durable events]
-  MQ --> Execution[Fulfilment execution]
-  Receipts[Crate receipts] --> Returns[Returns service]
-  Returns --> MQ
-  MQ --> Adapter[Adapter: ownership gate and command journal]
+  Orders --> Core[Core: inventory and movement intents]
+  Core --> Broker[RabbitMQ: durable events]
+  Broker --> Execution[Extracted fulfilment tasks]
+  Receipts --> Returns[Returns: receipts and tasks]
+  Returns --> Broker
+  Broker --> Adapter[Adapter: allocation, owner epoch, command journal]
+  Adapter --> Broker
   Execution --> Adapter
   Returns --> Adapter
-  Adapter --> Simulator[Independent equipment simulator]
-  UI[Operations console] --> Core
+  Adapter -- mutual TLS --> Simulator[Independent equipment simulator and database]
+  UI[Local operations console and identity] --> Core
   UI --> Execution
   UI --> Returns
   UI --> Adapter
 ```
 
-The legacy scheduler and new execution service coexist during migration. Each owns its tasks; the core keeps stock ownership. The adapter is the sole route to simulated equipment. The detailed plan shows the baseline, coexistence, data boundaries, and local deployment.
+The core keeps stock ownership. Each task owner has its own database and consumes versioned assignments; the adapter is the only equipment gateway. Legacy and extracted coordinators coexist behind that ownership gate. A separate shadow deployment compares decisions without dispatch authority.
 
-**Planned stack:** Java 21, Spring Boot, jOOQ, PostgreSQL, RabbitMQ, Keycloak, React/TypeScript, kind with Calico, OpenTelemetry, Prometheus, Grafana, and Tempo.
+The [architecture guide](docs/architecture/overview.md) shows the baseline, coexistence, extracted system, trust boundaries and local resource tradeoffs. [ADRs](docs/adr) explain individual decisions.
 
-## Review the design
+## Run it
 
-| Document | What to look for |
-| --- | --- |
-| [Implementation plan](docs/planning/implementation-plan.md) | Workflows, service/data ownership, contracts, migration protocol, local platform, recovery, and phased build order. |
-| [Research and sources](docs/research/pre-development-research.md) | Verified compatibility, technology tradeoffs, primary references, and what still needs runtime proof. |
-| [54 acceptance scenarios](docs/planning/acceptance-matrix.md) | Observable completion criteria for correctness, failures, migration, security, offline mode, and usability. |
-| [Local machine readiness](docs/research/local-machine-readiness.md) | Installed tools, missing kind CLI, resource constraints, and port isolation. |
-| [Owner decision record](docs/planning/open-decisions.md) | Confirmed project name, MIT license, and development readiness. |
-| [Implementation handoff](docs/planning/goal-handoff.md) | The scope and completion contract for the future development goal. |
+Use PowerShell 7 with Java 21, Node.js 24/npm, Git, kubectl and Docker Desktop's Linux engine. Keep at least 20 GiB workspace disk headroom; doctor checks the Docker VM's 10 GiB planning budget. Initial acquisition is online.
 
-For a quick review, read the opening sections of the implementation plan, its cutover/rollback protocol, and scenarios A18, A29–A35, and A46–A48 in the acceptance matrix.
+```powershell
+git clone https://github.com/fullstack-nick/cutover.git
+Set-Location cutover
+./scripts/bootstrap.ps1
+./scripts/demo.ps1 Status
+```
 
-## Development and demonstration
+Open [localhost:8780](http://localhost:8780). Sign in as `operator-a` using its generated password in the ignored `.local/secrets/credentials.json`. Supervisor and platform-administrator accounts have separate duties. Credentials, caches and raw evidence stay local.
 
-The planned progression is: working legacy workflow → reproducible local platform → reliable integration → shadow comparison and zone cutover → independent returns product → failure, restore, and offline evidence.
+Follow the [quickstart and 10–15 minute reviewer path](docs/onboarding/quickstart.md) for both workflows, comparison, migration and recovery. Bootstrap creates a fresh legacy-owned dataset; later starts preserve consumed stock and ownership changes.
 
-The eventual demonstration will submit orders, compare schedulers, migrate a zone, run both products, lose an equipment response, restart a consumer, and restore an earlier application checkpoint while preserving the simulator's physical history.
+```powershell
+./scripts/demo.ps1 Stop
+./scripts/demo.ps1 Start
+```
 
-The current backend test suite requires Java 21 and a working Docker Linux engine. On Windows, run `./mvnw.cmd -B -ntp test` from the repository root. Maven and test images are acquired on the first run; tests create and clean up their own disposable containers. This is a development check, not the final demonstration quickstart.
+Stop preserves data. Deliberate reset is a separate [checkpoint-backed operation](docs/runbooks/demo-lifecycle.md). The [operating guide](docs/operations/local-platform.md) links deployment, diagnostics and recovery procedures.
 
-The [development baseline guide](docs/operations/development-baseline.md) provides the current build/start/check/stop commands and explains the process verification scope.
+## Verification and measured limits
 
-The [local platform guide](docs/operations/local-platform.md) describes the current kind deployment, console sign-in and optional local diagnostics.
+Run `./mvnw.cmd -B -ntp verify` for backend, schema, contract and real PostgreSQL/RabbitMQ checks. Disposable labelled containers require the Docker Linux engine. Runtime drivers under `tools/scenario-driver` record assertions, image identities and results in private run directories.
 
-The final quickstart will provide verified platform setup, a 10–15-minute walkthrough, screenshots, cleanup instructions, and measured results tied to a commit.
+The verified backend has **178 checks** across 21 test classes, with no remaining failures, errors or skips. The latest offline runs cover the shared messaging/security components and all product-owner workflows, including corrected storage-pressure fixtures. Component checks remain separate from platform acceptance.
 
-## Scope and limits
+The latest full load qualification on the `26ac729` runtime offered two two-line orders and one receipt per second for ten minutes after 60 seconds of warm-up. All 3,000 measured movements were included: **78.067% reached durable adapter acceptance within two seconds; p99 was 18,117.047 ms**. The target is at least 99% within two seconds. A later task-created timestamp does not replace original movement eligibility. Publication changes are undergoing renewed qualification; no improved result is claimed yet.
 
-This is an independent portfolio project using original code and synthetic data. It does not operate real machinery, implement a complete warehouse-management system, or claim production high availability. Multiple services on one computer share a hardware failure domain.
+The development host has an Intel Core i9-13900H, 32 GiB host RAM and an approximately 15.4 GiB Docker VM. Other local workloads share its CPU and disk. Recorded quiescent-checkpoint restoration took **10 minutes 49 seconds**. These are local experiments, not production guarantees.
 
-Licensed under the [MIT License](LICENSE). Third-party components retain their own licenses.
+All [54 acceptance scenarios](docs/planning/acceptance-matrix.md) are required. The ledger and curated [evidence](docs/evidence) distinguish component tests, runtime checks and unresolved results. Prepared runtime/restart/rollback under external-egress denial is separate from a source build using warmed package caches.
+
+## Scope
+
+Cutover uses original code and synthetic data. It does not connect to real machinery or implement a complete warehouse-management system. Separate processes on one computer share a hardware failure domain; same-host checkpoints do not protect against host-disk loss. Browser access uses loopback HTTP; the equipment boundary uses mutual TLS.
+
+Original code and documentation use the [MIT License](LICENSE). Third-party components retain their own licenses and notices.

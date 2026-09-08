@@ -20,7 +20,7 @@ class CoreController {
         Access.role(jwt,"supervisor");return cancellations.retry(jwt.getSubject(),Access.site(jwt,site),id,cancellationId,key,body);
     }
     @PostMapping("/api/v1/sites/{site}/orders") ResponseEntity<JsonNode> create(@PathVariable String site,@RequestHeader("Idempotency-Key") String key,@RequestBody JsonNode request,@AuthenticationPrincipal Jwt jwt){
-        Access.role(jwt,"scenario","service");var accepted=orders.accept(jwt.getSubject(),Access.site(jwt,site),key,request);
+        Access.intake(jwt);var accepted=orders.accept(jwt.getSubject(),Access.site(jwt,site),key,request);
         return ResponseEntity.accepted().location(URI.create(accepted.required("statusUrl").asString())).body(accepted);
     }
     @GetMapping("/api/v1/sites/{site}/orders/{id}") JsonNode get(@PathVariable String site,@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt){

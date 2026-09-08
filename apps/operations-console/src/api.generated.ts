@@ -11,7 +11,10 @@ export interface paths {
         /** @description Newest recorded orders first, with a stable timestamp and ID cursor. A cursor outside this site yields an empty page. */
         get: operations["listOrders"];
         put?: never;
-        /** Durably accept synthetic work; acceptance is not completion */
+        /**
+         * Durably accept synthetic work; acceptance is not completion
+         * @description Requires an authorized intake client (scenario-driver, legacy-core, equipment-adapter, execution-service or returns-service), a scenario/service role and signed site membership. Shadow identities cannot submit business work. Fresh keys allocate metadata and respect storage admission even for repeated business references; recorded keys return their retained response without a new allocation.
+         */
         post: operations["createOrders"];
         delete?: never;
         options?: never;
@@ -49,7 +52,10 @@ export interface paths {
         };
         get: operations["listReturnReceipts"];
         put?: never;
-        /** Durably accept synthetic work; acceptance is not completion */
+        /**
+         * Durably accept synthetic work; acceptance is not completion
+         * @description Requires an authorized intake client (scenario-driver, legacy-core, equipment-adapter, execution-service or returns-service), a scenario/service role and signed site membership. Shadow identities cannot submit business work. Fresh keys allocate metadata and respect storage admission even for repeated business references; recorded keys return their retained response without a new allocation.
+         */
         post: operations["createReturnReceipts"];
         delete?: never;
         options?: never;

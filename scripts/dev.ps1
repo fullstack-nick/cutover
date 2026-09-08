@@ -29,6 +29,8 @@ try {
         Invoke-Compose @('stop','identity-migrate')
         Invoke-Compose @('up','-d','--wait','--wait-timeout','180','keycloak','equipment-simulator','equipment-adapter','legacy-core')
         Invoke-Compose @('up','-d','--wait','--wait-timeout','60','proxy')
+        & node scripts/ensure-local-users.mjs
+        if($LASTEXITCODE -ne 0){throw 'Local identity site-membership policy could not be verified.'}
         Write-Host 'Cutover development baseline is available at http://localhost:8780. Local credentials are in .local/secrets/credentials.json.'
     }elseif($Action -eq 'Stop'){
         Invoke-Compose @('stop','proxy','legacy-core','equipment-adapter','keycloak','identity-migrate','rabbitmq','application-db','application-volume-probe')

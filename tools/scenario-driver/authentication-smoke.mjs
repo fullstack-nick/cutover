@@ -31,6 +31,22 @@ try{
   evidence.worldBefore=await simulatorRead('/sim/v1/equipment');
   operator=await humanSession('operator-a');const original=operator.bearer(),claims=decode(original),parts=original.split('.');
   for(const path of paths)assert.equal((await api(`/api/v1/sites/site-a${path}`,{bearer:original})).status,200);
+  const shadow=await token('shadow-scheduler');
+  const intakeCounts=()=>({core:query('core','SELECT (SELECT count(*) FROM orders),(SELECT count(*) FROM idempotency);'),returns:query('returns','SELECT (SELECT count(*) FROM receipts),(SELECT count(*) FROM idempotency),sum(received),sum(sorted) FROM crate_counters;')});
+  const beforeRestricted=intakeCounts();
+  for(const [path,body]of[
+    ['/orders',{sourceSystem:'scenario-driver',externalOrderRef:`${id}-shadow`,storeId:'store-01',priority:5,lines:[{sku:'SKU-093',quantity:1}]}],
+    ['/return-receipts',{sourceSystem:'scenario-driver',externalReceiptRef:`${id}-shadow`,counts:{REUSABLE:1,NEEDS_CLEANING:0,DAMAGED:0}}]
+  ]){
+    const result=await api(`/api/v1/sites/site-a${path}`,{method:'POST',key:`${id}-shadow-${path.slice(1)}`,body,bearer:shadow});
+    assert.equal(result.status,403);assert.equal(result.body.code,'INTAKE_IDENTITY_REQUIRED');evidence.http.push({label:'Restricted shadow identity cannot originate business work',path,site:'site-a',status:result.status});
+  }
+  assert.deepEqual(intakeCounts(),beforeRestricted);
+  const forward=spawnSync('pwsh',['-NoProfile','-File',resolve(root,'scripts/forward.ps1'),'-Target','adapter-api'],{encoding:'utf8',windowsHide:true,timeout:45000,maxBuffer:65536});
+  assert.equal(forward.status,0,'The owned adapter API forward must be available for the permitted snapshot read.');
+  const snapshot=await api('/internal/v1/sites/site-a/zones/ambient/scheduling-context',{method:'POST',body:{movementIds:[]},bearer:shadow,target:'adapter'});
+  assert.equal(snapshot.status,200);
+  evidence.cases.push({id:'A28/security-review',status:'passed',name:'An actual shadow bearer token presented through the normal localhost proxy cannot create business intake, while its scheduling snapshot read remains permitted',ownerRecordsUnchanged:true,snapshotReadStatus:snapshot.status});
   await rejected('Missing authentication',undefined);await rejected('Authorized identity outside its site',original,404,'site-b');
   for(const [label,changes]of[['Changed site membership',{sites:['site-b']}],['Changed issuer',{iss:claims.iss+'/untrusted'}],['Changed audience',{aud:['unrelated-service']}],['Changed expiry',{exp:1}]])await rejected(label,`${parts[0]}.${encoded({...claims,...changes})}.${parts[2]}`);
   const header=JSON.parse(Buffer.from(parts[0],'base64url'));

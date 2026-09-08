@@ -14,7 +14,7 @@ class ReturnsController {
     private final ReceiptService receipts;private final ReturnsCoordinator coordinator;
     ReturnsController(ReceiptService receipts,ReturnsCoordinator coordinator){this.receipts=receipts;this.coordinator=coordinator;}
     @PostMapping("/api/v1/sites/{site}/return-receipts") ResponseEntity<JsonNode> register(@PathVariable String site,@RequestHeader("Idempotency-Key") String key,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt){
-        Access.role(jwt,"scenario","service");var accepted=receipts.register(jwt.getSubject(),Access.site(jwt,site),key,body);return ResponseEntity.accepted().location(URI.create(accepted.required("statusUrl").asString())).body(accepted);
+        Access.intake(jwt);var accepted=receipts.register(jwt.getSubject(),Access.site(jwt,site),key,body);return ResponseEntity.accepted().location(URI.create(accepted.required("statusUrl").asString())).body(accepted);
     }
     @GetMapping("/api/v1/sites/{site}/return-receipts") JsonNode list(@PathVariable String site,@RequestParam(required=false) UUID cursor,@RequestParam(defaultValue="25") int limit,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"operator","supervisor","scenario","service");return receipts.list(Access.site(jwt,site),cursor,limit);}
     @GetMapping("/api/v1/sites/{site}/return-receipts/{id}") JsonNode get(@PathVariable String site,@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt){Access.role(jwt,"operator","supervisor","scenario","service");return receipts.get(Access.site(jwt,site),id);}

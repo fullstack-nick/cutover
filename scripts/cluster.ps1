@@ -13,6 +13,8 @@ Push-Location $root
 $priorNetwork=$env:KIND_EXPERIMENTAL_DOCKER_NETWORK
 try {
     if($Action -eq 'Status'){Invoke-Kubectl @('get','nodes','-o','wide');Invoke-Kubectl @('get','pods','-A');return}
+    & node --input-type=module -e 'import {privateDirectory} from "./scripts/lib/local-platform.mjs"; privateDirectory(".local");'
+    if($LASTEXITCODE -ne 0){throw 'Could not protect the project kubeconfig directory.'}
     & (Join-Path $PSScriptRoot 'doctor.ps1') -Profile demo
     if(-not (Test-Path -LiteralPath $kind)){throw 'Run bootstrap-tools.ps1 first.'}
     $hash=(Get-FileHash -LiteralPath infra/vendor/calico/v3.32.2/calico.yaml -Algorithm SHA256).Hash.ToLowerInvariant()

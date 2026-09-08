@@ -5,8 +5,10 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { platformResources, migrationJob, identityMigrationJob, config, namespaces } from '../infra/kubernetes/base/platform.mjs';
 import { policies } from '../infra/kubernetes/base/policies.mjs';
+import { privateDirectory } from './lib/local-platform.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+privateDirectory(resolve(root, '.local'));
 const read = path => readFileSync(resolve(root, path), 'utf8');
 const credentials = JSON.parse(read('.local/secrets/credentials.json')).passwords;
 const inventory = JSON.parse(read('.local/images/node-images.json'));
@@ -80,7 +82,7 @@ for (const workload of objects.filter(item => ['Deployment', 'StatefulSet'].incl
   });
   workload.spec.template.metadata.annotations = { ...workload.spec.template.metadata.annotations, 'dev.cutover/config-sha256': createHash('sha256').update(JSON.stringify(inputs)).digest('hex') };
 }
-const directory = resolve(root, '.local/kubernetes/demo'); mkdirSync(directory, { recursive: true });
+const directory = resolve(root, '.local/kubernetes/demo'); privateDirectory(directory);
 function group(name, contents) {
   const path = resolve(directory, name); mkdirSync(path, { recursive: true });
   writeFileSync(resolve(path, 'resources.json'), JSON.stringify({ apiVersion: 'v1', kind: 'List', items: contents }, null, 2));

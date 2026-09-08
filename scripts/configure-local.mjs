@@ -4,10 +4,12 @@ import { fileURLToPath } from 'node:url';
 import { randomBytes, createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { volumeStatusSql } from './lib/volume-probe.mjs';
+import { privateDirectory } from './lib/local-platform.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const directory = resolve(root, '.local/secrets');
-mkdirSync(directory, { recursive: true });
+privateDirectory(resolve(root, '.local'));
+privateDirectory(directory);
 const credentialFile = resolve(directory, 'credentials.json');
 const credentials = existsSync(credentialFile) ? JSON.parse(readFileSync(credentialFile, 'utf8')) : { createdAt: new Date().toISOString(), passwords: {} };
 const password = key => credentials.passwords[key] ??= randomBytes(32).toString('hex');

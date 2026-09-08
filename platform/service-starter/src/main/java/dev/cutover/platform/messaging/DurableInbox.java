@@ -21,6 +21,11 @@ import org.jooq.impl.DSL;
 /** Database commit transfers responsibility from RabbitMQ to this owner's durable inbox. */
 public final class DurableInbox {
     public static final int MAX_MESSAGE_BYTES = 65536;
+    public sealed interface Receipt permits Admitted, Quarantined { UUID id(); }
+    /** Durable inbox ownership is established, even when its business handler is still pending. */
+    public record Admitted(UUID id) implements Receipt {}
+    /** Raw bytes remain in the separate quarantine namespace and have not transferred. */
+    public record Quarantined(UUID id) implements Receipt {}
     private final DSLContext database;
     private final MessageHandler handler;
     private final Clock clock;
@@ -36,7 +41,7 @@ public final class DurableInbox {
         this.exchanges=subscription.exchanges();
     }
 
-    public UUID receive(String exchange, String transportMessageId, byte[] body) {
+    public Receipt receive(String exchange, String transportMessageId, byte[] body) {
         if (body.length > MAX_MESSAGE_BYTES) throw new Problem(503, "MESSAGE_TOO_LARGE", "Broker message-size enforcement must be repaired before consumption resumes.");
         Events.Envelope envelope;
         String json;
@@ -62,13 +67,13 @@ public final class DurableInbox {
                 if (!hash.equals(previous.get("payload_hash", String.class)) || !exchange.equals(previous.get("received_exchange", String.class)))
                     return quarantineRaw(sql, exchange, transportMessageId, body, "EVENT_ID_CONFLICT", event.siteId());
                 sql.execute("UPDATE inbox SET deliveries=deliveries+1 WHERE event_id= ?", event.eventId());
-                return event.eventId();
+                return new Admitted(event.eventId());
             }
             reserveStorage(sql, body.length);
             sql.execute("INSERT INTO inbox(event_id,envelope,payload_hash,state,next_attempt_at,received_at,received_exchange,payload_bytes,raw_body,site_id) VALUES (?,?::jsonb,?,'RECEIVED',?::timestamptz,?::timestamptz,?,?,?,?)",
                     event.eventId(), JsonSupport.write(event), hash, now(), now(), exchange, body.length, body, event.siteId());
             attempt(sql, event);
-            return event.eventId();
+            return new Admitted(event.eventId());
         });
     }
 
@@ -119,7 +124,7 @@ public final class DurableInbox {
         sql.execute("UPDATE stream_cursor SET last_version= ? WHERE source= ? AND site_id= ? AND aggregate_type= ? AND aggregate_id= ?", event.aggregateVersion(), event.source(), event.siteId(), event.aggregateType(), event.aggregateId());
     }
 
-    private UUID quarantineRaw(DSLContext sql, String exchange, String messageId, byte[] body, String reason, String site) {
+    private Quarantined quarantineRaw(DSLContext sql, String exchange, String messageId, byte[] body, String reason, String site) {
         lockStorage(sql);
         UUID id;
         try {
@@ -127,11 +132,11 @@ public final class DurableInbox {
             digest.update(exchange.getBytes(StandardCharsets.UTF_8)); digest.update((byte) 0); digest.update(body);
             var bytes = ByteBuffer.wrap(digest.digest()); id = new UUID(bytes.getLong(), bytes.getLong());
         } catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
-        if (sql.fetchExists(DSL.table("delivery_quarantine"), DSL.field("delivery_id").eq(id))) return id;
+        if (sql.fetchExists(DSL.table("delivery_quarantine"), DSL.field("delivery_id").eq(id))) return new Quarantined(id);
         reserveStorage(sql, body.length);
         sql.execute("INSERT INTO delivery_quarantine(delivery_id,transport_message_id,received_exchange,site_id,raw_body,payload_bytes,reason,received_at,body_hash) VALUES (?,?,?,?,?,?,?,?::timestamptz,encode(sha256(?),'hex'))",
                 id, messageId, exchange, site, body, body.length, reason, now(),body);
-        return id;
+        return new Quarantined(id);
     }
 
     /** A site label is trustworthy only when it agrees with the broker-authenticated publisher. */
