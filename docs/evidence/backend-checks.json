@@ -1,17 +1,17 @@
 {
   "command": "./mvnw.cmd -o verify",
-  "productionSource": "c6486a6e7918d704192e68d10fd03a078d60de00",
-  "finishedAt": "2026-09-08T19:52:45+02:00",
-  "durationSeconds": 1027,
-  "tests": 190,
+  "productionSource": "b911f143d0b228523352c08d5ba9a4a9daa41b3e",
+  "finishedAt": "2026-09-08T22:08:50+02:00",
+  "durationSeconds": 626,
+  "tests": 193,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
-  "originalLogSha256": "0d68144ef38179195d94e4d4aa3e37ac295135557c323a325ca8b5f9c20dbe2d",
+  "originalLogSha256": "a035b1f805a9b2b74d5c0de7c8b6a64bef7d56a7ea5472fa30d1ec7f5bfd5431",
   "classes": [
     {
       "name": "dev.cutover.adapter.CommandJournalTest",
-      "tests": 14,
+      "tests": 15,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -130,7 +130,7 @@
     },
     {
       "name": "dev.cutover.reliability.DurableDeliveryTest",
-      "tests": 41,
+      "tests": 43,
       "failures": 0,
       "errors": 0,
       "skipped": 0
