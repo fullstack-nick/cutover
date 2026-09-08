@@ -2,6 +2,8 @@
 
 Date: 8 September 2026. Status: implemented; component, deployed process-crash and queue-overflow regressions passed; sustained-load qualification pending.
 
+The transaction ownership rules below remain in force. [ADR 0022](0022-bounded-broker-subscriptions.md) subsequently replaces the pull transport with a bounded subscription and records its separate qualification.
+
 The full `968cad5` load run completed all 3,300 physical/business effects once, but only 85.9% of the 3,000 measured movements reached durable adapter acceptance within two seconds of original eligibility (p99 8,340.798 ms). Individual task-created latency was much lower and does not replace that denominator. Slow intervals included publication confirmation and consumption waits; one retained trace overlaps a database checkpoint. Checkpoint overlap is evidence of shared storage contention, not proof that every delayed delivery has the same cause.
 
 The pull consumer previously committed each delivery separately. It now reads at most 16 deliveries per runtime iteration (the API rejects batches above 32), transfers their durable inbox/quarantine ownership in one PostgreSQL transaction, and acknowledges individual delivery tags only after that transaction returns successfully. It does not wait for a batch to fill. A 64-KiB message bound limits a runtime batch to at most 1 MiB of message bodies, plus bounded decoding overhead. Basic-get does not use prefetch as its bound. Acknowledgements must use the receiving channel, and unacknowledged deliveries are requeued when that channel closes. [RabbitMQ acknowledgement documentation](https://www.rabbitmq.com/docs/confirms)
