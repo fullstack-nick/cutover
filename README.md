@@ -6,7 +6,7 @@ Cutover is a local portfolio lab for grocery fulfilment and reusable-crate retur
 
 Java 21 · Spring Boot · jOOQ/PostgreSQL · RabbitMQ · React/TypeScript · Keycloak · kind/Calico · OpenTelemetry
 
-**Status: final implementation and acceptance verification in progress.** Working runtime evidence covers owner migration and reversal, independent returns, unknown-command recovery, process failures, restoration and the prepared offline walkthrough. The latest full load completed all 3,300 movements once but missed the dispatch target. Final error-format checks and the complete reviewer evidence bundle remain open. The [implementation ledger](docs/planning/implementation-progress.md) records passed checks, failed measurements and remaining work.
+**Status: final implementation and acceptance verification in progress.** Working runtime evidence covers owner migration and reversal, independent returns, unknown-command recovery, process failures, restoration and the prepared offline walkthrough. The latest full load completed all 3,300 movements once but missed the dispatch target. The complete reviewer evidence bundle remains open. The [implementation ledger](docs/planning/implementation-progress.md) records passed checks, failed measurements and remaining work.
 
 The application runs entirely on one machine with synthetic data and equipment. GitHub hosts source; builds, tests and deployment are invoked locally. There is no cloud runtime, CI/CD or hosted authentication.
 

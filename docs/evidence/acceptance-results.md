@@ -1,6 +1,6 @@
 # Acceptance status
 
-Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, final raw error-format checks and the timed reviewer path remain open.
+Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency and the timed reviewer path remain open.
 
 The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
 
@@ -15,7 +15,7 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A07 | The same returns run publishes repeated requests/completions with new event IDs and proves single effects. |
 | A08 | `cancellation-1788817068207`: unstarted cancellation releases once; started/unknown work retains its reservation. |
 | A09 | PostgreSQL checks reject regressing/conflicting observations; `storage-repair-1788819273019` exposes a sequence gap and repairs it through original-event replay. |
-| A10 | The same functional run rejects eight invalid inputs without order, reservation, idempotency or receipt writes. Raw RFC 9457 response-format verification for proxy/authentication errors remains pending after the correction. |
+| A10 | The same functional run rejects eight invalid inputs without order, reservation, idempotency or receipt writes. [Raw HTTP boundary evidence](http-boundaries-2026-09-08.md), `problem-responses-1788891930309`, separately asserts seven authentication, role, request and proxy responses on the corrected runtime, with unchanged owner rows. |
 | A11 | `process-crash-1788884703569`: the current runtime exits after business commit and completes the retained original after restart. |
 | A12 | The same run exits after publisher confirmation and records duplicate delivery with single effects. |
 | A13 | The same run exits after effect commit before acknowledgement, then deduplicates the repeated delivery. Separate real PostgreSQL/quorum checks cover multi-message crash and transaction rollback. |
