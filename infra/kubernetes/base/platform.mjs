@@ -88,10 +88,10 @@ export function platformResources(images, settings) {
     ['collector', 'collector', 4318, ['--config=/etc/cutover/config.yaml'], 10001, '384Mi', null, '/'],
     ['prometheus', 'prometheus', 9090, ['--config.file=/etc/cutover/config.yaml', '--storage.tsdb.path=/data', '--storage.tsdb.retention.time=24h', '--storage.tsdb.retention.size=512MB'], 65534, '384Mi', { path: '/data', size: '1Gi' }, '/-/ready'],
     ['tempo', 'tempo', 3200, ['-config.file=/etc/cutover/config.yaml', '-target=all', '-backend-scheduler.provider.work.compaction.block-retention=24h'], 10001, '1Gi', { path: '/var/tempo', size: '1Gi' }, '/ready'],
-    ['grafana', 'grafana', 3000, undefined, 472, '384Mi', { path: '/var/lib/grafana', size: '1Gi' }, '/api/health'],
+    ['grafana', 'grafana', 3000, undefined, 472, '1Gi', { path: '/var/lib/grafana', size: '1Gi' }, '/api/health'],
   ]) {
     const extra = name === 'grafana' ? {
-      env: [literal('GF_ANALYTICS_REPORTING_ENABLED', false), literal('GF_ANALYTICS_CHECK_FOR_UPDATES', false), literal('GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES', false), literal('GF_NEWS_NEWS_FEED_ENABLED', false), literal('GF_SECURITY_ADMIN_USER', 'cutover-admin'), secret('GF_SECURITY_ADMIN_PASSWORD', 'password', 'grafana-admin'), literal('GF_USERS_ALLOW_SIGN_UP', false), literal('GF_PLUGINS_PREINSTALL_DISABLED', true)],
+      env: [literal('GOMEMLIMIT', '768MiB'), literal('GF_ANALYTICS_REPORTING_ENABLED', false), literal('GF_ANALYTICS_CHECK_FOR_UPDATES', false), literal('GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES', false), literal('GF_NEWS_NEWS_FEED_ENABLED', false), literal('GF_SECURITY_ADMIN_USER', 'cutover-admin'), secret('GF_SECURITY_ADMIN_PASSWORD', 'password', 'grafana-admin'), literal('GF_USERS_ALLOW_SIGN_UP', false), literal('GF_PLUGINS_PREINSTALL_DISABLED', true)],
       volumes: [configuration('grafana-datasources'), configuration('grafana-dashboards'), configuration('cutover-dashboard')], mounts: [mount('grafana-datasources', '/etc/grafana/provisioning/datasources'), mount('grafana-dashboards', '/etc/grafana/provisioning/dashboards'), mount('cutover-dashboard', '/var/lib/grafana/dashboards')],
     } : { volumes: [configuration(`${name}-config`)], mounts: [mount(`${name}-config`, '/etc/cutover')] };
     if (name === 'tempo') extra.env = [literal('GOMEMLIMIT', '768MiB')];

@@ -3,8 +3,9 @@ import { spawn } from 'node:child_process';
 import { openSync, closeSync, readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 process.env.CUTOVER_PROFILE='demo';
-const { api, token, query, simulator, provisionObservers, saveEvidence, credentials }=await import('./client.mjs');
+const { api, token, query, simulator, provisionObservers, saveEvidence }=await import('./client.mjs');
 const { humanSession }=await import('./human-session.mjs');
+const { verifyDashboard }=await import('./dashboard-browser.mjs');
 const { root, target, call, privateDirectory, writeJson, simulatorRead, until }=await import('../../scripts/lib/local-platform.mjs');
 const runId=`offline-${Date.now()}`,directory=resolve(root,'.local/evidence',runId),prefix='/api/v1/sites/site-a';
 privateDirectory(directory);
@@ -82,13 +83,11 @@ try {
   await run('load-cached-predecessor','scripts/load-cached-rollback.mjs');
   await run('cached-rollback','tools/scenario-driver/adapter-image-rollback-smoke.mjs',[`--image=${cache.rollback.runtimeReference}`]);
   await run('telemetry','tools/scenario-driver/telemetry-smoke.mjs');
-  await session.page.goto('http://127.0.0.1:8783/d/cutover-platform/cutover-local-operations');
-  try {
-    await session.page.getByRole('textbox',{name:'Email or username',exact:true}).fill('cutover-admin');
-    await session.page.getByRole('textbox',{name:'Password',exact:true}).fill(credentials.passwords.grafana_admin);
-    await session.page.getByRole('button',{name:'Log in',exact:true}).click();
-  } catch { throw new Error('The prepared local dashboard login did not complete.'); }
-  await session.page.getByText('Observed application targets',{exact:true}).waitFor({timeout:30000});await session.page.screenshot({path:resolve(directory,'offline-dashboard.png'),fullPage:true});
+  const dashboardPodBefore=target('demo').get('pod','grafana-0','cutover-observability');
+  evidence.dashboard=await verifyDashboard(session.page,resolve(directory,'offline-dashboard.png'));
+  const dashboardPodAfter=target('demo').get('pod','grafana-0','cutover-observability');
+  assert.equal(dashboardPodAfter.metadata.uid,dashboardPodBefore.metadata.uid);
+  assert.equal(dashboardPodAfter.status.containerStatuses[0].restartCount,dashboardPodBefore.status.containerStatuses[0].restartCount,'Grafana must survive actual dashboard rendering.');
   evidence.cases.push({status:'passed',name:'Cached compatible rollback, ten scrape targets, local trace retrieval and actual dashboard rendering under denial'});
   assert.ok(evidence.browserRequests.some(item=>!item.allowed&&item.path==='/cutover-offline-probe'));
   assert.ok(evidence.browserRequests.every(item=>item.allowed||item.path==='/cutover-offline-probe'),'The application attempted an unexpected external browser request.');
