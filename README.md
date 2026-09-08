@@ -71,7 +71,7 @@ Stop preserves data. Deliberate reset is a separate [checkpoint-backed operation
 
 Run `./mvnw.cmd -B -ntp verify` for backend, schema, contract and real PostgreSQL/RabbitMQ checks. Disposable labelled containers require the Docker Linux engine. Runtime drivers under `tools/scenario-driver` record assertions, image identities and results in private run directories.
 
-The verified backend has **180 checks** across 22 test classes, with no remaining failures, errors or skips. The latest offline runs cover shared messaging/security, all product-owner workflows, corrected storage-pressure fixtures and [N/N−1 contract consumers](contracts/compatibility/README.md). Component checks remain separate from platform acceptance.
+The full offline backend verification passed **186 checks** across 23 test classes, with zero failures, errors or skips, in **12 minutes 11 seconds**. It covers shared messaging/security, every product-owner workflow, storage pressure, bounded inbox commits, database-error responses and [N/N−1 contract consumers](contracts/compatibility/README.md). [Per-class results](docs/evidence/backend-checks.json) remain separate from platform acceptance.
 
 The latest full load qualification on the `968cad5` runtime offered two two-line orders and one receipt per second for ten minutes after 60 seconds of warm-up. All 3,000 measured movements were included: **85.9% reached durable adapter acceptance within two seconds; p99 was 8,340.798 ms**. The target is at least 99% within two seconds. A later task-created timestamp does not replace original movement eligibility. Bounded inbox transactions are undergoing verification; no later performance result is claimed yet.
 
