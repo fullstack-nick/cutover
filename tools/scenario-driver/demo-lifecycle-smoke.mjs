@@ -3,11 +3,13 @@ import { spawn } from 'node:child_process';
 import { openSync, closeSync } from 'node:fs';
 import { resolve } from 'node:path';
 process.env.CUTOVER_PROFILE='demo';
+assert.ok(process.argv.slice(2).every(argument=>argument==='--offline-browser'),'Only the optional isolated-browser denial flag is supported.');
+const offlineBrowser=process.argv.includes('--offline-browser');
 const { api, token, query, provisionObservers, saveEvidence }=await import('./client.mjs');
 const { humanSession }=await import('./human-session.mjs');
 const { root, target, privateDirectory, simulatorRead, until, call, writeJson }=await import('../../scripts/lib/local-platform.mjs');
 const id=`demo-lifecycle-${Date.now()}`,directory=resolve(root,'.local/evidence',id),prefix='/api/v1/sites/site-a';
-privateDirectory(directory);const evidence={startedAt:new Date().toISOString(),cases:[],steps:[]};
+privateDirectory(directory);const evidence={startedAt:new Date().toISOString(),cases:[],steps:[],offlineBrowser,browserRequests:[]};
 const names=['cutover-control-plane','cutover-dev-equipment-simulator-1','cutover-dev-simulator-db-1','cutover-dev-equipment-volume-probe-1'];
 const containers=()=>JSON.parse(call('docker',['inspect',...names])).map(box=>({name:box.Name,id:box.Id,image:box.Image,running:box.State.Running,mounts:box.Mounts.filter(m=>m.Type==='volume').map(m=>({name:m.Name,destination:m.Destination})).sort((a,b)=>a.destination.localeCompare(b.destination))}));
 const counts=()=>({core:JSON.parse(query('core',"SELECT jsonb_build_object('orders',(SELECT count(*) FROM orders),'reservations',(SELECT count(*) FROM reservations),'effects',(SELECT count(*) FROM inventory_ledger),'stock',(SELECT sum(on_hand) FROM stock),'reserved',(SELECT sum(reserved) FROM stock));")),returns:JSON.parse(query('returns',"SELECT jsonb_build_object('receipts',(SELECT count(*) FROM receipts),'effects',(SELECT count(*) FROM sorting_ledger),'received',(SELECT sum(received) FROM crate_counters),'sorted',(SELECT sum(sorted) FROM crate_counters));"))});
@@ -33,7 +35,8 @@ try{
   evidence.physicalAfter=await simulatorRead('/sim/v1/equipment');for(const key of ['worldId','journalGeneration','journalHighWater'])assert.equal(evidence.physicalAfter[key],evidence.physicalBefore[key]);
   evidence.countsAfter=counts();assert.deepEqual(evidence.countsAfter,evidence.countsBefore);
   const repeated=await api(`${prefix}/return-receipts`,{method:'POST',key:id,body,bearer:await token()});assert.equal(repeated.status,202);assert.equal(repeated.body.id,receipt.id);assert.deepEqual(counts(),evidence.countsBefore);
-  session=await humanSession('operator-a');const bearer=session.bearer();
+  session=await humanSession('operator-a',{offline:offlineBrowser,onRequest:request=>evidence.browserRequests.push(request)});const bearer=session.bearer();
+  if(offlineBrowser)assert.ok(evidence.browserRequests.length>0&&evidence.browserRequests.every(request=>request.allowed),'The restarted local login must request only permitted loopback assets.');
   assert.equal((await api(`${prefix}/orders?limit=2`,{bearer})).status,200);assert.equal((await api(`${prefix}/return-receipts/${receipt.id}`,{bearer})).body.state,'COMPLETED');
   evidence.cases.push({status:'passed',supports:['A45','A52'],name:'Normal Stop/Start and repeated commands preserve all four container/volume identities, world/generation/high water, business totals, original receipt idempotency and real local login',scope:'Preservation lifecycle only; explicit reset and a fresh bootstrap are separate required checks.'});
 }catch(error){failure=error;evidence.failure=error.message;}

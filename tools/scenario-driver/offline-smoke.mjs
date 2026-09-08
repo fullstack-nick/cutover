@@ -70,7 +70,7 @@ try {
   const physical=await simulatorRead('/sim/v1/equipment');assert.equal(physical.worldId,evidence.worldBefore.worldId);assert.equal(physical.journalGeneration,evidence.worldBefore.journalGeneration);
   await waitOrder(accepted.body.id);await waitReceipt(received.body.id);
   evidence.cases.push({status:'passed',name:'Actual simulator restart uses cached image and preserves world, journal and both completed products',before:before.State.StartedAt,after:after.State.StartedAt});
-  await run('whole-lab-restart','tools/scenario-driver/demo-lifecycle-smoke.mjs');
+  await run('whole-lab-restart','tools/scenario-driver/demo-lifecycle-smoke.mjs',['--offline-browser']);
   await run('egress-probe-after-restart','scripts/offline-egress.mjs',['Probe']);
   await waitOrder(accepted.body.id);await waitReceipt(received.body.id);
   evidence.cases.push({status:'passed',name:'Normal whole-lab stop/start preserves both products and supports fresh PKCE login while scoped external-egress denial remains effective'});
