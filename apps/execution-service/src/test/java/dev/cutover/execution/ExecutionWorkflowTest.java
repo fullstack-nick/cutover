@@ -64,6 +64,28 @@ class ExecutionWorkflowTest {
     void finish(UUID order){for(int n=0;n<40&&!orders.get("site-a",order).path("state").asString().equals("COMPLETED");n++)tick();assertThat(orders.get("site-a",order).path("state").asString()).isEqualTo("COMPLETED");}
     UUID movement(UUID order){return core.sql().fetchOne("SELECT movement_id FROM movement_intents WHERE order_id=?",order).get(0,UUID.class);}
     int count(DatabaseFixture db,String table){return db.sql().fetchOne("SELECT count(*) FROM "+table).get(0,Integer.class);}
+    @Test void aSlowBatchUsesNewEquipmentEvidenceForItsRemainingMovement(){
+        verifyEvidenceAfterSlowDispatch(true);
+    }
+    @Test void aSlowBatchStillRefusesEquipmentEvidenceThatRemainsStale(){
+        verifyEvidenceAfterSlowDispatch(false);
+    }
+    void verifyEvidenceAfterSlowDispatch(boolean refreshEquipment){
+        accept("slow-batch",new OrderService.Line("SKU-001",1),new OrderService.Line("SKU-003",1));messages();
+        var first=new AtomicBoolean(true);
+        var slow=new DispatchPort(){
+            @Override public JsonNode context(String site,String zone,List<UUID> ids){return port.context(site,zone,ids);}
+            @Override public JsonNode dispatch(String site,UUID id,UUID allocation,long epoch,String lane,JsonNode movement){
+                var result=port.dispatch(site,id,allocation,epoch,lane,movement);
+                if(first.getAndSet(false)){clock.advance(Duration.ofSeconds(6));if(refreshEquipment)observations.refresh();}
+                return result;
+            }
+        };
+        assertThat(new ExecutionScheduler(execution.sql(),slow,clock).poll()).isEqualTo(2);
+        assertThat(count(adapter,"command_journal")).isEqualTo(refreshEquipment?2:1);
+        assertThat(execution.sql().fetchOne("SELECT count(*) FROM execution_tasks WHERE last_error='OBSERVATION_STALE'").get(0,Integer.class)).isEqualTo(refreshEquipment?0:1);
+        assertThat(count(physical,"execution_ledger")).isZero();
+    }
     @Test void recordedCommandsCannotStarveANewEligibleMovement() {
         clock.advance(Duration.ofSeconds(30));observations.refresh();
         for(int n=0;n<16;n++)accept("pending-command-"+n,new OrderService.Line("SKU-001",1));

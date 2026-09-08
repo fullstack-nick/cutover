@@ -37,14 +37,18 @@ public final class ExecutionScheduler {
         return tasks.size();
     }
     private void decide(List<Record> tasks){
-        String site=tasks.getFirst().get("site_id",String.class),zone=tasks.getFirst().get("zone_id",String.class);
-        var context=adapter.context(site,zone,tasks.stream().map(task->task.get("movement_id",UUID.class)).toList());
-        var evidence=new HashMap<UUID,JsonNode>();context.path("movements").forEach(item->evidence.put(Database.uuid(item,"movementId"),item));
-        var snapshot=snapshot(site,zone,tasks,context,evidence);var unresolved=new HashMap<UUID,Record>();
-        for(var task:tasks){UUID id=task.get("movement_id",UUID.class);var item=evidence.get(id);
-            if(item!=null && item.hasNonNull("command"))observe(task,item.path("command"));else unresolved.put(id,task);
-        }
+        String site=tasks.getFirst().get("site_id",String.class);
+        var unresolved=new LinkedHashMap<UUID,Record>();var snapshot=contextSnapshot(tasks,unresolved);
         for(int round=0;round<=tasks.size();round++){
+            if(unresolved.isEmpty())return;
+            // A previous durable dispatch may outlive this batch's retained observation.
+            // Read current evidence for the remaining leased tasks; the same freshness rule
+            // still rejects it when the adapter has no newer valid observation.
+            Instant observed=Instant.parse(snapshot.required("observedAt").asString()),decisionAt=clock.instant();
+            if(observed.plusSeconds(5).isBefore(decisionAt)||observed.isAfter(decisionAt)){
+                snapshot=contextSnapshot(List.copyOf(unresolved.values()),unresolved);
+                if(unresolved.isEmpty())return;
+            }
             snapshot.put("decisionAt",timestamp(clock.instant()));var proposal=SchedulingDecision.propose(snapshot);retain(snapshot,proposal);
             if(proposal.path("selectedMovementId").isNull()){
                 for(var ranked:proposal.path("ranking")){var task=unresolved.remove(Database.uuid(ranked,"movementId"));if(task==null)continue;String reason=ranked.path("reason").asString();
@@ -62,6 +66,16 @@ public final class ExecutionScheduler {
             var remaining=JsonSupport.MAPPER.createArrayNode();for(var candidate:snapshot.path("candidates"))if(!id.toString().equals(candidate.path("movementId").asString()))remaining.add(candidate);snapshot.set("candidates",remaining);
             if(remaining.isEmpty())return;
         }
+    }
+    private ObjectNode contextSnapshot(List<Record> tasks,Map<UUID,Record> unresolved){
+        String site=tasks.getFirst().get("site_id",String.class),zone=tasks.getFirst().get("zone_id",String.class);
+        var context=adapter.context(site,zone,tasks.stream().map(task->task.get("movement_id",UUID.class)).toList());
+        var evidence=new HashMap<UUID,JsonNode>();context.path("movements").forEach(item->evidence.put(Database.uuid(item,"movementId"),item));
+        unresolved.clear();
+        for(var task:tasks){UUID id=task.get("movement_id",UUID.class);var item=evidence.get(id);
+            if(item!=null&&item.hasNonNull("command"))observe(task,item.path("command"));else unresolved.put(id,task);
+        }
+        return snapshot(site,zone,tasks,context,evidence);
     }
     private ObjectNode snapshot(String site,String zone,List<Record> tasks,JsonNode context,Map<UUID,JsonNode> evidence){
         var equipment=context.path("equipment");var result=JsonSupport.MAPPER.createObjectNode().put("ruleVersion",SchedulingDecision.RULE_VERSION).put("siteId",site).put("zoneId",zone)
