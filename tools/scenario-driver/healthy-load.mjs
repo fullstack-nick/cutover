@@ -20,7 +20,7 @@ const percentile=(values,q)=>{const sorted=[...values].sort((a,b)=>a-b);return s
 const sqlIds=ids=>ids.map(value=>{assert.match(value,/^[a-f0-9-]{36}$/);return `'${value}'`;}).join(',');
 function walSnapshot() {
   return JSON.parse(target('demo').kube(['-n','cutover-platform','exec','application-db-0','-c','application-db','--','psql','-X','-U','postgres','-d','postgres','-Atc',
-    "SELECT jsonb_build_object('at',clock_timestamp(),'timingEnabled',current_setting('track_wal_io_timing'),'fsyncEnabled',current_setting('fsync'),'synchronousCommit',current_setting('synchronous_commit'),'io',(SELECT row_to_json(s) FROM pg_stat_io s WHERE object='wal' AND context='normal' AND backend_type='client backend'),'wal',(SELECT row_to_json(s) FROM pg_stat_wal s));"]));
+    "SELECT jsonb_build_object('at',clock_timestamp(),'timingEnabled',current_setting('track_wal_io_timing'),'fsyncEnabled',current_setting('fsync'),'synchronousCommit',current_setting('synchronous_commit'),'walSyncMethod',current_setting('wal_sync_method'),'commitDelayMicros',current_setting('commit_delay'),'commitSiblings',current_setting('commit_siblings'),'io',(SELECT row_to_json(s) FROM pg_stat_io s WHERE object='wal' AND context='normal' AND backend_type='client backend'),'wal',(SELECT row_to_json(s) FROM pg_stat_wal s));"]));
 }
 function batchQuery(owner,ids,makeSql) {
   const result=[];
@@ -98,6 +98,7 @@ try {
   evidence.wal.afterOffering=walSnapshot();
   const walFirst=evidence.wal.before,walLast=evidence.wal.afterOffering;
   assert.ok([walFirst,walLast].every(s=>s.timingEnabled==='on'&&s.fsyncEnabled==='on'&&s.synchronousCommit==='on'));
+  for(const setting of ['walSyncMethod','commitDelayMicros','commitSiblings'])assert.equal(walFirst[setting],walLast[setting],`Database ${setting} must remain unchanged throughout the measured offering.`);
   assert.equal(walFirst.io.stats_reset,walLast.io.stats_reset);assert.equal(walFirst.wal.stats_reset,walLast.wal.stats_reset);
   const walSeconds=(Date.parse(walLast.at)-Date.parse(walFirst.at))/1000;
   evidence.wal.delta={seconds:walSeconds,fsyncs:walLast.io.fsyncs-walFirst.io.fsyncs,fsyncMillis:walLast.io.fsync_time-walFirst.io.fsync_time,walBytes:Number(walLast.wal.wal_bytes)-Number(walFirst.wal.wal_bytes),fsyncsPerSecond:(walLast.io.fsyncs-walFirst.io.fsyncs)/walSeconds};
