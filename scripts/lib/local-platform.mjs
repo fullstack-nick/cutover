@@ -135,10 +135,12 @@ export function cleanupAbandonedForwards(parentPid, cluster = 'cutover') {
 export function simulatorRead(path, credentials = jsonFile(resolve(root, '.local/secrets/credentials.json'))) {
   if (!/^\/sim\/v1\/(equipment|history(?:\?after=\d+&limit=\d+)?|recovery-inventory\?limit=(?:[1-9]|[12][0-9]|3[0-2])|commands\/[0-9a-f-]{36}|test-controls\/faults)$/.test(path)) throw new Error('Unrecognized read-only simulator operation.');
   return new Promise((done, failed) => {
-    const request = https.get(`https://localhost:18784${path}`, { pfx: readFileSync(resolve(root, '.local/secrets/equipment/scenario.p12')), passphrase: credentials.passwords.equipment_store, ca: readFileSync(resolve(root, '.local/secrets/equipment/ca.pem')), timeout: 8000 }, response => {
+    // Maintenance can spend minutes in synchronous dumps between reads. Do not reuse a TLS socket whose idle close has not yet been observed by this event loop.
+    const request = https.get(`https://localhost:18784${path}`, { agent: false, pfx: readFileSync(resolve(root, '.local/secrets/equipment/scenario.p12')), passphrase: credentials.passwords.equipment_store, ca: readFileSync(resolve(root, '.local/secrets/equipment/ca.pem')), timeout: 8000 }, response => {
       const parts = []; let bytes = 0;
       response.on('data', chunk => { bytes += chunk.length; if (bytes > 262144) request.destroy(new Error('Simulator evidence exceeded the response bound.')); else parts.push(chunk); });
       response.on('end', () => { try { if (response.statusCode !== 200) throw new Error(`Simulator read failed (${response.statusCode}).`); done(JSON.parse(Buffer.concat(parts))); } catch (error) { failed(error); } });
+      response.on('error', failed);
     });
     request.on('timeout', () => request.destroy(new Error('Simulator read timed out.'))); request.on('error', failed);
   });
