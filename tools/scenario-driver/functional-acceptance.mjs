@@ -81,7 +81,14 @@ try {
     ['unknown-classification',`${prefix}/return-receipts`,{sourceSystem:'scenario-driver',externalReceiptRef:`${id}-invalid-return`,counts:{UNSUPPORTED:1}},[422]],
   ];
   const returnsBefore=query('returns','SELECT count(*) FROM receipts;');
-  for(const [name,path,request,statuses] of invalid){const result=await api(path,{bearer,method:'POST',key:`${id}-invalid-${name}`,body:request});assert.ok(statuses.includes(result.status),`${name}: ${result.status}`);assert.ok(result.body?.code||result.body?.title);evidence.invalid.push({name,status:result.status,code:result.body?.code??result.body?.title});}
+  for(const [name,path,request,statuses] of invalid){
+    const result=await api(path,{bearer,method:'POST',key:`${id}-invalid-${name}`,body:request});assert.ok(statuses.includes(result.status),`${name}: ${result.status}`);assert.ok(result.body?.code||result.body?.title);
+    if(name==='oversize'){
+      const response=await fetch(`http://localhost:8780${path}`,{method:'POST',headers:{Authorization:`Bearer ${bearer}`,'Content-Type':'application/json','Idempotency-Key':`${id}-oversize-wire`},body:JSON.stringify(request),signal:AbortSignal.timeout(8000)});
+      assert.equal(response.status,413);assert.ok(response.headers.get('content-type')?.startsWith('application/problem+json'));const problem=await response.json();assert.equal(problem.code,'PAYLOAD_TOO_LARGE');assert.equal(problem.status,413);
+    }
+    evidence.invalid.push({name,status:result.status,code:result.body?.code??result.body?.title});
+  }
   assert.equal(query('core','SELECT (SELECT count(*) FROM orders)||\':\'||(SELECT count(*) FROM reservations)||\':\'||(SELECT count(*) FROM idempotency);'),counts);
   assert.equal(query('returns','SELECT count(*) FROM receipts;'),returnsBefore);
   evidence.cases.push({id:'A10',status:'passed',name:'Eight invalid HTTP inputs return bounded problem responses without order, reservation, idempotency or receipt writes.'});

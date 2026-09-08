@@ -43,6 +43,7 @@ public class JwtSecurityConfiguration {
         return decoder;
     }
     @Bean SecurityFilterChain apiAccess(HttpSecurity http) throws Exception {
+        var authenticationProblem=SecurityProblems.authentication();var deniedProblem=SecurityProblems.denied();
         var converter=new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             var authorities=new ArrayList<GrantedAuthority>();
@@ -52,10 +53,11 @@ public class JwtSecurityConfiguration {
             return authorities;
         });
         return http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(errors->errors.authenticationEntryPoint(authenticationProblem).accessDeniedHandler(deniedProblem))
                 .authorizeHttpRequests(requests -> requests.requestMatchers("/actuator/health/**","/actuator/prometheus").permitAll()
                         .requestMatchers("/internal/v1/platform/storage","/internal/v1/platform/untrusted-deliveries").hasRole("platform-admin")
                         .requestMatchers("/internal/v1/sites/*/messaging","/internal/v1/sites/*/messaging/**").hasAnyRole("operator","supervisor","platform-admin","service")
                         .requestMatchers("/internal/**").hasRole("service").requestMatchers("/api/v1/**").authenticated().anyRequest().denyAll())
-                .oauth2ResourceServer(server -> server.jwt(jwt -> jwt.jwtAuthenticationConverter(converter))).build();
+                .oauth2ResourceServer(server -> server.authenticationEntryPoint(authenticationProblem).accessDeniedHandler(deniedProblem).jwt(jwt -> jwt.jwtAuthenticationConverter(converter))).build();
     }
 }

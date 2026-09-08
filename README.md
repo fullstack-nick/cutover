@@ -6,7 +6,7 @@ Cutover is a local portfolio lab for grocery fulfilment and reusable-crate retur
 
 Java 21 · Spring Boot · jOOQ/PostgreSQL · RabbitMQ · React/TypeScript · Keycloak · kind/Calico · OpenTelemetry
 
-**Status: final implementation and acceptance verification in progress.** Working runtime evidence covers owner migration and reversal, independent returns, unknown-command recovery, process failures and application restoration. The latest full load completed all 3,300 movements once but missed the dispatch target. Prepared offline qualification and the complete reviewer evidence bundle remain open. The [implementation ledger](docs/planning/implementation-progress.md) records passed checks, failed measurements and remaining work.
+**Status: final implementation and acceptance verification in progress.** Working runtime evidence covers owner migration and reversal, independent returns, unknown-command recovery, process failures, restoration and the prepared offline walkthrough. The latest full load completed all 3,300 movements once but missed the dispatch target. Final error-format checks and the complete reviewer evidence bundle remain open. The [implementation ledger](docs/planning/implementation-progress.md) records passed checks, failed measurements and remaining work.
 
 The application runs entirely on one machine with synthetic data and equipment. GitHub hosts source; builds, tests and deployment are invoked locally. There is no cloud runtime, CI/CD or hosted authentication.
 
@@ -20,6 +20,7 @@ The application runs entirely on one machine with synthetic data and equipment. 
 | Handle a lost equipment response | Immutable command IDs, an independent physical journal and [supervised investigation](docs/operations/command-investigation.md) with one physical/business effect. |
 | Reuse the platform for another product | [Returns](docs/evidence/returns-2026-09-08.md) owns its tables and models; it continues through an unrelated outbound-lane fault. |
 | Recover older application data honestly | [Six-database restoration](docs/evidence/restore-2026-09-08.md), original-event replay and reconciliation against unchanged physical history. Missing later intent stays quarantined. |
+| Run the prepared lab offline | [Executed offline walkthrough](docs/evidence/prepared-offline-2026-09-08.md): login, both products, recovery, whole-lab restart, cached image rollback and populated dashboards under scoped external-egress denial. |
 
 ## Two-minute architecture
 
@@ -73,7 +74,7 @@ Run `./mvnw.cmd -B -ntp verify` for backend, schema, contract and real PostgreSQ
 
 The full offline backend verification passed **186 checks** across 23 test classes, with zero failures, errors or skips, in **12 minutes 11 seconds**. It covers shared messaging/security, every product-owner workflow, storage pressure, bounded inbox commits, database-error responses and [N/N−1 contract consumers](contracts/compatibility/README.md). [Per-class results](docs/evidence/backend-checks.json) remain separate from platform acceptance.
 
-The latest full load qualification on the `968cad5` runtime offered two two-line orders and one receipt per second for ten minutes after 60 seconds of warm-up. All 3,000 measured movements were included: **85.9% reached durable adapter acceptance within two seconds; p99 was 8,340.798 ms**. The target is at least 99% within two seconds. A later task-created timestamp does not replace original movement eligibility. Bounded inbox transactions are undergoing verification; no later performance result is claimed yet.
+The latest full load qualification on the `968cad5` runtime offered two two-line orders and one receipt per second for ten minutes after 60 seconds of warm-up. All 3,000 measured movements were included: **85.9% reached durable adapter acceptance within two seconds; p99 was 8,340.798 ms**. The target is at least 99% within two seconds. A later task-created timestamp does not replace original movement eligibility. Bounded inbox transactions pass component and deployed crash/overflow regressions; no later full performance result is claimed yet.
 
 The development host has an Intel Core i9-13900H, 32 GiB host RAM and an approximately 15.4 GiB Docker VM. Other local workloads share its CPU and disk. Recorded quiescent-checkpoint restoration took **10 minutes 49 seconds**. These are local experiments, not production guarantees.
 

@@ -1,21 +1,21 @@
 # Acceptance status
 
-Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, prepared offline operation, renewed functional HTTP checks and the timed reviewer path remain open.
+Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, final raw error-format checks and the timed reviewer path remain open.
 
 The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
 
 | ID | Evidence available / remaining qualification |
 | --- | --- |
-| A01 | Actual ambient/chilled baseline and platform workflows; renewed functional HTTP driver pending. |
-| A02 | Exact partial/total shortages in PostgreSQL checks and `order-register-1788866584899`; renewed functional HTTP driver pending. |
-| A03 | Original-key/business-reference uniqueness in baseline and PostgreSQL checks; renewed functional HTTP driver pending. |
-| A04 | Changed payload conflicts in core/returns/cancellation/recovery checks; `work-console-1788869826870` includes actual recovery conflicts. Renewed outbound HTTP check pending. |
-| A05 | Twelve concurrent PostgreSQL last-unit requests conserve stock. The new six-request deployed HTTP race is pending. |
+| A01 | `functional-1788887744619`: actual ambient/chilled HTTP order completes with compatible allocations and single physical/inventory effects. |
+| A02 | The same functional run exhausts real stock with exact partial/total shortages and conservation of every requested quantity; order-register UI evidence is separate. |
+| A03 | The same functional run returns identical original responses for original/fresh keys with one order/reservation set; original-key retry remains readable during admission refusal. |
+| A04 | The same functional run rejects changed payloads under both key paths. Independent returns, cancellation and work-console runs cover their owner-specific conflicts. |
+| A05 | `functional-1788887744619`: six concurrent two-line HTTP requests with alternating input order consume only existing last units, with no overselling or leaked reservations. Deterministic transaction retry also has PostgreSQL component checks. |
 | A06 | `returns-1788838277326`: mixed reusable/cleaning/damaged destinations and independent count/physical reconciliation. |
 | A07 | The same returns run publishes repeated requests/completions with new event IDs and proves single effects. |
 | A08 | `cancellation-1788817068207`: unstarted cancellation releases once; started/unknown work retains its reservation. |
 | A09 | PostgreSQL checks reject regressing/conflicting observations; `storage-repair-1788819273019` exposes a sequence gap and repairs it through original-event replay. |
-| A10 | Bounded input/site/enum checks in owner components and actual returns APIs. Expanded deployed malformed-input driver pending. |
+| A10 | The same functional run rejects eight invalid inputs without order, reservation, idempotency or receipt writes. Raw RFC 9457 response-format verification for proxy/authentication errors remains pending after the correction. |
 | A11 | `process-crash-1788884703569`: the current runtime exits after business commit and completes the retained original after restart. |
 | A12 | The same run exits after publisher confirmation and records duplicate delivery with single effects. |
 | A13 | The same run exits after effect commit before acknowledgement, then deduplicates the repeated delivery. Separate real PostgreSQL/quorum checks cover multi-message crash and transaction rollback. |
@@ -53,7 +53,7 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A45 | Separate application and broker restarts pass. `platform-resilience-1788883850354` replaces the database pod on its existing PVCs, preserves recorded responses and five accepted effects, and verifies unavailable intake returns 503 without creating an order. |
 | A46 | `restore-1788849841860`: six databases, 211 fingerprints, 1,207 original replay events and 183 matching physical/command records. Release took 648.572 seconds. |
 | A47 | `stale-restore-1788848295108`: one later known completion and three absent intents are distinguished without repeated physical work. RPO gap 516.516 seconds. |
-| A48 | Prepared runtime login, both products, recovery, restart, cached rollback and dashboards under scoped external-egress denial: pending. |
+| A48 | [Prepared offline rehearsal](prepared-offline-2026-09-08.md), `offline-1788887275782`: actual login, both products, lost-response recovery, simulator and whole-lab restarts, cached predecessor import/rollback, telemetry and populated dashboards under scoped denial; exact firewall cleanup verified. |
 | A49 | `cache-1788887175088`: all 4,050 installed assets match, excluding mutable Chromium diagnostic logs. An isolated empty-file-cache fixture fails explicitly and identifies all missing tools, Maven/npm packages, image archives and browser revisions; existing caches/daemon images remain intact. |
 | A50 | **Failed.** `load-1788880017964`: 85.9% within two seconds, original-eligibility p99 8,340.798 ms; all 3,000 measured movements included, all 3,300 total effects single. Inbox batching requires a new full measurement. |
 | A51 | Actual order/returns/task/recovery/migration/audit workflows, mobile views, stale data, version conflicts, keyboard close and focus restoration are recorded. Final screenshots after the latest console build are pending. |
