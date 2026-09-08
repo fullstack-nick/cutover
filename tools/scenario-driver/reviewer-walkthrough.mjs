@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFileSync, readdirSync, openSync, closeSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {captureReviewerConsole} from './reviewer-console.mjs';
 process.env.CUTOVER_PROFILE='demo';
 const { query, provisionObservers, saveEvidence }=await import('./client.mjs');
 const { humanSession }=await import('./human-session.mjs');
@@ -48,15 +49,7 @@ try{
   assert.ok(evidence.commandSeconds<=900,'The documented command sequence exceeded fifteen minutes; record the actual duration and investigate before qualifying the reviewer path.');
   session=await humanSession('operator-a');const page=session.page;
   page.on('pageerror',()=>evidence.browserErrors.push('An uncaught browser error occurred.'));
-  await page.setViewportSize({width:1440,height:1000});
-  for(const view of ['Overview','Orders','Returns','Tasks','Migrations']){
-    await page.getByRole('button',{name:view,exact:true}).click();
-    await page.getByRole('heading',{name:view,exact:true}).waitFor();
-    if(['Overview','Orders','Returns'].includes(view))await page.locator('tbody tr').first().waitFor();
-    if(view==='Migrations')await page.locator('.route-owner').first().waitFor();
-    if(view==='Tasks')await page.getByRole('heading',{name:'Task queues',exact:true}).waitFor();
-    await page.screenshot({path:resolve(directory,`${view.toLowerCase()}.png`)});
-  }
+  await captureReviewerConsole(page,directory);
   assert.deepEqual(evidence.browserErrors,[]);
   evidence.worldAfter=await simulatorRead('/sim/v1/equipment');assert.equal(evidence.worldAfter.worldId,evidence.worldBefore.worldId);assert.equal(evidence.worldAfter.journalGeneration,evidence.worldBefore.journalGeneration);
   assert.deepEqual(unrelated(),evidence.unrelatedBefore);
