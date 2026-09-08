@@ -13,6 +13,8 @@ scrape_configs:
         labels: { service: execution-service }
       - targets: [shadow-scheduler.cutover-apps.svc.cluster.local:9091]
         labels: { service: shadow-scheduler }
+      - targets: [returns-service.cutover-apps.svc.cluster.local:9091]
+        labels: { service: returns-service }
       - targets: [equipment-simulator.cutover-platform.svc.cluster.local:9091]
         labels: { service: equipment-simulator }
   - job_name: cutover-identity

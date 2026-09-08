@@ -45,7 +45,7 @@ try {
     if($TransferBaseline){& node scripts/transfer-baseline.mjs restore;if($LASTEXITCODE -ne 0){throw 'Frozen baseline transfer failed.'}}
     & node scripts/ensure-databases.mjs
     if($LASTEXITCODE -ne 0){throw 'Owner database provisioning failed.'}
-    Run-Jobs 'migrations' 'cutover-apps' @('migrate-legacy-core','migrate-equipment-adapter','migrate-execution-service','migrate-shadow-scheduler')
+    Run-Jobs 'migrations' 'cutover-apps' @('migrate-legacy-core','migrate-equipment-adapter','migrate-execution-service','migrate-shadow-scheduler','migrate-returns-service')
     # Stop the runtime identity process before its migration account makes schema changes.
     $identity=& kubectl --kubeconfig $config --context kind-cutover -n cutover-platform get deployment keycloak --ignore-not-found -o name
     if($identity){Invoke-Kubectl @('-n','cutover-platform','scale','deployment/keycloak','--replicas=0');Invoke-Kubectl @('-n','cutover-platform','wait','--for=delete','pod','-l','app.kubernetes.io/name=keycloak','--timeout=90s')}
@@ -55,6 +55,6 @@ try {
     & (Join-Path $PSScriptRoot 'forward.ps1') -Action Start -Target console
     & node scripts/ensure-local-users.mjs
     if($LASTEXITCODE -ne 0){throw 'Local identity fixture verification failed.'}
-    foreach($name in @('execution-service','shadow-scheduler')){Invoke-Kubectl @('-n','cutover-apps','rollout','status',"deployment/$name",'--timeout=240s')}
+    foreach($name in @('execution-service','shadow-scheduler','returns-service')){Invoke-Kubectl @('-n','cutover-apps','rollout','status',"deployment/$name",'--timeout=240s')}
     Write-Host 'Cutover local platform rolled out. Verify its behavior before recording acceptance.'
 }finally{Pop-Location}

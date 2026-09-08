@@ -25,6 +25,7 @@
     <module>apps/legacy-core</module>
     <module>apps/execution-service</module>
     <module>tools/shadow-checks</module>
+    <module>apps/returns-service</module>
   </modules>
   <dependencyManagement><dependencies>
     <dependency><groupId>dev.cutover</groupId><artifactId>service-starter</artifactId><version>${project.version}</version></dependency>

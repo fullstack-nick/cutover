@@ -10,6 +10,7 @@ const simulator = JSON.parse(readFileSync(resolve(root, '.local/kubernetes/demo/
 const id = `policy-${Date.now()}`;
 const probes = [
   ['core', 'cutover-apps', 'legacy-core'], ['adapter', 'cutover-apps', 'equipment-adapter'], ['proxy', 'cutover-apps', 'proxy'],
+  ['execution', 'cutover-apps', 'execution-service'], ['shadow', 'cutover-apps', 'shadow-scheduler'], ['returns', 'cutover-apps', 'returns-service'],
   ['outsider', 'cutover-apps', 'unauthorized-probe'], ['collector', 'cutover-observability', 'collector'],
   ['prometheus', 'cutover-observability', 'prometheus'], ['grafana', 'cutover-observability', 'grafana'],
 ];
@@ -17,14 +18,21 @@ function command(args, input) { return spawnSync('kubectl', [...target, ...args]
 const namespace = key => probes.find(row => row[0] === key)[1];
 const db = 'application-db.cutover-platform.svc.cluster.local', broker = 'rabbitmq.cutover-platform.svc.cluster.local', identity = 'keycloak.cutover-platform.svc.cluster.local';
 const core = 'legacy-core.cutover-apps.svc.cluster.local', adapter = 'equipment-adapter.cutover-apps.svc.cluster.local';
+const execution = 'execution-service.cutover-apps.svc.cluster.local', returns = 'returns-service.cutover-apps.svc.cluster.local', shadow = 'shadow-scheduler.cutover-apps.svc.cluster.local';
 const collector = 'collector.cutover-observability.svc.cluster.local', tempo = 'tempo.cutover-observability.svc.cluster.local', prometheus = 'prometheus.cutover-observability.svc.cluster.local';
 const matrix = [
   ['core', db, 5432, true], ['core', broker, 5672, true], ['core', identity, 8080, true], ['core', adapter, 8080, true], ['core', collector, 4318, true], ['core', simulator, 8443, false],
-  ['adapter', simulator, 8443, true], ['adapter', core, 8080, false],
+  ['adapter', simulator, 8443, true], ['adapter', core, 8080, true], ['adapter', execution, 8080, true], ['adapter', returns, 8080, false],
+  ['returns', db, 5432, true], ['returns', broker, 5672, true], ['returns', identity, 8080, true], ['returns', adapter, 8080, true], ['returns', collector, 4318, true], ['returns', core, 8080, false], ['returns', execution, 8080, false], ['returns', simulator, 8443, false],
+  ['execution', db, 5432, true], ['execution', broker, 5672, true], ['execution', identity, 8080, true], ['execution', adapter, 8080, true], ['execution', collector, 4318, true], ['execution', core, 8080, false], ['execution', returns, 8080, false], ['execution', simulator, 8443, false],
+  ['shadow', db, 5432, true], ['shadow', broker, 5672, true], ['shadow', identity, 8080, true], ['shadow', adapter, 8080, true], ['shadow', collector, 4318, true], ['shadow', core, 8080, false], ['shadow', returns, 8080, false], ['shadow', simulator, 8443, false],
   ['proxy', core, 8080, true], ['proxy', adapter, 8080, true], ['proxy', identity, 8080, true], ['proxy', db, 5432, false], ['proxy', broker, 5672, false], ['proxy', simulator, 8443, false],
+  ['proxy', execution, 8080, true], ['proxy', shadow, 8080, true], ['proxy', returns, 8080, true],
   ['outsider', core, 8080, false], ['outsider', identity, 8080, false], ['outsider', simulator, 8443, false],
+  ['outsider', returns, 8080, false],
   ['collector', tempo, 4317, true], ['collector', db, 5432, false],
   ['prometheus', core, 9091, true], ['prometheus', adapter, 9091, true], ['prometheus', simulator, 9091, true], ['prometheus', identity, 9000, true], ['prometheus', broker, 15692, true], ['prometheus', collector, 8888, true], ['prometheus', tempo, 3200, true],
+  ['prometheus', execution, 9091, true], ['prometheus', shadow, 9091, true], ['prometheus', returns, 9091, true],
   ['grafana', prometheus, 9090, true], ['grafana', tempo, 3200, true], ['grafana', db, 5432, false], ['grafana', simulator, 8443, false],
 ];
 const cases = []; const created = [];

@@ -223,7 +223,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Page with items, nextCursor and observedAt"
+            "description": "Site-scoped current returns projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/receipt-page"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -256,7 +263,14 @@
         "operationId": "getReturnReceipts",
         "responses": {
           "200": {
-            "description": "Resource projection and observation time"
+            "description": "Site-scoped current returns projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/receipt-view"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -1174,6 +1188,123 @@
           }
         }
       }
+    },
+    "/api/v1/sites/{siteId}/return-counters": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getReturnCounters",
+        "responses": {
+          "200": {
+            "description": "Site-scoped current returns projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/return-counters"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/return-tasks": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getReturnTasks",
+        "responses": {
+          "200": {
+            "description": "Site-scoped current returns projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/return-task-list"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/return-tasks/{id}/recovery": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "recoverReturnTask",
+        "description": "Supervisor resumes an exhausted execution transport investigation with expected version and reason. No allocation or physical command identity is replaced.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audited status investigation requested"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        },
+        "summary": "Resume an exhausted returns transport investigation; physical uncertainty remains under adapter reconciliation"
+      }
     }
   },
   "components": {
@@ -1610,6 +1741,572 @@
       },
       "execution-task-list": {
         "$ref": "../schemas/execution-task-list.v1.json"
+      },
+      "receipt-view": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string"
+          },
+          "externalReceiptRef": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "REGISTERED",
+              "SORTING",
+              "COMPLETED",
+              "RECONCILIATION_REQUIRED"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "classification": {
+                  "type": "string",
+                  "enum": [
+                    "REUSABLE",
+                    "NEEDS_CLEANING",
+                    "DAMAGED"
+                  ]
+                },
+                "received": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "sorted": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "classification",
+                "received",
+                "sorted"
+              ],
+              "additionalProperties": true
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "movementId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "classification": {
+                  "type": "string",
+                  "enum": [
+                    "REUSABLE",
+                    "NEEDS_CLEANING",
+                    "DAMAGED"
+                  ]
+                },
+                "state": {
+                  "type": "string"
+                },
+                "movement": {
+                  "type": "object",
+                  "properties": {
+                    "zoneId": {
+                      "const": "returns",
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "destination": {
+                      "type": "string",
+                      "enum": [
+                        "reusable",
+                        "cleaning",
+                        "damaged"
+                      ]
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "zoneId",
+                    "quantity",
+                    "destination",
+                    "source"
+                  ],
+                  "additionalProperties": true
+                },
+                "taskId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "taskState": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "taskVersion": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "transportFailures": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "transportPaused": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "lastError": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "movementId",
+                "classification",
+                "state",
+                "movement",
+                "taskId",
+                "taskState",
+                "taskVersion",
+                "transportFailures",
+                "transportPaused",
+                "lastError"
+              ],
+              "additionalProperties": true
+            },
+            "minItems": 1,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "id",
+          "siteId",
+          "externalReceiptRef",
+          "state",
+          "version",
+          "createdAt",
+          "completedAt",
+          "observedAt",
+          "counts",
+          "movements"
+        ],
+        "additionalProperties": true
+      },
+      "receipt-page": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "siteId": {
+                  "type": "string"
+                },
+                "externalReceiptRef": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "REGISTERED",
+                    "SORTING",
+                    "COMPLETED",
+                    "RECONCILIATION_REQUIRED"
+                  ]
+                },
+                "version": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "completedAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "observedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "counts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "classification": {
+                        "type": "string",
+                        "enum": [
+                          "REUSABLE",
+                          "NEEDS_CLEANING",
+                          "DAMAGED"
+                        ]
+                      },
+                      "received": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "sorted": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "classification",
+                      "received",
+                      "sorted"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                "movements": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "movementId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "classification": {
+                        "type": "string",
+                        "enum": [
+                          "REUSABLE",
+                          "NEEDS_CLEANING",
+                          "DAMAGED"
+                        ]
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "movement": {
+                        "type": "object",
+                        "properties": {
+                          "zoneId": {
+                            "const": "returns",
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "destination": {
+                            "type": "string",
+                            "enum": [
+                              "reusable",
+                              "cleaning",
+                              "damaged"
+                            ]
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "zoneId",
+                          "quantity",
+                          "destination",
+                          "source"
+                        ],
+                        "additionalProperties": true
+                      },
+                      "taskId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "uuid"
+                      },
+                      "taskState": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "taskVersion": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "transportFailures": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "transportPaused": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "lastError": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "movementId",
+                      "classification",
+                      "state",
+                      "movement",
+                      "taskId",
+                      "taskState",
+                      "taskVersion",
+                      "transportFailures",
+                      "transportPaused",
+                      "lastError"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "minItems": 1,
+                  "maxItems": 3
+                }
+              },
+              "required": [
+                "id",
+                "siteId",
+                "externalReceiptRef",
+                "state",
+                "version",
+                "createdAt",
+                "completedAt",
+                "observedAt",
+                "counts",
+                "movements"
+              ],
+              "additionalProperties": true
+            },
+            "maxItems": 100
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "observedAt"
+        ],
+        "additionalProperties": true
+      },
+      "return-counters": {
+        "type": "object",
+        "properties": {
+          "siteId": {
+            "type": "string"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "classifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "classification": {
+                  "type": "string",
+                  "enum": [
+                    "REUSABLE",
+                    "NEEDS_CLEANING",
+                    "DAMAGED"
+                  ]
+                },
+                "received": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "sorted": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "outstanding": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "classification",
+                "received",
+                "sorted",
+                "outstanding"
+              ],
+              "additionalProperties": true
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "siteId",
+          "observedAt",
+          "classifications"
+        ],
+        "additionalProperties": true
+      },
+      "return-task-list": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "movementId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "allocationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "receiptId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "classification": {
+              "type": "string",
+              "enum": [
+                "REUSABLE",
+                "NEEDS_CLEANING",
+                "DAMAGED"
+              ]
+            },
+            "zoneId": {
+              "type": "string",
+              "const": "returns"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "READY",
+                "BLOCKED",
+                "DISPATCH_REQUESTED",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "RECONCILIATION_REQUIRED"
+              ]
+            },
+            "owner": {
+              "type": "string",
+              "const": "returns-service"
+            },
+            "epoch": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lastError": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "transportFailures": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transportPaused": {
+              "type": "boolean"
+            },
+            "dispatchAcceptedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "id",
+            "movementId",
+            "allocationId",
+            "receiptId",
+            "classification",
+            "zoneId",
+            "state",
+            "owner",
+            "epoch",
+            "version",
+            "lastError",
+            "transportFailures",
+            "transportPaused",
+            "dispatchAcceptedAt"
+          ],
+          "additionalProperties": true
+        }
       }
     },
     "securitySchemes": {

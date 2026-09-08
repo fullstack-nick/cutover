@@ -11,8 +11,8 @@ Implementation goal started 7 September 2026. The implementation plan and all 54
 | 4. Reliability boundary | Foundation verified | Transactional messages, bounded admission/retries, uncertainty, cancellation and retained-history guards pass component/process checks. Physical-volume pressure and the full acceptance profiles remain phase-8 gates. |
 | 5. Extraction and shadow | Foundation verified | 1,000 real shadow comparisons; 33 original tasks retained through the guarded boundary; assignment-created execution tasks now operate after a real owner switch. |
 | 6. Cutover and rollback | Foundation verified | 105 full-suite checks; live drain/fencing, concurrency and uncertain-outcome reversal; all five actual process restarts; previous adapter image on V115. Failed measurements and repairs remain recorded. |
-| 7. Second product | Pending | Scaffold and verify independent reusable-crate returns. |
-| 8. Full operations verification | Pending | All acceptance scenarios, measured capacity, restore, and prepared offline operation. |
+| 7. Second product | Foundation verified | 121 full-suite checks including 16 returns checks; five deployed workflow checks, two browser checks, ten metric targets and 83 network-policy checks. Separate receipt/counter/task ownership is verified. |
+| 8. Full operations verification | In progress | Complete the final acceptance bundle, measured capacity, physical-volume pressure, checkpoint/restore and prepared offline operation. |
 | 9. Portfolio finish | Pending | Console polish, documentation, reviewer walkthrough, evidence, and public repository. |
 
 ## Setup observations
@@ -148,3 +148,13 @@ Additive V115 preserves assignment timestamps for the tested predecessor writer 
 The live five-phase restart check then passed in `migration-crash-1788834766024-resume-1788835287007`. The same session retained 87 inventory proofs, five actual exit-73 records and one epoch increment; its ten-movement dispatch p99 was **552.919 ms**. The missing simulator migration was repaired and the original command reconciled before resuming the saved run. Both earlier failed reversal observations remain unchanged; the immediate parent is `REVERSED` and its ancestor `SUPERSEDED`.
 
 `adapter-image-rollback-1788835517276` passed the selected N−1 gate: the cached phase-5 adapter operated against V115 and completed six new movements once each, with every route owner, epoch, version and schema version unchanged. The current image and dispatch gate were restored. Real supervisor/operator browser checks then verified the completed session, retained failed history, role controls and narrow layout. See the selected zone-migration evidence and application-image rollback runbook. These are phase-6 milestones; returns, full restore/offline/capacity work and the complete final acceptance bundle remain required.
+
+### Independent crate returns — 8 September 2026
+
+The returns application was generated from the technical scaffold and given an owner-local V116 schema, transactional receipt registration, single-effect sorting ledger, and bounded coordinator. No fulfilment persistence model or scheduler is a runtime or connected-test dependency. All four recorded template hashes were verified against their sources.
+
+`./mvnw.cmd -B -ntp verify` passed 121 checks in 7 minutes 53 seconds at 05:24:51 Europe/Berlin, including 16 returns checks. `returns-1788838277326` passed five deployed checks: duplicate HTTP references and distinct broker event IDs, mixed destinations and counters, site/role/input boundaries, lane independence, a returns process outage while outbound continued, and physical lost-response recovery. The actual V116 runtime and original receipt/task/movement identities were verified.
+
+`returns-ui-1788838637610` passed two browser walkthroughs after wording polish: PKCE, current totals and receipt evidence, keyboard dismissal, a 390-pixel viewport, operator restrictions and supervisor reconciliation through the form. `telemetry-1788838441512` verified ten scrape targets plus retrievable traces and Grafana health. `policy-1788838595392` passed 83 actual DNS/TCP checks, including the new product and the explicit migration proof paths.
+
+Postflight found all six test receipts complete, ten single sorting effects, all crate counters reconciled and the same simulator world/generation at sequence 179. Site-a outbound owners/epochs remained unchanged. The public [returns evidence](../evidence/returns-2026-09-08.md), [onboarding guide](../onboarding/returns-service.md), [ADR 0012](../adr/0012-independent-crate-returns.md) and [runbook](../runbooks/returns.md) explain this milestone and its limits. Full mixed-product capacity, physical storage pressure, backup/restore, prepared offline operation and the final acceptance bundle remain phase-8 work.

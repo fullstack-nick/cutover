@@ -434,6 +434,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/return-counters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getReturnCounters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/return-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getReturnTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/return-tasks/{id}/recovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume an exhausted returns transport investigation; physical uncertainty remains under adapter reconciliation
+         * @description Supervisor resumes an exhausted execution transport investigation with expected version and reason. No allocation or physical command identity is replaced.
+         */
+        post: operations["recoverReturnTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -562,6 +621,159 @@ export interface components {
         "migration-view": components["schemas"]["migration-view.v1"];
         "migration-list": components["schemas"]["migration-list.v1"];
         "execution-task-list": components["schemas"]["execution-task-list.v1"];
+        "receipt-view": {
+            /** Format: uuid */
+            id: string;
+            siteId: string;
+            externalReceiptRef: string;
+            /** @enum {string} */
+            state: "REGISTERED" | "SORTING" | "COMPLETED" | "RECONCILIATION_REQUIRED";
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            observedAt: string;
+            counts: ({
+                /** @enum {string} */
+                classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+                received: number;
+                sorted: number;
+            } & {
+                [key: string]: unknown;
+            })[];
+            movements: ({
+                /** Format: uuid */
+                movementId: string;
+                /** @enum {string} */
+                classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+                state: string;
+                movement: {
+                    /** @constant */
+                    zoneId: "returns";
+                    quantity: number;
+                    /** @enum {string} */
+                    destination: "reusable" | "cleaning" | "damaged";
+                    source: string;
+                } & {
+                    [key: string]: unknown;
+                };
+                /** Format: uuid */
+                taskId: string | null;
+                taskState: string | null;
+                taskVersion: number | null;
+                transportFailures: number | null;
+                transportPaused: boolean | null;
+                lastError: string | null;
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
+        };
+        "receipt-page": {
+            items: ({
+                /** Format: uuid */
+                id: string;
+                siteId: string;
+                externalReceiptRef: string;
+                /** @enum {string} */
+                state: "REGISTERED" | "SORTING" | "COMPLETED" | "RECONCILIATION_REQUIRED";
+                version: number;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                completedAt: string | null;
+                /** Format: date-time */
+                observedAt: string;
+                counts: ({
+                    /** @enum {string} */
+                    classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+                    received: number;
+                    sorted: number;
+                } & {
+                    [key: string]: unknown;
+                })[];
+                movements: ({
+                    /** Format: uuid */
+                    movementId: string;
+                    /** @enum {string} */
+                    classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+                    state: string;
+                    movement: {
+                        /** @constant */
+                        zoneId: "returns";
+                        quantity: number;
+                        /** @enum {string} */
+                        destination: "reusable" | "cleaning" | "damaged";
+                        source: string;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                    /** Format: uuid */
+                    taskId: string | null;
+                    taskState: string | null;
+                    taskVersion: number | null;
+                    transportFailures: number | null;
+                    transportPaused: boolean | null;
+                    lastError: string | null;
+                } & {
+                    [key: string]: unknown;
+                })[];
+            } & {
+                [key: string]: unknown;
+            })[];
+            /** Format: uuid */
+            nextCursor: string | null;
+            /** Format: date-time */
+            observedAt: string;
+        } & {
+            [key: string]: unknown;
+        };
+        "return-counters": {
+            siteId: string;
+            /** Format: date-time */
+            observedAt: string;
+            classifications: ({
+                /** @enum {string} */
+                classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+                received: number;
+                sorted: number;
+                outstanding: number;
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
+        };
+        "return-task-list": ({
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            allocationId: string;
+            /** Format: uuid */
+            receiptId: string;
+            /** @enum {string} */
+            classification: "REUSABLE" | "NEEDS_CLEANING" | "DAMAGED";
+            /** @constant */
+            zoneId: "returns";
+            /** @enum {string} */
+            state: "READY" | "BLOCKED" | "DISPATCH_REQUESTED" | "IN_PROGRESS" | "COMPLETED" | "RECONCILIATION_REQUIRED";
+            /** @constant */
+            owner: "returns-service";
+            epoch: number;
+            version: number;
+            lastError: string | null;
+            transportFailures: number;
+            transportPaused: boolean;
+            /** Format: date-time */
+            dispatchAcceptedAt: string | null;
+        } & {
+            [key: string]: unknown;
+        })[];
         "order-page.v1": {
             items: ({
                 /** Format: uuid */
@@ -1199,12 +1411,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Page with items, nextCursor and observedAt */
+            /** @description Site-scoped current returns projection */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["receipt-page"];
+                };
             };
             default: components["responses"]["problem"];
         };
@@ -1250,12 +1464,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Resource projection and observation time */
+            /** @description Site-scoped current returns projection */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["receipt-view"];
+                };
             };
             default: components["responses"]["problem"];
         };
@@ -1757,6 +1973,80 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["migration-view.v1"];
                 };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    getReturnCounters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Site-scoped current returns projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["return-counters"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    getReturnTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Site-scoped current returns projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["return-task-list"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    recoverReturnTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Audited status investigation requested */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["problem"];
         };

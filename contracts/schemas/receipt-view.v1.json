@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "siteId": {
+      "type": "string"
+    },
+    "externalReceiptRef": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "REGISTERED",
+        "SORTING",
+        "COMPLETED",
+        "RECONCILIATION_REQUIRED"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "counts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": [
+              "REUSABLE",
+              "NEEDS_CLEANING",
+              "DAMAGED"
+            ]
+          },
+          "received": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sorted": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "classification",
+          "received",
+          "sorted"
+        ],
+        "additionalProperties": true
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "movements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "REUSABLE",
+              "NEEDS_CLEANING",
+              "DAMAGED"
+            ]
+          },
+          "state": {
+            "type": "string"
+          },
+          "movement": {
+            "type": "object",
+            "properties": {
+              "zoneId": {
+                "const": "returns",
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "destination": {
+                "type": "string",
+                "enum": [
+                  "reusable",
+                  "cleaning",
+                  "damaged"
+                ]
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "zoneId",
+              "quantity",
+              "destination",
+              "source"
+            ],
+            "additionalProperties": true
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "taskState": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "taskVersion": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "transportFailures": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "transportPaused": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "movementId",
+          "classification",
+          "state",
+          "movement",
+          "taskId",
+          "taskState",
+          "taskVersion",
+          "transportFailures",
+          "transportPaused",
+          "lastError"
+        ],
+        "additionalProperties": true
+      },
+      "minItems": 1,
+      "maxItems": 3
+    }
+  },
+  "required": [
+    "id",
+    "siteId",
+    "externalReceiptRef",
+    "state",
+    "version",
+    "createdAt",
+    "completedAt",
+    "observedAt",
+    "counts",
+    "movements"
+  ],
+  "additionalProperties": true
+}

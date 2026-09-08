@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "siteId": {
+      "type": "string"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "classifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": [
+              "REUSABLE",
+              "NEEDS_CLEANING",
+              "DAMAGED"
+            ]
+          },
+          "received": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sorted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outstanding": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "classification",
+          "received",
+          "sorted",
+          "outstanding"
+        ],
+        "additionalProperties": true
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "required": [
+    "siteId",
+    "observedAt",
+    "classifications"
+  ],
+  "additionalProperties": true
+}

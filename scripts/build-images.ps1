@@ -17,7 +17,7 @@ try {
         CUTOVER_PROXY_IMAGE=$lock.images.proxy.reference
     }
     $manifest=[ordered]@{builtAt=(Get-Date).ToUniversalTime().ToString('o');revision=$revision;dirty=[bool](git status --porcelain);images=@()}
-    foreach($service in @('equipment-simulator','equipment-adapter','legacy-core','execution-service')){
+    foreach($service in @('equipment-simulator','equipment-adapter','legacy-core','execution-service','returns-service')){
         $jar=Join-Path $root "apps/$service/target/$service-0.1.0-SNAPSHOT-exec.jar"
         $hash=(Get-FileHash -LiteralPath $jar -Algorithm SHA256).Hash.ToLowerInvariant()
         $dockerfileHash=(Get-FileHash -LiteralPath infra/images/application.Dockerfile -Algorithm SHA256).Hash

@@ -13,14 +13,14 @@ try {
   const targets = await json(8781, '/api/v1/targets');
   assert.equal(targets.status, 'success');
   const active = targets.data.activeTargets;
-  const expected = ['legacy-core', 'equipment-adapter', 'equipment-simulator', 'rabbitmq', 'keycloak', 'collector', 'tempo'];
+  const expected = ['legacy-core', 'equipment-adapter', 'execution-service', 'shadow-scheduler', 'returns-service', 'equipment-simulator', 'rabbitmq', 'keycloak', 'collector', 'tempo'];
   const jobs = { rabbitmq: 'cutover-broker', keycloak: 'cutover-identity', collector: 'cutover-collector', tempo: 'cutover-tempo' };
   for (const name of expected) {
     const target = active.find(item => item.labels.service === name || item.labels.job === jobs[name]);
     assert.ok(target, `Missing scrape target: ${name}`);
     assert.equal(target.health, 'up', `${name}: ${target.lastError}`);
   }
-  cases.push({ name: 'all seven expected Prometheus targets are actually scraped', status: 'passed', targets: active.map(({ labels, health, lastError }) => ({ labels, health, lastError })) });
+  cases.push({ name: 'all ten expected Prometheus targets are actually scraped', status: 'passed', targets: active.map(({ labels, health, lastError }) => ({ labels, health, lastError })) });
   const deadline = Date.now() + 30000;
   let traces;
   do {

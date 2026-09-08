@@ -56,7 +56,7 @@ export function platformResources(images, settings) {
     literal('JAVA_TOOL_OPTIONS', '-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Dorg.jooq.no-logo=true -Dorg.jooq.no-tips=true -javaagent:/app/telemetry.jar'),
     literal('OTEL_EXPORTER_OTLP_ENDPOINT', `http://collector.${observability}.svc.cluster.local:4318`), literal('OTEL_EXPORTER_OTLP_PROTOCOL', 'http/protobuf'),
     literal('OTEL_METRICS_EXPORTER', 'none'), literal('OTEL_LOGS_EXPORTER', 'none'), literal('OTEL_BSP_MAX_QUEUE_SIZE', '512'), literal('OTEL_BSP_MAX_EXPORT_BATCH_SIZE', '128'), literal('OTEL_BSP_EXPORT_TIMEOUT', '2000'), literal('OTEL_EXPORTER_OTLP_TIMEOUT', '2000')];
-  for (const [name, owner] of [['legacy-core', 'core'], ['equipment-adapter', 'adapter'], ['execution-service', 'execution'], ['shadow-scheduler', 'shadow']]) {
+  for (const [name, owner] of [['legacy-core', 'core'], ['equipment-adapter', 'adapter'], ['execution-service', 'execution'], ['shadow-scheduler', 'shadow'], ['returns-service', 'returns']]) {
     const env = [...common, literal('OTEL_SERVICE_NAME', name), literal('CUTOVER_DATABASE_URL', `jdbc:postgresql://application-db.${platform}.svc.cluster.local:5432/cutover_${owner}`), literal('CUTOVER_DATABASE_USER', `cutover_${owner}_runtime`), secret('CUTOVER_DATABASE_PASSWORD', 'databasePassword', `${name}-runtime`),
       literal('SPRING_RABBITMQ_USERNAME', `cutover_${owner}`), secret('SPRING_RABBITMQ_PASSWORD', 'brokerPassword', `${name}-runtime`)];
     const extra = {};

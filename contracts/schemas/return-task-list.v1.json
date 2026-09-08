@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "maxItems": 100,
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "movementId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "allocationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "receiptId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "classification": {
+        "type": "string",
+        "enum": [
+          "REUSABLE",
+          "NEEDS_CLEANING",
+          "DAMAGED"
+        ]
+      },
+      "zoneId": {
+        "type": "string",
+        "const": "returns"
+      },
+      "state": {
+        "type": "string",
+        "enum": [
+          "READY",
+          "BLOCKED",
+          "DISPATCH_REQUESTED",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "RECONCILIATION_REQUIRED"
+        ]
+      },
+      "owner": {
+        "type": "string",
+        "const": "returns-service"
+      },
+      "epoch": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "lastError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "transportFailures": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "transportPaused": {
+        "type": "boolean"
+      },
+      "dispatchAcceptedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      }
+    },
+    "required": [
+      "id",
+      "movementId",
+      "allocationId",
+      "receiptId",
+      "classification",
+      "zoneId",
+      "state",
+      "owner",
+      "epoch",
+      "version",
+      "lastError",
+      "transportFailures",
+      "transportPaused",
+      "dispatchAcceptedAt"
+    ],
+    "additionalProperties": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "template": "platform/service-template",
+  "version": 1,
+  "service": "returns-service",
+  "packageName": "returns",
+  "files": [
+    {
+      "path": "pom.xml",
+      "templateSha256": "2cb0fe94573bbc33870d72c71abacb6142a13d9f426a0d2519923fc681d2cdbe"
+    },
+    {
+      "path": "src/main/java/dev/cutover/returns/ServiceApplication.java",
+      "templateSha256": "b32fad2aa76cf20b079ac10e5b7dbe528d914e96ae0c82c7189dedc29956fda6"
+    },
+    {
+      "path": "src/main/resources/application.yml",
+      "templateSha256": "99c1744787581a1a059a67c871a69dfb980cfa826c9e8ab9a6ab6de463117ac9"
+    },
+    {
+      "path": "src/main/resources/db/returns-service/V100__service_identity.sql",
+      "templateSha256": "8a987db471b2ec862d39f20ca76447bbe061bed1858be9ca6714b7f5f3927a57"
+    }
+  ]
+}
