@@ -4,6 +4,7 @@ import dev.cutover.platform.Database;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
 import dev.cutover.platform.ServiceHttp;
+import dev.cutover.platform.OperationTrace;
 import dev.cutover.platform.messaging.RetryDelay;
 import java.time.Clock;
 import java.time.Instant;
@@ -84,7 +85,8 @@ public final class LegacyScheduler {
             }
             UUID id=UUID.fromString(selected.asString());var task=unresolved.remove(id);
             if(task==null)throw new IllegalStateException("SQL selected a command that was already observed");
-            try{
+            try(var trace=OperationTrace.movement(database,"legacy-core",site,id,"cutover.task.dispatch")){
+                trace.field("cutover.task_id",task.get("task_id").toString()).field("cutover.movement_id",id.toString());
                 ensureDispatchWritable();
                 var command=adapter.dispatch(site,id,task.get("allocation_id",UUID.class),task.get("epoch",Long.class),decision.path("selectedLaneId").asString(),JsonSupport.read(task.get("movement").toString()));
                 observe(task,command);

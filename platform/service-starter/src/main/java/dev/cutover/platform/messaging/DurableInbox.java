@@ -86,6 +86,7 @@ public final class DurableInbox {
     }
 
     private void attempt(DSLContext sql, Events.Envelope event) {
+        try (var trace = dev.cutover.platform.OperationTrace.event("cutover.event.apply", event)) {
         int attempts = sql.fetchOne("UPDATE inbox SET attempts=attempts+1,version=version+1 WHERE event_id= ? RETURNING attempts", event.eventId()).get(0, Integer.class);
         try {
             // A handler failure rolls back its effects and cursor; the outer transaction still records pending/quarantine.
@@ -93,10 +94,12 @@ public final class DurableInbox {
             int bytes = sql.fetchOne("UPDATE inbox SET state='APPLIED',applied_at= ?::timestamptz,last_error=NULL,version=version+1 WHERE event_id= ? RETURNING payload_bytes", now(), event.eventId()).get(0, Integer.class);
             sql.execute("UPDATE message_storage SET active_messages=active_messages-1,active_bytes=active_bytes- ? WHERE singleton", bytes);
         } catch (RuntimeException failure) {
+            trace.failed(failure);
             boolean retryable = !(failure instanceof DeliveryFailure delivery) || delivery.retryable();
             String code = failure instanceof DeliveryFailure ? failure.getMessage() : "EFFECT_TEMPORARILY_UNAVAILABLE";
             String state = retryable && attempts < RetryDelay.MAX_ATTEMPTS ? "PENDING" : "QUARANTINED";
             sql.execute("UPDATE inbox SET state= ?,last_error= ?,next_attempt_at= ?::timestamptz,version=version+1 WHERE event_id= ?", state, code, now().plus(RetryDelay.after(event.eventId(), attempts)), event.eventId());
+        }
         }
     }
 

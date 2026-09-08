@@ -6,6 +6,7 @@ import dev.cutover.platform.Events;
 import dev.cutover.platform.Idempotency;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
+import dev.cutover.platform.OperationTrace;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,9 @@ public final class OrderService {
     public record Request(String sourceSystem,String externalOrderRef,String storeId,int priority,List<Line> lines) {}
 
     public JsonNode accept(String caller,String site,String key,JsonNode body) {
+        return OperationTrace.call("cutover.order.accept",site,null,()->acceptTraced(caller,site,key,body));
+    }
+    private JsonNode acceptTraced(String caller,String site,String key,JsonNode body) {
         try { Contracts.validate("order-request.v1",JsonSupport.write(body)); }
         catch(IllegalArgumentException invalid) { throw Problem.invalid(invalid.getMessage()); }
         Request request=JsonSupport.MAPPER.treeToValue(body,Request.class);
@@ -44,6 +48,7 @@ public final class OrderService {
                 if(!sql.fetchExists(STORES, STORES.SITE_ID.eq(site).and(STORES.STORE_ID.eq(request.storeId())))) throw Problem.invalid("Unknown store for this site.");
                 for(Line line:request.lines()) if(!sql.fetchExists(PRODUCTS, PRODUCTS.SITE_ID.eq(site).and(PRODUCTS.SKU.eq(line.sku())))) throw Problem.invalid("Unknown SKU for this site.");
                 UUID id=UUID.randomUUID();
+                OperationTrace.annotate("cutover.order_id",id.toString());
                 sql.execute("UPDATE admission SET active_requests=active_requests+1 WHERE singleton");
                 sql.execute("INSERT INTO orders(order_id,site_id,source_system,external_ref,payload_hash,store_id,priority,state,created_at) VALUES (?,?,?,?,?,?,?,'ACCEPTED',?::timestamptz)",id,site,request.sourceSystem(),request.externalOrderRef(),JsonSupport.hash(request),request.storeId(),request.priority(),java.time.OffsetDateTime.ofInstant(clock.instant().truncatedTo(java.time.temporal.ChronoUnit.MICROS),java.time.ZoneOffset.UTC));
                 for(Line line:request.lines()) sql.execute("INSERT INTO order_lines(order_id,site_id,sku,requested) VALUES (?,?,?,?)",id,site,line.sku(),line.quantity());
@@ -60,6 +65,9 @@ public final class OrderService {
 
     /** Only a verified adapter completion reaches this method, through the worker or authorized event consumer. */
     public void complete(String site,UUID movementId,JsonNode command) {
+        OperationTrace.call("cutover.inventory.complete",site,movementId,()->{completeTraced(site,movementId,command);return null;});
+    }
+    private void completeTraced(String site,UUID movementId,JsonNode command) {
         if(!"COMPLETED".equals(command.path("state").asString()) || !movementId.toString().equals(command.path("commandId").asString())
                 || !site.equals(command.path("siteId").asString()) || command.path("evidence").path("executionSequence").asLong(0)<1)
             throw Problem.conflict("UNVERIFIED_COMPLETION","A movement requires verified adapter and simulator completion.");
@@ -74,6 +82,7 @@ public final class OrderService {
             int quantity=reservation.get("quantity",Integer.class);
             if(command.path("payload").path("quantity").asInt()!=quantity) throw Problem.conflict("MOVEMENT_QUANTITY","Completion quantity differs from the reserved movement.");
             UUID order=reservation.get("order_id",UUID.class);
+            OperationTrace.annotate("cutover.order_id",order.toString());
             sql.execute("UPDATE stock SET on_hand=on_hand-?,reserved=reserved-?,version=version+1 WHERE site_id= ? AND sku= ?",quantity,quantity,site,reservation.get("sku"));
             sql.execute("INSERT INTO inventory_ledger(movement_id,site_id,reservation_id,sku,quantity,command_id,simulator_world_id,execution_sequence) VALUES (?,?,?,?,?,?,?,?)",
                     movementId,site,movementId,reservation.get("sku"),quantity,Database.uuid(command,"commandId"),Database.uuid(command.path("evidence"),"worldId"),command.path("evidence").path("executionSequence").asLong());

@@ -2,6 +2,8 @@ package dev.cutover.platform.messaging;
 
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Database;
+import dev.cutover.platform.Events;
+import dev.cutover.platform.OperationTrace;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -56,7 +58,7 @@ public final class OutboxRelay {
         while (count < limit) {
             Claimed row = claim(); if (row == null) break;
             hooks.reached("AFTER_BUSINESS_COMMIT", row.eventId());
-            try {
+            try (var trace = OperationTrace.event("cutover.event.publish", JsonSupport.MAPPER.readValue(row.body(), Events.Envelope.class))) {
                 publisher.publish(row.exchange(), row.type(), row.eventId(), row.body());
                 hooks.reached("AFTER_BROKER_CONFIRM", row.eventId());
                 confirmed(row); count++; consecutivePublishFailures=0;

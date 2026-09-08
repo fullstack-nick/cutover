@@ -14,8 +14,11 @@ public final class Events {
 
     public static void append(DSLContext sql, String site, String source, String type, UUID aggregateId,
                               long version, String eventType, UUID correlationId, JsonNode payload) {
+        try (var trace = OperationTrace.start("cutover.event.record", site, aggregateId)) {
         var event = new Envelope(UUID.randomUUID(), eventType, 1, Instant.now(), site, source, type, aggregateId,
-                version, correlationId, null, null, payload);
+                version, OperationTrace.correlationId(correlationId), OperationTrace.causationId(), OperationTrace.traceparent(), payload);
+        trace.field("cutover.event_id", event.eventId().toString()).field("cutover.event_type", eventType)
+                .field("cutover.correlation_id", event.correlationId().toString());
         String json = JsonSupport.write(event);
         Contracts.validate("event-envelope.v1", json);
         int bytes = json.getBytes(StandardCharsets.UTF_8).length;
@@ -23,5 +26,6 @@ public final class Events {
             throw new Problem(503, "OUTBOX_CAPACITY", "Durable event capacity is exhausted.");
         sql.execute("INSERT INTO outbox(event_id,site_id,source,aggregate_type,aggregate_id,aggregate_version,event_type,envelope,payload_bytes) VALUES (?,?,?,?,?,?,?,?::jsonb,?)",
                 event.eventId(), site, source, type, aggregateId, version, eventType, json, bytes);
+        }
     }
 }

@@ -31,7 +31,15 @@ try {
     if(state) {
       assert.ok(['kubectl', 'kubectl.exe'].includes(state.executable?.toLowerCase()) && [kubeconfig, context, 'port-forward', `service/${service}`, `${port}:${remotePort}`, '127.0.0.1'].every(value => state.arguments?.includes(value)), 'Recorded process identity changed; no process was stopped.');
       if(action === 'Start' && await healthy())reused = true;
-      else { process.kill(saved.pid);await until(() => !identity(saved.pid), 'the exact recorded forward stops', 12000); }
+      else {
+        // A failed health check may outlive kubectl itself. Recheck ownership before signalling.
+        const current=identity(saved.pid);
+        if(current) {
+          assert.ok(['kubectl','kubectl.exe'].includes(current.executable?.toLowerCase()) && [kubeconfig,context,'port-forward',`service/${service}`,`${port}:${remotePort}`,'127.0.0.1'].every(value=>current.arguments?.includes(value)), 'Recorded process identity changed; no process was stopped.');
+          try { process.kill(saved.pid); } catch(error) { if(error.code!=='ESRCH')throw error; }
+        }
+        await until(() => !identity(saved.pid), 'the exact recorded forward stops', 12000);
+      }
     }
     if(!reused)unlinkSync(record);
   }

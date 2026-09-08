@@ -45,7 +45,8 @@ public final class ReturnsCoordinator {
         for(var lane:equipment.path("lanes"))if(site.equals(lane.path("siteId").asString()) && "returns".equals(lane.path("zoneId").asString()) && !lane.path("blocked").asBoolean())lanes.add(lane.path("laneId").asString());
         lanes.sort(Comparator.naturalOrder());
         for(var task:tasks){
-            try{
+            try(var trace=OperationTrace.movement(database,"returns-service",site,task.get("movement_id",UUID.class),"cutover.return.coordinate")){
+                trace.field("cutover.task_id",task.get("task_id").toString()).field("cutover.movement_id",task.get("movement_id").toString());
                 UUID movement=task.get("movement_id",UUID.class);JsonNode item=items.get(movement);
                 if(item!=null && item.hasNonNull("command")){observe(task,item.path("command"));continue;}
                 var assignment=item==null?JsonSupport.MAPPER.nullNode():item.path("allocation");

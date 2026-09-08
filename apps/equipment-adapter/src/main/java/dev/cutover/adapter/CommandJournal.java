@@ -6,6 +6,7 @@ import dev.cutover.platform.Contracts;
 import dev.cutover.platform.Idempotency;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
+import dev.cutover.platform.OperationTrace;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -28,6 +29,9 @@ public final class CommandJournal {
     }
 
     public JsonNode record(String site,String owner,UUID movementId,UUID allocationId,long epoch,String lane,JsonNode movement) {
+        return OperationTrace.call("cutover.command.record",site,movementId,()->recordTraced(site,owner,movementId,allocationId,epoch,lane,movement));
+    }
+    private JsonNode recordTraced(String site,String owner,UUID movementId,UUID allocationId,long epoch,String lane,JsonNode movement) {
         if (!Set.of("legacy-core","execution-service","returns-service").contains(owner)) throw new Problem(403,"DISPATCH_IDENTITY","This identity cannot submit physical commands.");
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
@@ -84,6 +88,11 @@ public final class CommandJournal {
 
     private void investigate(UUID id) {
         var row=database.fetchOne("SELECT * FROM command_journal WHERE command_id= ?",id);
+        try (var trace=OperationTrace.movement(database,"equipment-adapter",row.get("site_id",String.class),id,"cutover.command.investigate")) {
+            investigateTraced(id,row);
+        }
+    }
+    private void investigateTraced(UUID id, Record row) {
         JsonNode command=JsonSupport.read(row.get("payload").toString());
         try {
             EquipmentPort.Reply status=equipment.command(id);

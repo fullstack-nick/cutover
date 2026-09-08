@@ -48,7 +48,10 @@ public final class ExecutionScheduler {
             }
             UUID id=Database.uuid(proposal,"selectedMovementId");var task=unresolved.remove(id);
             if(task==null)throw new IllegalStateException("A recorded command cannot be a new scheduling candidate.");
-            try{if(dispatchable(task))observe(task,adapter.dispatch(site,id,task.get("allocation_id",UUID.class),task.get("epoch",Long.class),proposal.path("selectedLaneId").asString(),JsonSupport.read(task.get("movement").toString())));}
+            try(var trace=OperationTrace.movement(database,"execution-service",site,id,"cutover.task.dispatch")){
+                trace.field("cutover.task_id",task.get("task_id").toString()).field("cutover.movement_id",id.toString());
+                if(dispatchable(task))observe(task,adapter.dispatch(site,id,task.get("allocation_id",UUID.class),task.get("epoch",Long.class),proposal.path("selectedLaneId").asString(),JsonSupport.read(task.get("movement").toString())));
+            }
             catch(Problem problem){defer(task,problem.code(),problem.status()==503);}
             catch(ServiceHttp.Unavailable unavailable){defer(task,"ADAPTER_UNAVAILABLE",true);}
             var remaining=JsonSupport.MAPPER.createArrayNode();for(var candidate:snapshot.path("candidates"))if(!id.toString().equals(candidate.path("movementId").asString()))remaining.add(candidate);snapshot.set("candidates",remaining);

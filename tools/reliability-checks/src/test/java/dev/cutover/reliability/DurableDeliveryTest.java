@@ -5,6 +5,7 @@ import dev.cutover.platform.Database;
 import dev.cutover.platform.Events;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
+import dev.cutover.platform.OperationTrace;
 import dev.cutover.platform.messaging.*;
 import dev.cutover.testing.DatabaseFixture;
 import dev.cutover.testing.MutableClock;
@@ -71,6 +72,27 @@ class DurableDeliveryTest {
     int count(String table) { return db.sql().fetchOne("SELECT count(*) FROM " + table).get(0, Integer.class); }
     String state(UUID id) { return db.sql().fetchOne("SELECT state FROM inbox WHERE event_id=?", id).get(0, String.class); }
     static final class Crash extends Error {}
+
+    @Test void originalTraceAndCausationSurviveDurableDeliveryAndLaterWorkerLookup() {
+        UUID movement=UUID.randomUUID(),correlation=UUID.randomUUID();
+        String parent="00-0123456789abcdef0123456789abcdef-0123456789abcdef-01";
+        var original=new Events.Envelope(UUID.randomUUID(),"MovementRequested.v1",1,clock.instant(),"site-a","legacy-core","movement",movement,1,correlation,null,parent,JsonSupport.read("{}"));
+        var consumer=new DurableInbox(db.sql(),(sql,event)->Events.append(sql,"site-a","equipment-adapter","movement",movement,1,"MovementAssigned.v1",movement,JsonSupport.read("{}")),clock,Set.of("legacy-core"),Set.of("site-a"));
+        byte[] bytes=JsonSupport.write(original).getBytes(StandardCharsets.UTF_8);
+        consumer.receive("cutover.legacy-core.v1",original.eventId().toString(),bytes);
+        consumer.receive("cutover.legacy-core.v1",original.eventId().toString(),bytes);
+        assertThat(count("outbox")).isEqualTo(1);
+        var assigned=JsonSupport.MAPPER.readValue(db.sql().fetchOne("SELECT envelope FROM outbox").get(0).toString(),Events.Envelope.class);
+        assertThat(assigned.causationId()).isEqualTo(original.eventId());
+        assertThat(assigned.correlationId()).isEqualTo(correlation);
+        assertThat(assigned.traceparent()).contains("0123456789abcdef0123456789abcdef");
+        try(var later=OperationTrace.movement(db.sql(),"equipment-adapter","site-a",movement,"cutover.command.investigate")) {
+            assertThat(OperationTrace.causationId()).isEqualTo(assigned.eventId());
+            assertThat(OperationTrace.correlationId(null)).isEqualTo(correlation);
+            assertThat(OperationTrace.traceparent()).contains("0123456789abcdef0123456789abcdef");
+        }
+        assertThat(OperationTrace.causationId()).isNull();
+    }
 
     @Test void checkpointReplayRetainsOriginalBytesAndIdentityWithoutRewritingConfirmedOutbox() throws Exception {
         UUID id=append(UUID.randomUUID(),1);relay(DeliveryHooks.NONE).poll(16);rabbit.consume(queue,inbox,16);
@@ -183,6 +205,23 @@ class DurableDeliveryTest {
         var request=JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",version,"reason","A frozen checkpoint must prevent a new manual replay mutation."));
         assertThatThrownBy(()->new MessagingOperations(db.sql()).recover("supervisor","site-a","outbox",id,"paused",request)).isInstanceOf(Problem.class);
         assertThat(count("audit")).isZero();assertThat(count("outbox")).isEqualTo(1);
+    }
+
+    @Test void unarmedDeliveryFaultHooksNeedNoWriteTransactionAndNoticeLaterArming() {
+        UUID id=append(UUID.randomUUID(),1);
+        db.sql().transaction(configuration->{
+            var sql=DSL.using(configuration);sql.execute("SET TRANSACTION READ ONLY");
+            var hooks=new dev.cutover.platform.control.ProcessFaults(sql,clock,code->{throw new AssertionError("An unarmed fault fired");});
+            for(String checkpoint:java.util.List.of("AFTER_BUSINESS_COMMIT","AFTER_BROKER_CONFIRM","AFTER_EFFECT_BEFORE_ACK"))hooks.reached(checkpoint,id);
+            assertThat(sql.fetchOne("SELECT pg_current_xact_id_if_assigned()::text").get(0)).isNull();
+        });
+        var hooks=new dev.cutover.platform.control.ProcessFaults(db.sql(),clock,code->{assertThat(code).isEqualTo(73);throw new Crash();});
+        hooks.reached("AFTER_BUSINESS_COMMIT",id);
+        var controls=new dev.cutover.platform.control.RuntimeControls(db.sql());
+        controls.arm("scenario","site-a","arm-after-empty-check",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",0,"checkpoint","AFTER_BUSINESS_COMMIT","eventId",id,"reason","A prior empty check must not hide a newly armed process boundary.")));
+        assertThatThrownBy(()->hooks.reached("AFTER_BUSINESS_COMMIT",id)).isInstanceOf(Crash.class);
+        hooks.reached("AFTER_BUSINESS_COMMIT",id);
+        assertThat(db.sql().fetchOne("SELECT count(*) FROM audit WHERE action='process-fault-fired'").get(0,Integer.class)).isEqualTo(1);
     }
 
     @Test void processFaultCommitsItsOneShotConsumptionBeforeTerminating() {

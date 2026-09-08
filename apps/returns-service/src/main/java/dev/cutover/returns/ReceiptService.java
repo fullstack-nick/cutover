@@ -18,6 +18,9 @@ public final class ReceiptService {
     public ReceiptService(DSLContext database, Clock clock) { this.database=database; this.clock=clock; }
 
     public JsonNode register(String caller,String site,String key,JsonNode body) {
+        return OperationTrace.call("cutover.receipt.register",site,null,()->registerTraced(caller,site,key,body));
+    }
+    private JsonNode registerTraced(String caller,String site,String key,JsonNode body) {
         try { Contracts.validate("receipt-request.v1",JsonSupport.write(body)); }
         catch(IllegalArgumentException invalid) { throw Problem.invalid("Use the bounded source reference and all three documented integer classification counts."); }
         String source=body.path("sourceSystem").asString(),reference=body.path("externalReceiptRef").asString();
@@ -39,6 +42,7 @@ public final class ReceiptService {
                 if(quota.get("active_requests",Integer.class)>=800 || quota.get("unpublished_events",Integer.class)>=8000 || quota.get("unpublished_bytes",Long.class)>=53687091)
                     throw new Problem(503,"ADMISSION_CAPACITY","Accepted receipts are near capacity; retry after backlog recovery.");
                 UUID id=UUID.randomUUID();
+                OperationTrace.annotate("cutover.receipt_id",id.toString());
                 sql.execute("INSERT INTO receipts(receipt_id,site_id,source_system,external_ref,payload_hash,state,created_at) VALUES (?,?,?,?,?,'REGISTERED',?::timestamptz)",id,site,source,reference,JsonSupport.hash(body),now());
                 sql.execute("UPDATE admission SET active_requests=active_requests+1 WHERE singleton");
                 for(String type:DESTINATIONS.keySet().stream().sorted().toList()) {
@@ -65,11 +69,15 @@ public final class ReceiptService {
         database.transaction(configuration->complete(DSL.using(configuration),site,movement,command));
     }
     void complete(DSLContext sql,String site,UUID id,JsonNode command) {
+        OperationTrace.call("cutover.sorting.complete",site,id,()->{completeTraced(sql,site,id,command);return null;});
+    }
+    private void completeTraced(DSLContext sql,String site,UUID id,JsonNode command) {
         if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Sorting effects are paused for a checkpoint.");
         sql.fetchOne("SELECT singleton FROM admission WHERE singleton FOR UPDATE");
         var intent=sql.fetchOne("SELECT * FROM return_movements WHERE site_id=? AND movement_id=?",site,id);
         if(intent==null)throw Problem.missing();
         UUID receipt=intent.get("receipt_id",UUID.class);
+        OperationTrace.annotate("cutover.receipt_id",receipt.toString());
         sql.fetchOne("SELECT receipt_id FROM receipts WHERE site_id=? AND receipt_id=? FOR UPDATE",site,receipt);
         var task=sql.fetchOne("SELECT * FROM return_tasks WHERE site_id=? AND movement_id=? FOR UPDATE",site,id);
         if(task==null)throw Problem.conflict("ASSIGNMENT_MISSING","Sorting completion requires its original adapter assignment.");

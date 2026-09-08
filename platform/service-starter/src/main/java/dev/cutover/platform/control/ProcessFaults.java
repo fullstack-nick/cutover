@@ -23,6 +23,9 @@ public final class ProcessFaults implements DeliveryHooks {
     public ProcessFaults(DSLContext database,Clock clock,IntConsumer terminate) { this.database=database;this.clock=clock;this.terminate=terminate; }
     @Override public void reached(String checkpoint,UUID eventId) {
         if (eventId==null || !Set.of("AFTER_BUSINESS_COMMIT","AFTER_BROKER_CONFIRM","AFTER_EFFECT_BEFORE_ACK").contains(checkpoint)) return;
+        // An ordinary delivery must not dirty the worker-control row merely to discover no fault.
+        // Read on every hook (no cache); armed faults still recheck their exact event under locks.
+        if (!database.fetchOne("SELECT EXISTS(SELECT FROM process_faults WHERE checkpoint=? AND remaining=1)",checkpoint).get(0,Boolean.class)) return;
         boolean fire=database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             if (!Database.workersMayWrite(sql)) return false;

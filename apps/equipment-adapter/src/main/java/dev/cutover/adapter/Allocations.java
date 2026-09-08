@@ -5,6 +5,7 @@ import dev.cutover.platform.Database;
 import dev.cutover.platform.Events;
 import dev.cutover.platform.JsonSupport;
 import dev.cutover.platform.Problem;
+import dev.cutover.platform.OperationTrace;
 import java.util.UUID;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -22,12 +23,16 @@ public final class Allocations {
     public Allocations(DSLContext database,Clock clock) { this.database=database;this.clock=clock; }
 
     public JsonNode register(String site, String source, JsonNode movement) {
+        return OperationTrace.call("cutover.movement.allocate",site,null,()->registerTraced(site,source,movement));
+    }
+    private JsonNode registerTraced(String site, String source, JsonNode movement) {
         try { Contracts.validate("movement.v1",JsonSupport.write(movement)); }
         catch (IllegalArgumentException invalid) { throw Problem.invalid(invalid.getMessage()); }
         if (!site.equals(movement.required("siteId").asString())) throw Problem.missing();
         String expected="returns".equals(movement.required("product").asString()) ? "returns-service" : "legacy-core";
         if (!expected.equals(source)) throw new Problem(403,"INTENT_SOURCE","This client cannot originate the movement.");
         UUID id=Database.uuid(movement,"movementId"); String zone=movement.required("zoneId").asString();
+        OperationTrace.annotate("cutover.movement_id",id.toString());
         if (("returns-service".equals(source))!=zone.equals("returns")) throw Problem.invalid("Product and zone are incompatible.");
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
@@ -65,7 +70,9 @@ public final class Allocations {
                 for(var item:pending) {
                     sql.execute("UPDATE movement_allocations SET owner=?,epoch=?,state='ASSIGNED',version=1,assigned_at=?::timestamptz WHERE allocation_id=? AND state='PENDING'",route.get("owner"),route.get("epoch"),now(),item.get("allocation_id"));
                     String site=item.get("site_id",String.class);UUID id=item.get("movement_id",UUID.class);
-                    Events.append(sql,site,"equipment-adapter","movement",id,1,"MovementAssigned.v1",id,view(sql,site,id));
+                    try (var trace=OperationTrace.movement(sql,"equipment-adapter",site,id,"cutover.movement.release")) {
+                        Events.append(sql,site,"equipment-adapter","movement",id,1,"MovementAssigned.v1",id,view(sql,site,id));
+                    }
                     assigned++;
                 }
                 if(assigned==16)break;
