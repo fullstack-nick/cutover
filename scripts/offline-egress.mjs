@@ -45,6 +45,8 @@ function validateRecord() {
   assert.equal(record.protocol,1);assert.match(record.chain,/^CUTOVER_OFF_[a-f0-9]{8}$/);assert.equal(record.comment,`cutover-offline:${record.chain.slice(-8)}`);
   assert.ok(['iptables','iptables-nft','iptables-legacy'].includes(record.binary));
   assert.equal(record.networks.length,3);record.networks.forEach(n=>{assert.ok(networkNames.includes(n.name));assert.match(n.bridge,/^br-[a-f0-9]{12}$/);});
+  assert.ok(record.allowedCidrs.length>=3&&record.allowedCidrs.length<=8);
+  record.allowedCidrs.forEach(cidr=>assert.match(cidr,/^(?:10|172|192)\.[0-9.]+\/(?:1[6-9]|2\d)$/));
 }
 function counters() {return host(`${record.binary} -w 5 -nvxL ${record.chain}`).stdout.trim();}
 try {
@@ -68,7 +70,9 @@ try {
     else{
       validateRecord();const existing=host(`${record.binary} -w 5 -S ${record.chain}`,false);
       if(existing.status===0){
-        const lines=existing.stdout.trim().split(/\r?\n/);assert.ok(lines.every(line=>line===`-N ${record.chain}` || (line.startsWith(`-A ${record.chain} `) && line.includes(`--comment ${record.comment}`))),'The reserved chain was changed; inspect it before removing rules.');
+        const lines=existing.stdout.trim().split(/\r?\n/).map(line=>line.replace(`--comment "${record.comment}"`,`--comment ${record.comment}`));
+        const expected=new Set([`-N ${record.chain}`,...record.allowedCidrs.map(cidr=>`-A ${record.chain} -d ${cidr} -m comment --comment ${record.comment} -j RETURN`),`-A ${record.chain} -m comment --comment ${record.comment} -j REJECT --reject-with icmp-admin-prohibited`]);
+        assert.ok(lines.every(line=>expected.has(line))&&new Set(lines).size===lines.length,'The reserved chain differs from its exact recorded rules; inspect it before removing rules.');
         record.finalCounters=counters();writeJson(path,record);
         const rules=['set -e'];for(const network of record.networks){const rule=`DOCKER-USER -i ${network.bridge} -m comment --comment ${record.comment} -j ${record.chain}`;rules.push(`if ${record.binary} -w 5 -C ${rule} 2>/dev/null; then ${record.binary} -w 5 -D ${rule}; fi`);}
         rules.push(`${record.binary} -w 5 -F ${record.chain}`,`${record.binary} -w 5 -X ${record.chain}`);host(rules.join('\n'));
@@ -84,10 +88,13 @@ try {
       assert.ok(!result.error && result.status!==0,'An external TCP connection unexpectedly succeeded.');
       record.probes.push({at:new Date().toISOString(),container:name,destination:'1.1.1.1:443',exitCode:result.status,elapsedMillis:Date.now()-started});
     }
-    // Docker Desktop can inject a host proxy; testing only direct TCP would miss this route.
-    const proxy=spawnSync('docker',['exec','cutover-control-plane','bash','-c','test -n "${HTTPS_PROXY:-}" || exit 42; command -v curl >/dev/null || exit 43; curl --silent --show-error --output /dev/null --connect-timeout 3 --max-time 5 --proxy "$HTTPS_PROXY" https://example.com'],{encoding:'utf8',windowsHide:true,timeout:8000});
-    assert.ok(!proxy.error && ![0,42,43].includes(proxy.status),'The prepared profile must also prove that its injected Docker proxy cannot reach an external HTTP destination.');
-    record.probes.push({at:new Date().toISOString(),container:'cutover-control-plane',destination:'https://example.com via injected HTTPS_PROXY',exitCode:proxy.status});
+    // A configured host proxy is a separate route. Its absence is recorded, never reported as a refused connection.
+    for(const name of ['cutover-control-plane','cutover-dev-equipment-simulator-1']){
+      const proxy=spawnSync('docker',['exec',name,'bash','-c','proxy="${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}"; test -n "$proxy" || exit 42; command -v curl >/dev/null || exit 43; curl --silent --show-error --output /dev/null --connect-timeout 3 --max-time 5 --proxy "$proxy" https://example.com'],{encoding:'utf8',windowsHide:true,timeout:8000});
+      const probe={at:new Date().toISOString(),container:name,destination:'https://example.com via configured HTTP(S) proxy',exitCode:proxy.status,configured:proxy.status!==42};
+      record.probes.push(probe);writeJson(path,record);
+      assert.ok(!proxy.error&&[5,6,7,28,42].includes(proxy.status),'A configured proxy must fail DNS/connection establishment; a reachable proxy, missing curl or TLS-only failure cannot establish offline isolation.');
+    }
     record.counters=counters();assert.match(record.counters,/\n\s*[1-9][0-9]*\s+[0-9]+\s+REJECT\s/,'Denied traffic must increment the actual firewall counter.');writeJson(path,record);console.log('Both Cutover external TCP probes were refused and the scoped reject counter increased.');
   }else{
     if(record && record.state!=='DISABLED'){validateRecord();console.log(JSON.stringify({state:record.state,chain:record.chain,networks:record.networks,counters:counters()},null,2));}

@@ -28,6 +28,14 @@ The second command must return exit code 1 and list missing assets. It reroots a
 
 ## Scoped runtime denial
 
+For the complete automated rehearsal, start the prepared demo with a verified cache and no active denial, then run:
+
+```powershell
+node tools/scenario-driver/offline-smoke.mjs
+```
+
+This command manages Enable/Probe/Disable, both product workflows, lost-response recovery, simulator and whole-lab restarts, the cached predecessor import/rollback, and actual browser/dashboard checks. It retains private evidence and attempts to remove its exact firewall rules in cleanup. The commands below expose the individual network controls for inspection or recovery; do not manually enable denial before starting the automated rehearsal.
+
 Start the prepared demo first. These commands inspect the exact Cutover containers and their three dedicated Docker networks before changing rules:
 
 ```powershell
@@ -40,7 +48,7 @@ node scripts/offline-egress.mjs Disable
 
 A temporary pinned helper has only `NET_ADMIN`, no host filesystem/PID mount and no privileged flag. It installs a reserved, journalled firewall chain reached only from the three verified Cutover bridges. The configured Cutover Docker, pod and service address ranges remain reachable. Other IPv4 destinations are rejected before Docker's existing forwarding rules. A network with an unrelated container or IPv6 enabled is rejected by preflight. No machine-wide network switch or unrelated container stop is used.
 
-`Probe` requires failed external TCP connections from both kind and the simulator plus a nonzero actual reject counter. The journal in `.local/offline/egress.json` records network identities, exact rules and counters. A failed or interrupted walkthrough leaves this journal available: inspect `Status` and run `Disable` to remove only its exact tagged jumps and reserved chain. Do not flush global firewall tables.
+`Probe` requires failed external TCP connections from both kind and the simulator plus a nonzero actual reject counter. It separately tests any configured HTTP(S) proxy in either container, recording absent configuration explicitly; a successful connection or TLS-only failure cannot prove isolation. The journal in `.local/offline/egress.json` records network identities, exact rules and counters. A failed or interrupted walkthrough leaves this journal available: inspect `Status` and run `Disable` to remove only its exact tagged jumps and reserved chain. Do not flush global firewall tables.
 
 Passing `Check` and `Probe` alone does not qualify A48. That requires actual local login, both products, recovery, restart, compatible cached rollback and dashboard evidence while denial is active. Browser checks must also deny external destinations in their own isolated browser context; the Windows browser is outside the Docker bridge boundary.
 
