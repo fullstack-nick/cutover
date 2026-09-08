@@ -13,6 +13,8 @@ node scripts/cache.mjs Check
 
 The private inventory records SHA-256/SHA-512 file hashes, pinned browser revisions, npm tarballs, the available Maven dependency/plugin repository and wrapper distribution, tools, network manifests, the Java agent, current image archives and a tested predecessor archive. Docker image IDs and node runtime digests remain distinct. The Maven inventory can contain extra dependencies used by other local builds; it is an inventory, not a minimal dependency claim. No cache files or credentials belong in Git.
 
+The offline rehearsal verifies and imports the recorded predecessor archive into the owned kind node while external-egress denial is active, then selects its exact runtime digest for rollback. It does not require that a fresh node already contain the predecessor. `node scripts/load-cached-rollback.mjs` performs the same bounded import independently; it checks the archive hash, platform, manifest digest, project alias and target-node ownership before loading.
+
 `Check` fails when a recorded file, checksum, image ID or dependency input differs. It does not download replacements. After deliberate dependency changes, acquire and verify them, then record a new inventory. Re-record after building new application images.
 
 Cold-cache verification can use an explicitly empty directory within `.local/verification`:

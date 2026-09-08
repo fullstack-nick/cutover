@@ -74,6 +74,7 @@ try {
   await run('egress-probe-after-restart','scripts/offline-egress.mjs',['Probe']);
   await waitOrder(accepted.body.id);await waitReceipt(received.body.id);
   evidence.cases.push({status:'passed',name:'Normal whole-lab stop/start preserves both products and supports fresh PKCE login while scoped external-egress denial remains effective'});
+  await run('load-cached-predecessor','scripts/load-cached-rollback.mjs');
   await run('cached-rollback','tools/scenario-driver/adapter-image-rollback-smoke.mjs',[`--image=${cache.rollback.runtimeReference}`]);
   await run('telemetry','tools/scenario-driver/telemetry-smoke.mjs');
   await session.page.goto('http://127.0.0.1:8783/d/cutover-platform/cutover-local-operations');

@@ -1,6 +1,6 @@
 # Acceptance status
 
-Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, deployed inbox-batch regressions, separate database/monitoring outages, queue overflow, prepared offline operation and the timed reviewer path remain open.
+Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, remaining deployed inbox-batch regressions, prepared offline operation, renewed functional HTTP checks and the timed reviewer path remain open.
 
 The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
 
@@ -21,7 +21,7 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A13 | The same process run exits after effect commit before acknowledgement. New multi-message commit/crash component checks pass; deployed repeat pending. |
 | A14 | `mandatory-return-1788870649419`: positive confirm with mandatory return retains the original; routing repair succeeds. Repeat after publisher changes pending. |
 | A15 | `broker-capacity-1788870391246`: actual broker absence, 800 accepted requests/1,600 events, controlled refusals and 802 single effects after recovery. |
-| A16 | Real quorum reject-publish component checks pass. Full deployed critical/shadow queue overflow is pending. |
+| A16 | `queue-overflow-1788884331159`: actual critical/shadow quorum limits reject publication, retain the original head/source bytes, and drain 10,001/1,001 duplicate deliveries with single effects. Both products continue while shadow is full; audited original replay succeeds. |
 | A17 | `storage-repair-1788819273019`: poison exhaustion, retained bytes, predecessor correction and audited reprocessing; typed raw-quarantine ownership regressions pass in components. |
 | A18 | `equipment-recovery-1788814389493`: lost response resolves against the same command, with one execution. |
 | A19 | The same equipment run proves retained pre-acceptance absence before resending the original ID. |
