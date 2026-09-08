@@ -27,6 +27,7 @@ public final class RestoreReconciliation {
             || request.reason().strip().length()<8 || request.reason().length()>500)throw Problem.invalid("Use a verified checkpoint identity, physical world, timestamp and bounded recovery reason.");
         String hash=JsonSupport.hash(request);
         return database.transactionResult(configuration->{var sql=DSL.using(configuration);
+            Database.controlWriteLock(sql);
             var control=sql.fetchOne("SELECT * FROM service_control WHERE singleton FOR UPDATE");
             var old=sql.fetchOne("SELECT request_hash FROM restore_sessions WHERE restore_id=?",request.restoreId());
             if(old!=null){if(!hash.equals(old.get(0)))throw Problem.conflict("RESTORE_IDENTITY_CONFLICT","The original checkpoint request cannot change.");return view(sql,request.restoreId());}
@@ -166,6 +167,7 @@ public final class RestoreReconciliation {
         var frontier=inventory.read(null,1);
         return database.transactionResult(configuration->{var sql=DSL.using(configuration);
             // Lock exclusively before workersMayWrite takes its shared freeze lock: no lock upgrade.
+            Database.controlWriteLock(sql);
             sql.fetchOne("SELECT * FROM service_control WHERE singleton FOR UPDATE");var row=lock(sql,id,version);
             if(!row.get("state").equals("VERIFIED"))throw Problem.conflict("RESTORE_NOT_VERIFIED","The recovery state changed before release.");
             String error=frontierError(row,frontier);

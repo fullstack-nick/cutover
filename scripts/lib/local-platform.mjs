@@ -10,6 +10,8 @@ export const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const owners = Object.freeze({ core: 'legacy-core', adapter: 'equipment-adapter', execution: 'execution-service', returns: 'returns-service', shadow: 'shadow-scheduler' });
 export const databases = Object.freeze([...Object.keys(owners), 'keycloak']);
 export const namespaces = Object.freeze(['cutover-apps', 'cutover-platform', 'cutover-observability']);
+// Same reserved two-int key as Database.controlWriteLock. Hold before row/version locks.
+export const controlWriteBarrier = "SELECT pg_advisory_xact_lock(1129665615,1);";
 export const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 export const jsonFile = path => JSON.parse(readFileSync(path, 'utf8'));
 export function writeJson(path, value) {

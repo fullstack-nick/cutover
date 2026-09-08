@@ -107,9 +107,18 @@ public final class OrderService {
         return Database.json(sql,"SELECT jsonb_build_object('id',o.order_id,'siteId',o.site_id,'externalOrderRef',o.external_ref,'storeId',o.store_id,'priority',o.priority,'state',o.state,'version',o.version,'createdAt',o.created_at,'completedAt',o.completed_at,'observedAt',now(),'lines',(SELECT COALESCE(jsonb_agg(jsonb_build_object('sku',l.sku,'requested',l.requested,'reserved',l.reserved_quantity,'shortage',l.shortage) ORDER BY l.sku),'[]'::jsonb) FROM order_lines l WHERE l.order_id=o.order_id),'movements',(SELECT COALESCE(jsonb_agg(jsonb_build_object('movementId',m.movement_id,'state',m.state,'movement',m.movement) ORDER BY m.movement_id),'[]'::jsonb) FROM movement_intents m WHERE m.order_id=o.order_id)) FROM orders o WHERE o.site_id= ? AND o.order_id= ?",site,id);
     }
     public JsonNode list(String site,UUID cursor,int limit) {
+        return list(site,cursor,limit,null,false);
+    }
+    public JsonNode list(String site,UUID cursor,int limit,String reference,boolean shortagesOnly) {
         if(limit<1 || limit>100) throw Problem.invalid("Page size must be between 1 and 100.");
+        String search=reference==null?"":reference.strip();
+        if(search.length()>128)throw Problem.invalid("Order reference search is limited to 128 characters.");
+        var after=cursor==null?null:database.select(ORDERS.CREATED_AT).from(ORDERS).where(ORDERS.SITE_ID.eq(site).and(ORDERS.ORDER_ID.eq(cursor))).fetchOne();
+        var continuation=cursor==null?DSL.noCondition():after==null?DSL.falseCondition():ORDERS.CREATED_AT.lt(after.get(ORDERS.CREATED_AT)).or(ORDERS.CREATED_AT.eq(after.get(ORDERS.CREATED_AT)).and(ORDERS.ORDER_ID.lt(cursor)));
         var rows=database.select(ORDERS.ORDER_ID).from(ORDERS).where(ORDERS.SITE_ID.eq(site))
-                .and(cursor == null ? DSL.noCondition() : ORDERS.ORDER_ID.gt(cursor)).orderBy(ORDERS.ORDER_ID).limit(limit).fetch();
+                .and(continuation).and(search.isEmpty()?DSL.noCondition():ORDERS.EXTERNAL_REF.containsIgnoreCase(search))
+                .and(shortagesOnly?DSL.exists(DSL.selectOne().from(ORDER_LINES).where(ORDER_LINES.ORDER_ID.eq(ORDERS.ORDER_ID)).and(ORDER_LINES.SHORTAGE.gt(0))):DSL.noCondition())
+                .orderBy(ORDERS.CREATED_AT.desc(),ORDERS.ORDER_ID.desc()).limit(limit).fetch();
         var items=JsonSupport.MAPPER.createArrayNode();for(UUID id:rows.getValues("order_id",UUID.class)) items.add(get(site,id));
         var page=JsonSupport.MAPPER.createObjectNode();page.set("items",items);
         if(rows.size()==limit)page.put("nextCursor",rows.getLast().get("order_id").toString());else page.putNull("nextCursor");

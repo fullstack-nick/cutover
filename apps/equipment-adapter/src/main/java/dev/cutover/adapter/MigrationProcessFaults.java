@@ -26,6 +26,7 @@ public final class MigrationProcessFaults implements MigrationSessions.Checkpoin
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             return Idempotency.execute(sql, actor, site, "arm-migration-fault", key, request, () -> {
+                Database.controlWriteLock(sql);
                 long before = sql.fetchOne("SELECT version FROM service_control WHERE singleton FOR UPDATE").get(0, Long.class);
                 if (!Database.workersMayWrite(sql)) throw new Problem(503, "WORKERS_PAUSED", "Phase fault changes are paused for the checkpoint.");
                 if (before != request.path("expectedVersion").asLong()) throw Problem.conflict("VERSION_CONFLICT", "Refresh the process controls before arming a phase fault.");

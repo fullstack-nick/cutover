@@ -43,11 +43,14 @@ function backlog(owner) {
 }
 try {
   target('demo').verify();
+  const databasePod=target('demo').get('pod','application-db-0','cutover-platform');target('demo').owned(databasePod);
   const inspected=JSON.parse(call('docker',['inspect',...names]));
   for(const item of inspected)if(item.Config.Labels['io.x-k8s.kind.cluster']!=='cutover' && item.Config.Labels['dev.cutover.project']!=='cutover')throw new Error('Sampler ownership check failed.');
   const end=Date.now()+16*60*1000;
   do {
     const start=Date.now(),sample={at:new Date().toISOString(),...hardware(),owners:{}};
+    const cpu=target('demo').kube(['-n','cutover-platform','exec','application-db-0','-c','application-db','--','cat','/sys/fs/cgroup/cpu.stat']);
+    sample.databaseCpu={podUid:databasePod.metadata.uid,at:new Date().toISOString(),...Object.fromEntries(cpu.trim().split(/\r?\n/).map(line=>{const [key,value]=line.split(/\s+/);return [key,Number(value)];}))};
     for(const owner of ['core','adapter','execution','returns','shadow'])sample.owners[owner]=backlog(owner);
     sample.collectionMillis=Date.now()-start;records.push(sample);writeJson(path,{intervalMillis:10000,records,errors});
     if(records.length===1)process.send?.({type:'ready'});

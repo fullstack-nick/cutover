@@ -37,7 +37,7 @@ export async function api(path, { method = 'GET', body, key, bearer, target = 'c
       parsed = { code: `HTTP_${response.status}`, detail: 'The local proxy returned a non-JSON error response.' };
     }
   }
-  return { status: response.status, body: parsed };
+  return { status: response.status, body: parsed, retryAfter: response.headers.get('Retry-After') };
 }
 export function simulator(path, body, identity = 'scenario', method = body === undefined ? 'GET' : 'POST') {
   if (!['GET','POST','PUT','DELETE'].includes(method)) throw new Error('Unsupported equipment HTTP operation.');

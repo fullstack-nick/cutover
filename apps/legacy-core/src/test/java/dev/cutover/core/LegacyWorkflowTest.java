@@ -62,6 +62,28 @@ class LegacyWorkflowTest {
     void tick(){clock.advance(Duration.ofMillis(500));observations.refresh();scheduler.poll();journal.work();simulator.advance();}
     void finish(UUID id,String expected){for(int i=0;i<20&&!orders.get("site-a",id).path("state").asString().equals(expected);i++)tick();assertThat(orders.get("site-a",id).path("state").asString()).isEqualTo(expected);}
 
+    @Test void reviewerOrderPagingSurvivesNewArrivalsAndFiltersShortagesWithinTheSite(){
+        UUID oldest=Database.uuid(orders.accept("scenario","site-a","page-oldest",request("Find ME ordinary",new OrderService.Line("SKU-001",1))),"id");clock.advance(Duration.ofSeconds(1));
+        UUID empty=Database.uuid(orders.accept("scenario","site-a","page-empty",request("Find me empty",new OrderService.Line("SKU-099",1))),"id");
+        UUID partial=Database.uuid(orders.accept("scenario","site-a","page-partial",request("Find me partial",new OrderService.Line("SKU-001",2),new OrderService.Line("SKU-099",2))),"id");clock.advance(Duration.ofSeconds(1));
+        UUID newest=Database.uuid(orders.accept("scenario","site-a","page-newest",request("Unrelated reference",new OrderService.Line("SKU-003",1))),"id");
+        var tied=java.util.stream.Stream.of(empty,partial).sorted(java.util.Comparator.comparing(UUID::toString).reversed()).toList();
+        var first=orders.list("site-a",null,2);assertThat(Database.uuid(first.path("items").get(0),"id")).isEqualTo(newest);
+        assertThat(Database.uuid(first.path("items").get(1),"id")).isEqualTo(tied.getFirst());
+        clock.advance(Duration.ofSeconds(1));orders.accept("scenario","site-a","page-later",request("Arrived after the first page",new OrderService.Line("SKU-005",1)));
+        var second=orders.list("site-a",Database.uuid(first,"nextCursor"),2);
+        assertThat(Database.uuid(second.path("items").get(0),"id")).isEqualTo(tied.getLast());
+        assertThat(Database.uuid(second.path("items").get(1),"id")).isEqualTo(oldest);
+        assertThat(orders.list("site-a",oldest,2).path("items").size()).isZero();
+        assertThat(orders.list("site-a",null,25," FIND me ",false).path("items").size()).isEqualTo(3);
+        var shortages=orders.list("site-a",null,25,"find ME",true).path("items");assertThat(shortages.size()).isEqualTo(2);
+        assertThat(java.util.stream.StreamSupport.stream(shortages.spliterator(),false).map(item->Database.uuid(item,"id")).toList()).containsExactlyElementsOf(tied);
+        assertThat(orders.list("site-a",null,25,"%",false).path("items").size()).isZero();
+        for(String site:List.of("site-a","site-b"))assertThat(orders.list(site,UUID.randomUUID(),25,"find",true).path("items").size()).isZero();
+        assertThat(orders.list("site-b",oldest,25,null,false).path("items").size()).isZero();
+        assertThatThrownBy(()->orders.list("site-a",null,25,"x".repeat(129),false)).isInstanceOf(Problem.class);
+    }
+
     @Test void fullAmbientAndChilledOrderRunsThroughTriggerTasksAndConsumesStockOnce(){
         UUID id=accept("complete",new OrderService.Line("SKU-001",4),new OrderService.Line("SKU-002",2));
         assertThat(coreDb.sql().fetchOne("SELECT count(*) FROM legacy_tasks").get(0,Integer.class)).isEqualTo(2);

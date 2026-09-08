@@ -207,6 +207,46 @@ class DurableDeliveryTest {
         assertThat(count("audit")).isZero();assertThat(count("outbox")).isEqualTo(1);
     }
 
+    @Test void ordinaryControlChecksAreReadOnlyAndRejectAnOldTransactionSnapshot() {
+        db.sql().transaction(configuration->{
+            var sql=DSL.using(configuration);sql.execute("SET TRANSACTION READ ONLY");
+            assertThat(Database.workersMayWrite(sql)).isTrue();Database.requireDurability(sql,true);Database.requireDurability(sql,false);
+            assertThat(sql.fetchOne("SELECT pg_current_xact_id_if_assigned()::text").get(0)).isNull();
+        });
+        db.sql().transaction(configuration->{
+            var sql=DSL.using(configuration);sql.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
+            assertThatThrownBy(()->Database.workersMayWrite(sql)).isInstanceOf(IllegalStateException.class).hasMessageContaining("READ COMMITTED");
+        });
+    }
+
+    @Test void freezeWaitsForThePriorTransactionAndPreventsALaterWorkerWrite() throws Exception {
+        var executor=java.util.concurrent.Executors.newFixedThreadPool(3);
+        var inside=new java.util.concurrent.CountDownLatch(1);var release=new java.util.concurrent.CountDownLatch(1);
+        UUID effect=UUID.randomUUID();
+        try {
+            var worker=executor.submit(()->db.sql().transaction(configuration->{
+                var sql=DSL.using(configuration);assertThat(Database.workersMayWrite(sql)).isTrue();inside.countDown();
+                assertThat(release.await(15,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                sql.execute("INSERT INTO effects(event_id,aggregate_id,version,value) VALUES (?,?,1,1)",effect,effect);
+            }));
+            assertThat(inside.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            var frozen=executor.submit(()->new dev.cutover.platform.control.RuntimeControls(db.sql()).change("supervisor","site-a","freeze-concurrent-worker",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",0,"workersPaused",true,"reason","Wait for the prior worker transaction before confirming the frozen boundary."))));
+            long deadline=System.nanoTime()+java.time.Duration.ofSeconds(5).toNanos();
+            while(System.nanoTime()<deadline && db.sql().fetchOne("SELECT count(*) FROM pg_locks WHERE locktype='advisory' AND NOT granted").get(0,Integer.class)==0)Thread.sleep(10);
+            assertThat(db.sql().fetchOne("SELECT count(*) FROM pg_locks WHERE locktype='advisory' AND NOT granted").get(0,Integer.class)).isPositive();
+            assertThat(frozen.isDone()).isFalse();assertThat(count("effects")).isZero();
+            var later=executor.submit(()->db.sql().transactionResult(configuration->Database.workersMayWrite(DSL.using(configuration))));
+            deadline=System.nanoTime()+java.time.Duration.ofSeconds(5).toNanos();
+            while(System.nanoTime()<deadline && db.sql().fetchOne("SELECT count(*) FROM pg_locks WHERE locktype='advisory' AND NOT granted").get(0,Integer.class)<2)Thread.sleep(10);
+            assertThat(db.sql().fetchOne("SELECT count(*) FROM pg_locks WHERE locktype='advisory' AND NOT granted").get(0,Integer.class)).isGreaterThanOrEqualTo(2);
+            release.countDown();worker.get(5,java.util.concurrent.TimeUnit.SECONDS);
+            assertThat(frozen.get(5,java.util.concurrent.TimeUnit.SECONDS).path("state").asString()).isEqualTo("CONTROL_RECORDED");
+            assertThat(new dev.cutover.platform.control.RuntimeControls(db.sql()).status("site-a").path("workersPaused").asBoolean()).isTrue();
+            assertThat(later.get(5,java.util.concurrent.TimeUnit.SECONDS)).isFalse();
+            assertThat(count("effects")).isEqualTo(1);
+        } finally {release.countDown();executor.shutdownNow();assertThat(executor.awaitTermination(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();}
+    }
+
     @Test void unarmedDeliveryFaultHooksNeedNoWriteTransactionAndNoticeLaterArming() {
         UUID id=append(UUID.randomUUID(),1);
         db.sql().transaction(configuration->{

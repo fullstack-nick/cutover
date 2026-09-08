@@ -58,9 +58,12 @@ try {
   assert.equal(query('adapter',"SELECT count(*) FROM command_journal WHERE state NOT IN ('COMPLETED','REJECTED_BEFORE_EXECUTION');"),'0','Do not mix the healthy denominator with preexisting unresolved commands.');
   for(const owner of ['core','adapter','execution','returns','shadow'])assert.equal(query(owner,"SELECT count(*) FROM service_control WHERE intake_paused OR dispatch_paused OR workers_paused OR relay_paused OR consumer_paused OR critical_storage;"),'0');
   const stock=JSON.parse(query('core',"SELECT jsonb_agg(jsonb_build_object('sku',s.sku,'zone',p.temperature_class,'available',s.on_hand-s.reserved) ORDER BY s.sku) FROM stock s JOIN products p USING(site_id,sku) WHERE s.site_id='site-a';"));
-  const pools=Object.fromEntries(['ambient','chilled'].map(zone=>[zone,stock.filter(item=>item.zone===zone && item.available>=50).slice(0,40)]));
-  assert.ok(pools.ambient.length>=30 && pools.chilled.length>=30,'This run needs enough existing synthetic stock; it never replenishes or resets it.');
-  const offset=seed%30,orderBodies=Array.from({length:orderCount},(_,index)=>({sourceSystem:'scenario-driver',externalOrderRef:`${id}-order-${index}`,storeId:`store-${String(index%10+1).padStart(2,'0')}`,priority:5,lines:['ambient','chilled'].map(zone=>({sku:pools[zone][(index+offset)%pools[zone].length].sku,quantity:1}))}));
+  const pools=Object.fromEntries(['ambient','chilled'].map(zone=>[zone,stock.filter(item=>item.zone===zone && item.available>0)]));
+  for(const zone of ['ambient','chilled'])assert.ok(pools[zone].reduce((sum,item)=>sum+item.available,0)>=orderCount,'This run needs enough existing compatible stock; it never replenishes or resets it.');
+  evidence.workload.stockSelection='Seeded round-robin across all compatible existing positive stock; skip exhausted items without any stock writes.';
+  const remaining=new Map(stock.map(item=>[item.sku,item.available])),positions=Object.fromEntries(['ambient','chilled'].map(zone=>[zone,seed%pools[zone].length]));
+  const nextSku=zone=>{for(let n=0;n<pools[zone].length;n++){const item=pools[zone][positions[zone]++%pools[zone].length];if(remaining.get(item.sku)>0){remaining.set(item.sku,remaining.get(item.sku)-1);return item.sku;}}throw new Error('Existing compatible stock was exhausted during workload preparation.');};
+  const orderBodies=Array.from({length:orderCount},(_,index)=>({sourceSystem:'scenario-driver',externalOrderRef:`${id}-order-${index}`,storeId:`store-${String(index%10+1).padStart(2,'0')}`,priority:5,lines:['ambient','chilled'].map(zone=>({sku:nextSku(zone),quantity:1}))}));
   const needed={};for(const body of orderBodies)for(const line of body.lines)needed[line.sku]=(needed[line.sku]??0)+1;
   for(const [sku,count] of Object.entries(needed))assert.ok(stock.find(item=>item.sku===sku).available>=count);
   evidence.stockBefore=stock;evidence.stockRequired=needed;

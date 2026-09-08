@@ -84,6 +84,7 @@ public final class RuntimeControls {
         if (reason.length()<8) throw Problem.invalid("Explain the intended fault or recovery action."); return reason;
     }
     private static long lockVersion(DSLContext sql,JsonNode request) {
+        Database.controlWriteLock(sql);
         long before=sql.fetchOne("SELECT version FROM service_control WHERE singleton FOR UPDATE").get(0,Long.class);
         if (before!=request.path("expectedVersion").asLong()) throw Problem.conflict("VERSION_CONFLICT","The process controls changed; inspect them before retrying."); return before;
     }

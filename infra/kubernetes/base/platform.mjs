@@ -31,9 +31,9 @@ export function platformResources(images, settings) {
   const result = Object.values(namespaces).map(name => ({ apiVersion: 'v1', kind: 'Namespace', metadata: { name, labels: { 'app.kubernetes.io/part-of': 'cutover', 'pod-security.kubernetes.io/enforce': 'restricted' } } }));
   const add = (...objects) => result.push(...objects);
   add(service('application-db', platform, [['postgres', 5432]]), workload('application-db', platform, images.postgres, {
-    user: 999, readOnly: false, port: 5432, memory: '512Mi', cpu: '1000m',
+    user: 999, readOnly: false, port: 5432, memory: '1Gi', cpu: '2000m',
     env: [secret('POSTGRES_PASSWORD', 'password', 'database-admin'), literal('POSTGRES_INITDB_ARGS', '--auth-host=scram-sha-256')],
-    args: ['postgres', '-c', 'shared_buffers=64MB', '-c', 'max_connections=100', '-c', 'timezone=UTC', '-c', 'track_wal_io_timing=on'],
+    args: ['postgres', '-c', 'shared_buffers=256MB', '-c', 'max_connections=100', '-c', 'timezone=UTC', '-c', 'track_wal_io_timing=on'],
     readiness: { exec: { command: ['pg_isready', '-U', 'postgres'] }, periodSeconds: 3 },
     storage: { path: '/var/lib/postgresql', size: '3Gi' }, volumes: [credential('database-init')], mounts: [mount('database-init', '/docker-entrypoint-initdb.d/010-owners.sql', 'init.sql')],
   }));

@@ -24,7 +24,8 @@ public final class BaselineRegistrations {
             if(!Set.of("COMPLETED","CANCELLED").contains(item.path("state").asString()))throw Problem.conflict("BASELINE_UNSETTLED","Settle the original baseline before recording the task-creation boundary.");
         }
         return database.transactionResult(configuration->{
-            var sql=DSL.using(configuration);var control=sql.fetchOne("SELECT * FROM service_control WHERE singleton FOR SHARE");
+            var sql=DSL.using(configuration);Database.controlReadLock(sql);
+            var control=sql.fetchOne("SELECT * FROM service_control WHERE singleton");
             if(!control.get("dispatch_paused",Boolean.class) || control.get("workers_paused",Boolean.class) || control.get("critical_storage",Boolean.class)
                     || control.get("version",Long.class)!=body.path("expectedControlVersion").asLong())throw Problem.conflict("REGISTRATION_GATE","Registration requires the observed paused adapter dispatch gate.");
             StorageBudget.requireHeadroom(sql);

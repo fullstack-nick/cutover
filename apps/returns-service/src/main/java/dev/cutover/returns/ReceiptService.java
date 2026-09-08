@@ -118,8 +118,10 @@ public final class ReceiptService {
         """,site,id);}
     public JsonNode list(String site,UUID cursor,int limit){
         if(limit<1 || limit>100)throw Problem.invalid("Page size must be between 1 and 100.");
+        var after=cursor==null?null:database.select(RECEIPTS.CREATED_AT).from(RECEIPTS).where(RECEIPTS.SITE_ID.eq(site).and(RECEIPTS.RECEIPT_ID.eq(cursor))).fetchOne();
+        var continuation=cursor==null?DSL.noCondition():after==null?DSL.falseCondition():RECEIPTS.CREATED_AT.lt(after.get(RECEIPTS.CREATED_AT)).or(RECEIPTS.CREATED_AT.eq(after.get(RECEIPTS.CREATED_AT)).and(RECEIPTS.RECEIPT_ID.lt(cursor)));
         var rows=database.select(RECEIPTS.RECEIPT_ID).from(RECEIPTS).where(RECEIPTS.SITE_ID.eq(site))
-            .and(cursor==null?DSL.noCondition():RECEIPTS.RECEIPT_ID.gt(cursor)).orderBy(RECEIPTS.RECEIPT_ID).limit(limit).fetch();
+            .and(continuation).orderBy(RECEIPTS.CREATED_AT.desc(),RECEIPTS.RECEIPT_ID.desc()).limit(limit).fetch();
         var result=JsonSupport.MAPPER.createObjectNode().put("observedAt",clock.instant().toString());var items=result.putArray("items");
         for(var row:rows)items.add(view(database,site,row.get(0,UUID.class)));
         if(rows.size()==limit)result.put("nextCursor",rows.getLast().get(0,UUID.class).toString());else result.putNull("nextCursor");return result;

@@ -8,6 +8,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** @description Newest recorded orders first, with a stable timestamp and ID cursor. A cursor outside this site yields an empty page. */
         get: operations["listOrders"];
         put?: never;
         /** Durably accept synthetic work; acceptance is not completion */
@@ -1323,6 +1324,10 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string;
+                /** @description Case-insensitive full or partial external reference, within the authenticated site. */
+                reference?: string;
+                /** @description Include only orders with at least one unreserved requested unit. */
+                shortagesOnly?: boolean;
             };
             header?: never;
             path: {

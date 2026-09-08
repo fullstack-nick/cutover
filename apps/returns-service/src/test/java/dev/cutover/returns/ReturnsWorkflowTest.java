@@ -47,6 +47,19 @@ class ReturnsWorkflowTest {
     }
     ObjectNode request(String reference,int reusable,int cleaning,int damaged){var body=JsonSupport.MAPPER.createObjectNode().put("sourceSystem","fixture-receiving").put("externalReceiptRef",reference);body.putObject("counts").put("REUSABLE",reusable).put("NEEDS_CLEANING",cleaning).put("DAMAGED",damaged);return body;}
     UUID register(String reference,int reusable,int cleaning,int damaged){return Database.uuid(receipts.register("scenario","site-a",reference,request(reference,reusable,cleaning,damaged)),"id");}
+    @Test void newestReceiptPagingIsStableAcrossNewArrivalsAndForeignCursors(){
+        UUID oldest=register("oldest",1,0,0);clock.advance(Duration.ofSeconds(1));
+        UUID first=register("same-time-a",1,0,0),second=register("same-time-b",0,1,0);clock.advance(Duration.ofSeconds(1));
+        UUID newest=register("newest",0,0,1);
+        var tied=java.util.stream.Stream.of(first,second).sorted(Comparator.comparing(UUID::toString).reversed()).toList();
+        var page=receipts.list("site-a",null,2);assertThat(Database.uuid(page.path("items").get(0),"id")).isEqualTo(newest);assertThat(Database.uuid(page.path("items").get(1),"id")).isEqualTo(tied.getFirst());
+        clock.advance(Duration.ofSeconds(1));register("later-arrival",1,0,0);
+        var next=receipts.list("site-a",Database.uuid(page,"nextCursor"),2);assertThat(Database.uuid(next.path("items").get(0),"id")).isEqualTo(tied.getLast());assertThat(Database.uuid(next.path("items").get(1),"id")).isEqualTo(oldest);
+        assertThat(receipts.list("site-a",oldest,2).path("items").size()).isZero();
+        assertThat(receipts.list("site-b",newest,25).path("items").size()).isZero();
+        assertThat(receipts.list("site-a",UUID.randomUUID(),25).path("items").size()).isZero();
+        assertThat(total("received")).isEqualTo(5);assertThat(total("sorted")).isZero();
+    }
     void deliver(DurableInbox inbox,String exchange,JsonNode event){inbox.receive(exchange,event.path("eventId").asString(),JsonSupport.write(event).getBytes(StandardCharsets.UTF_8));}
     void messages(){
         for(var row:returns.sql().fetch("SELECT event_id,envelope FROM outbox ORDER BY aggregate_id,aggregate_version"))if(requested.add(row.get("event_id",UUID.class)))deliver(adapterInbox,"cutover.returns-service.v1",JsonSupport.read(row.get("envelope").toString()));

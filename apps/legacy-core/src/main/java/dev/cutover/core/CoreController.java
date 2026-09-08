@@ -26,8 +26,8 @@ class CoreController {
     @GetMapping("/api/v1/sites/{site}/orders/{id}") JsonNode get(@PathVariable String site,@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt){
         Access.role(jwt,"operator","supervisor","scenario","service");return orders.get(Access.site(jwt,site),id);
     }
-    @GetMapping("/api/v1/sites/{site}/orders") JsonNode list(@PathVariable String site,@RequestParam(required=false) UUID cursor,@RequestParam(defaultValue="25") int limit,@AuthenticationPrincipal Jwt jwt){
-        Access.role(jwt,"operator","supervisor","scenario","service");return orders.list(Access.site(jwt,site),cursor,limit);
+    @GetMapping("/api/v1/sites/{site}/orders") JsonNode list(@PathVariable String site,@RequestParam(required=false) UUID cursor,@RequestParam(defaultValue="25") int limit,@RequestParam(required=false) String reference,@RequestParam(defaultValue="false") boolean shortagesOnly,@AuthenticationPrincipal Jwt jwt){
+        Access.role(jwt,"operator","supervisor","scenario","service");return orders.list(Access.site(jwt,site),cursor,limit,reference,shortagesOnly);
     }
     @GetMapping("/api/v1/sites/{site}/tasks") JsonNode tasks(@PathVariable String site,@AuthenticationPrincipal Jwt jwt){
         Access.role(jwt,"operator","supervisor","service");return scheduler.tasks(Access.site(jwt,site));

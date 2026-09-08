@@ -74,7 +74,8 @@ public final class SimulatorEngine {
         if (!database.fetchOne("SELECT EXISTS(SELECT 1 FROM simulator_commands c JOIN lanes l ON l.site_id=c.site_id AND l.lane_id=c.lane_id WHERE c.state IN ('ACCEPTED','EXECUTING') AND c.execute_after<=?::timestamptz AND NOT l.blocked)", due).get(0,Boolean.class)) return 0;
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
-            if (sql.fetchOne("SELECT workers_paused OR critical_storage FROM service_control WHERE singleton FOR SHARE").get(0,Boolean.class)) return 0;
+            Database.controlReadLock(sql);
+            if (sql.fetchOne("SELECT workers_paused OR critical_storage FROM service_control WHERE singleton").get(0,Boolean.class)) return 0;
             var now = OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
             var ready = sql.fetch("SELECT c.command_id,c.payload,c.state FROM simulator_commands c JOIN lanes l ON l.site_id=c.site_id AND l.lane_id=c.lane_id WHERE c.state IN ('ACCEPTED','EXECUTING') AND c.execute_after<= ?::timestamptz AND NOT l.blocked ORDER BY c.execute_after,c.command_id LIMIT 32 FOR UPDATE OF c SKIP LOCKED", now);
             int completed = 0;

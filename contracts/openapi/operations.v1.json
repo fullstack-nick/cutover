@@ -88,6 +88,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "reference",
+            "in": "query",
+            "description": "Case-insensitive full or partial external reference, within the authenticated site.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "shortagesOnly",
+            "in": "query",
+            "description": "Include only orders with at least one unreserved requested unit.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -104,7 +122,8 @@
           "default": {
             "$ref": "#/components/responses/problem"
           }
-        }
+        },
+        "description": "Newest recorded orders first, with a stable timestamp and ID cursor. A cursor outside this site yields an empty page."
       }
     },
     "/api/v1/sites/{siteId}/orders/{id}": {

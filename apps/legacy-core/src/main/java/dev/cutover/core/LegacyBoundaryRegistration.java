@@ -67,7 +67,8 @@ public final class LegacyBoundaryRegistration {
     private record Captured(long version,JsonNode inventory){}
     private static tools.jackson.databind.node.ObjectNode request(UUID id,long version){return JsonSupport.MAPPER.createObjectNode().put("registrationId",id.toString()).put("expectedControlVersion",version);}
     private static long gate(DSLContext sql){
-        var control=sql.fetchOne("SELECT * FROM service_control WHERE singleton FOR SHARE");
+        Database.controlReadLock(sql);
+        var control=sql.fetchOne("SELECT * FROM service_control WHERE singleton");
         if(!control.get("intake_paused",Boolean.class) || !control.get("dispatch_paused",Boolean.class) || control.get("workers_paused",Boolean.class) || control.get("critical_storage",Boolean.class))throw Problem.conflict("REGISTRATION_GATE","Pause core intake and dispatch while keeping checkpoint/registration processing writable.");
         StorageBudget.requireHeadroom(sql);return control.get("version",Long.class);
     }

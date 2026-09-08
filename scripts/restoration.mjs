@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { root, owners, jsonFile, writeJson, call, until, maintenanceLock, target, simulatorRead, request, maintenanceToken } from './lib/local-platform.mjs';
+import { root, owners, jsonFile, writeJson, call, until, maintenanceLock, target, simulatorRead, request, maintenanceToken, controlWriteBarrier } from './lib/local-platform.mjs';
 import { verifyCheckpoint } from './lib/checkpoint.mjs';
 import { restorationNetwork, simulatorContainer, run as runCommand } from './lib/restoration-cluster.mjs';
 import { restoreStep, reconcileRestore, delivery, intakeIdentities } from './lib/restoration-runtime.mjs';
@@ -39,6 +39,7 @@ async function stopRestoration() {
       for (const owner of Object.keys(owners)) {
         journal.stopCycle.controls[owner] ??= JSON.parse(platform.sql(owner, 'SELECT row_to_json(c) FROM service_control c WHERE singleton;'));save();
         platform.sql(owner, `BEGIN;
+${controlWriteBarrier}
 WITH prior AS (SELECT version FROM service_control WHERE singleton FOR UPDATE), changed AS
  (UPDATE service_control c SET intake_paused=true,dispatch_paused=true,workers_paused=true,version=c.version+1 FROM prior WHERE c.singleton AND c.version=prior.version RETURNING c.version)
 INSERT INTO audit(audit_id,site_id,actor,action,resource_id,reason,before_version,after_version,outcome,detail)

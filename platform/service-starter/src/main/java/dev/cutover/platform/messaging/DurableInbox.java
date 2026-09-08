@@ -146,7 +146,7 @@ public final class DurableInbox {
     }
 
     private static void lockStorage(DSLContext sql) {
-        if (sql.fetchOne("SELECT workers_paused FROM service_control WHERE singleton FOR SHARE").get(0, Boolean.class))
+        if (!Database.workersMayWrite(sql))
             throw new Problem(503, "WORKERS_PAUSED", "Inbox mutation is paused for an operational checkpoint.");
         sql.fetchOne("SELECT * FROM message_storage WHERE singleton FOR UPDATE");
     }

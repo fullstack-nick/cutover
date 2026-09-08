@@ -2,12 +2,19 @@ import { chromium } from '../../apps/operations-console/node_modules/playwright/
 import { credentials } from './client.mjs';
 
 /** Real local Authorization Code/PKCE login. Credentials and observed tokens stay in memory. */
-export async function humanSession(username) {
+export async function humanSession(username, { offline = false, onRequest = () => {} } = {}) {
   const keys = { 'operator-a': 'operator_a', 'operator-b': 'operator_b', 'supervisor-a': 'supervisor_a', 'supervisor-a2': 'supervisor_a2', 'platform-admin': 'platform_admin' };
   if (!Object.hasOwn(keys, username)) throw new Error('Only seeded fictional lab users can be used in this check.');
   const browser = await chromium.launch({ headless: true });
   try {
-    const context = await browser.newContext();
+    const context = await browser.newContext({ serviceWorkers: 'block' });
+    if (offline) await context.route('**/*', async route => {
+      const url = new URL(route.request().url());
+      const allowed = url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname) && ['8780', '8781', '8782', '8783'].includes(url.port);
+      // Record only route metadata, never token-bearing query strings, headers or bodies.
+      onRequest({ origin: url.origin, path: url.pathname, method: route.request().method(), allowed });
+      if (allowed) await route.continue(); else await route.abort('internetdisconnected');
+    });
     const page = await context.newPage();
     let authorization;
     page.on('request', request => {

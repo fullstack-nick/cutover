@@ -4,7 +4,7 @@ import { existsSync, openSync, closeSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { verifyCheckpoint } from './lib/checkpoint.mjs';
-import { root, owners, databases, jsonFile, writeJson, privateDirectory, maintenanceLock, target, call, until, simulatorRead, fingerprints } from './lib/local-platform.mjs';
+import { root, owners, databases, jsonFile, writeJson, privateDirectory, maintenanceLock, target, call, until, simulatorRead, fingerprints, controlWriteBarrier } from './lib/local-platform.mjs';
 import { provisionDatabases, ownerGrants } from './lib/owner-databases.mjs';
 import { verifyImages, networkPlan, inspectPrimary, createCluster, restoredResources } from './lib/restoration-cluster.mjs';
 import { restoreStep, replayCheckpoint, reconcileRestore, intakeIdentities } from './lib/restoration-runtime.mjs';
@@ -61,6 +61,7 @@ try {
   for (const owner of Object.keys(owners)) {
     const version = checkpoint.manifest.controls[owner].version;assert.ok(Number.isSafeInteger(version));
     const result = platform.sql(owner, `BEGIN;
+${controlWriteBarrier}
 SELECT singleton FROM service_control WHERE singleton FOR UPDATE;
 DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM service_control WHERE singleton AND workers_paused AND version=${version}) THEN RAISE EXCEPTION 'Checkpoint freeze changed'; END IF; END $$;
 UPDATE service_control SET intake_paused=true,dispatch_paused=true,workers_paused=true,relay_paused=false,consumer_paused=false,version=version+1 WHERE singleton;
@@ -79,7 +80,8 @@ SELECT row_to_json(c) FROM service_control c WHERE singleton;`);
   // Versioned owner-local control writes are performed while the original checkpoint workers are frozen.
   for (const owner of Object.keys(owners)) {
     const before = Number(platform.sql(owner, 'SELECT version FROM service_control WHERE singleton;'));
-    const after = platform.sql(owner, `BEGIN;UPDATE service_control SET workers_paused=false,version=version+1 WHERE singleton AND workers_paused AND intake_paused AND dispatch_paused AND version=${before} RETURNING version;
+    const after = platform.sql(owner, `BEGIN;${controlWriteBarrier}
+UPDATE service_control SET workers_paused=false,version=version+1 WHERE singleton AND workers_paused AND intake_paused AND dispatch_paused AND version=${before} RETURNING version;
 INSERT INTO audit(audit_id,site_id,actor,action,resource_id,reason,before_version,after_version,outcome,detail) VALUES (gen_random_uuid(),'site-a','platform-recovery','restore-reconcile','${journal.restoreId}','Resume original-message and original-command reconciliation with dispatch held.',${before},${before + 1},'DISPATCH_HELD','{}');COMMIT;`);
     assert.ok(after.split(/\r?\n/).includes(String(before + 1)), 'A recovery control version changed unexpectedly.');
   }
