@@ -87,12 +87,12 @@ export function platformResources(images, settings) {
   }
   return result;
 }
-export function migrationJob(name, owner, image, schema = name) {
+export function migrationJob(name, owner, image, schema = name, target = 'latest') {
   return { apiVersion: 'batch/v1', kind: 'Job', metadata: metadata(`migrate-${name}`, namespaces.apps), spec: { backoffLimit: 0, activeDeadlineSeconds: 180, ttlSecondsAfterFinished: 86400,
     template: { metadata: { labels: labels(`migrate-${name}`) }, spec: { restartPolicy: 'Never', automountServiceAccountToken: false, securityContext: { runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, seccompProfile: { type: 'RuntimeDefault' } },
       containers: [{ name: 'migrate', image, imagePullPolicy: 'Never', securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ['ALL'] } }, resources: { requests: { memory: '128Mi', cpu: '100m' }, limits: { memory: '512Mi', cpu: '1000m' } },
         command: ['java', '-Dloader.main=dev.cutover.platform.MigrationMain', '-cp', '/app/app.jar', 'org.springframework.boot.loader.launch.PropertiesLauncher'],
-        env: [literal('CUTOVER_DATABASE_URL', `jdbc:postgresql://application-db.${namespaces.platform}.svc.cluster.local:5432/cutover_${owner}`), literal('CUTOVER_DATABASE_USER', `cutover_${owner}_migrator`), secret('CUTOVER_DATABASE_PASSWORD', 'password', `${name}-migrator`), literal('CUTOVER_MIGRATION_LOCATIONS', `classpath:db/platform,classpath:db/${schema}`)] }] } } } };
+        env: [literal('CUTOVER_DATABASE_URL', `jdbc:postgresql://application-db.${namespaces.platform}.svc.cluster.local:5432/cutover_${owner}`), literal('CUTOVER_DATABASE_USER', `cutover_${owner}_migrator`), secret('CUTOVER_DATABASE_PASSWORD', 'password', `${name}-migrator`), literal('CUTOVER_MIGRATION_LOCATIONS', `classpath:db/platform,classpath:db/${schema}`), literal('CUTOVER_MIGRATION_TARGET', target)] }] } } } };
 }
 export function identityMigrationJob(image) {
   const env = [literal('KC_DB_URL', 'jdbc:postgresql://application-db:5432/cutover_keycloak'), literal('KC_DB_USERNAME', 'cutover_keycloak_migrator'), secret('KC_DB_PASSWORD', 'password', 'keycloak-migrator'),

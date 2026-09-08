@@ -47,6 +47,7 @@ public final class Allocations {
     }
 
     public JsonNode get(String site,UUID movement) { return view(database,site,movement); }
+    public JsonNode registerBaseline(String site,String client,JsonNode body){return new BaselineRegistrations(database).register(site,client,body);}
     public JsonNode schedulingContext(String site,String zone,java.util.List<UUID> ids,EquipmentObservations observations){return new SchedulingContext(database,observations).read(site,zone,ids);}
     static JsonNode view(DSLContext sql,String site,UUID movement) {
         return Database.json(sql,"SELECT jsonb_build_object('allocationId',allocation_id,'movementId',movement_id,'siteId',site_id,'zoneId',zone_id,'owner',owner,'epoch',epoch,'state',state,'version',version,'movement',movement,'payloadHash',payload_hash,'createdAt',created_at) FROM movement_allocations WHERE site_id= ? AND movement_id= ?",site,movement);

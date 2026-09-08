@@ -34,7 +34,7 @@ class LegacyWorkflowTest {
     static DatabaseFixture coreDb,adapterDb,simulatorDb;
     MutableClock clock;SimulatorEngine simulator;EquipmentObservations observations;Allocations allocations;CommandJournal journal;
     OrderService orders;LegacyScheduler scheduler;EquipmentPort equipment;
-    @BeforeAll static void databases(){coreDb=new DatabaseFixture("legacy-core");adapterDb=new DatabaseFixture("equipment-adapter");simulatorDb=new DatabaseFixture("equipment-simulator");}
+    @BeforeAll static void databases(){coreDb=new DatabaseFixture("legacy-core","109");adapterDb=new DatabaseFixture("equipment-adapter");simulatorDb=new DatabaseFixture("equipment-simulator");}
     @AfterAll static void stop(){coreDb.close();adapterDb.close();simulatorDb.close();}
     @BeforeEach void reset(){
         coreDb.reset();adapterDb.reset();simulatorDb.reset();clock=new MutableClock(Instant.now().plusSeconds(2));

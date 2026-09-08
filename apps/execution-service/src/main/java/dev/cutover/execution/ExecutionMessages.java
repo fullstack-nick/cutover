@@ -20,7 +20,8 @@ public final class ExecutionMessages implements MessageHandler {
         if(!allocation.path("movement").path("product").asString().equals("fulfilment") || !allocation.path("owner").asString().equals("execution-service"))return;
         var movement=allocation.required("movement");
         try{Contracts.validate("movement.v1",JsonSupport.write(movement));}catch(IllegalArgumentException invalid){throw DeliveryFailure.permanent("MOVEMENT_CONTRACT");}
-        if(!event.siteId().equals(movement.path("siteId").asString()) || !event.aggregateId().toString().equals(movement.path("movementId").asString()))throw DeliveryFailure.permanent("MOVEMENT_ID_MISMATCH");
+        if(!event.siteId().equals(movement.path("siteId").asString()) || !event.siteId().equals(allocation.path("siteId").asString()) || !event.aggregateId().toString().equals(movement.path("movementId").asString()))throw DeliveryFailure.permanent("MOVEMENT_ID_MISMATCH");
+        if(!allocation.path("epoch").isIntegralNumber() || allocation.path("epoch").asLong()<0 || (event.eventType().equals("MovementAssigned.v1") && !allocation.path("state").asString().equals("ASSIGNED")))throw DeliveryFailure.permanent("INVALID_TASK_ASSIGNMENT");
         var existing=sql.fetchOne("SELECT allocation_id,payload_hash,epoch FROM execution_tasks WHERE site_id=? AND movement_id=? FOR UPDATE",event.siteId(),event.aggregateId());
         var allocationId=Database.uuid(allocation,"allocationId");long epoch=allocation.path("epoch").asLong();
         if(existing!=null && (!existing.get("allocation_id").equals(allocationId) || !existing.get("payload_hash").equals(JsonSupport.hash(movement)) || existing.get("epoch",Long.class)!=epoch))throw DeliveryFailure.permanent("IMMUTABLE_TASK_ASSIGNMENT");

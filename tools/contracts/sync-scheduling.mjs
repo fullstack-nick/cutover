@@ -31,6 +31,13 @@ operations.paths['/api/v1/sites/{siteId}/tasks/{id}/recovery'] = { parameters: [
   requestBody: { required: true, content: { 'application/json': { schema: { $ref: '../schemas/reconciliation-request.v1.json' } } } },
   responses: { '200': response('Audited status investigation requested'), default: problem },
 } };
+operations.paths['/api/v1/sites/{siteId}/execution-tasks'] = { parameters: [parameter('siteId')], get: {
+  operationId: 'listExecutionTasks', description: 'Operator/supervisor read of the independent execution task owner; at most 100 tasks ordered by characterized priority, eligibility and stable movement ID.',
+  responses: { '200': response('Owned execution tasks and recovery state'), default: problem },
+} };
+operations.paths['/api/v1/sites/{siteId}/execution-tasks/{id}/recovery'] = structuredClone(operations.paths['/api/v1/sites/{siteId}/tasks/{id}/recovery']);
+operations.paths['/api/v1/sites/{siteId}/execution-tasks/{id}/recovery'].post.operationId = 'recoverExecutionTask';
+operations.paths['/api/v1/sites/{siteId}/execution-tasks/{id}/recovery'].post.description = 'Supervisor resumes an exhausted execution transport investigation with expected version and reason. No allocation or physical command identity is replaced.';
 write('openapi/operations.v1.json', operations);
 const internal = read('openapi/internal.v1.json');
 internal.paths['/internal/v1/sites/{site}/zones/{zone}/scheduling-context'] = { parameters: [parameter('site'), parameter('zone')], post: {

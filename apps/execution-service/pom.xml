@@ -5,6 +5,9 @@
   <dependencies>
     <dependency><groupId>dev.cutover</groupId><artifactId>service-starter</artifactId></dependency>
     <dependency><groupId>dev.cutover</groupId><artifactId>test-support</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>dev.cutover</groupId><artifactId>legacy-core</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>dev.cutover</groupId><artifactId>equipment-adapter</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>dev.cutover</groupId><artifactId>equipment-simulator</artifactId><version>${project.version}</version><scope>test</scope></dependency>
   </dependencies>
   <build><plugins>
     <plugin><groupId>dev.cutover</groupId><artifactId>schema-codegen-maven-plugin</artifactId></plugin>

@@ -423,6 +423,41 @@
           }
         }
       }
+    },
+    "/internal/v1/sites/{site}/legacy-registrations": {
+      "parameters": [
+        {
+          "name": "site",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,39}$"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "registerOriginalLegacyInventory",
+        "description": "Initial owner maintenance only. The legacy-core client supplies up to 32 settled original tasks while adapter dispatch is paused at the expected control version. Retained allocations, physical completion or cancellation states must agree. This creates registration receipts without changing ownership or creating physical work.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/baseline-registration-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Complete batch of retained allocation receipts and gate version"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {

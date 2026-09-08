@@ -802,6 +802,84 @@
           }
         }
       }
+    },
+    "/api/v1/sites/{siteId}/execution-tasks": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listExecutionTasks",
+        "description": "Operator/supervisor read of the independent execution task owner; at most 100 tasks ordered by characterized priority, eligibility and stable movement ID.",
+        "responses": {
+          "200": {
+            "description": "Owned execution tasks and recovery state"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/execution-tasks/{id}/recovery": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "recoverExecutionTask",
+        "description": "Supervisor resumes an exhausted execution transport investigation with expected version and reason. No allocation or physical command identity is replaced.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audited status investigation requested"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {

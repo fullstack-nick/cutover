@@ -21,6 +21,9 @@ class AdapterController {
         return allocations.register(Access.site(jwt,site),Access.client(jwt),body);
     }
     record ContextRequest(java.util.List<UUID> movementIds) {}
+    @PostMapping("/internal/v1/sites/{site}/legacy-registrations") JsonNode baseline(@PathVariable String site,@RequestBody JsonNode body,@AuthenticationPrincipal Jwt jwt){
+        return allocations.registerBaseline(Access.site(jwt,site),Access.client(jwt),body);
+    }
     @PostMapping("/internal/v1/sites/{site}/zones/{zone}/scheduling-context") JsonNode context(@PathVariable String site,@PathVariable String zone,@RequestBody ContextRequest body,@AuthenticationPrincipal Jwt jwt) {
         Access.role(jwt,"service");return allocations.schedulingContext(Access.site(jwt,site),zone,body.movementIds(),observations);
     }

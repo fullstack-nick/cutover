@@ -118,6 +118,7 @@ services:
       CUTOVER_DATABASE_USER: cutover_core_migrator
       CUTOVER_DATABASE_PASSWORD: ${CUTOVER_CORE_MIGRATOR}
       CUTOVER_MIGRATION_LOCATIONS: classpath:db/platform,classpath:db/legacy-core
+      CUTOVER_MIGRATION_TARGET: "109"
   migrate-adapter:
     <<: *migrate
     image: ${CUTOVER_EQUIPMENT_ADAPTER_IMAGE}

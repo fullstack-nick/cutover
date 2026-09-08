@@ -277,6 +277,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/execution-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Operator/supervisor read of the independent execution task owner; at most 100 tasks ordered by characterized priority, eligibility and stable movement ID. */
+        get: operations["listExecutionTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/execution-tasks/{id}/recovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supervisor resumes an exhausted execution transport investigation with expected version and reason. No allocation or physical command identity is replaced. */
+        post: operations["recoverExecutionTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1158,6 +1197,55 @@ export interface operations {
         };
     };
     recoverLegacyTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Audited status investigation requested */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    listExecutionTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owned execution tasks and recovery state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    recoverExecutionTask: {
         parameters: {
             query?: never;
             header: {

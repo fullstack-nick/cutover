@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$TransferBaseline,[switch]$SkipImageLoad)
+param([switch]$TransferBaseline,[switch]$SkipImageLoad,[ValidateSet('latest','109')][string]$LegacyMigrationTarget='latest')
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $config=Join-Path $root '.local/kubeconfig'
@@ -26,7 +26,9 @@ try {
     $node=& kubectl --kubeconfig $config --context kind-cutover get node cutover-control-plane -o json | ConvertFrom-Json
     if($LASTEXITCODE -ne 0 -or $node.metadata.labels.'dev.cutover.project' -ne 'cutover'){throw 'Cutover node ownership check failed.'}
     if(-not $SkipImageLoad){& node scripts/load-images.mjs;if($LASTEXITCODE -ne 0){throw 'Node image loading failed.'}}
-    & node scripts/render-demo.mjs
+    $priorLegacyTarget=$env:CUTOVER_LEGACY_MIGRATION_TARGET
+    try {$env:CUTOVER_LEGACY_MIGRATION_TARGET=$LegacyMigrationTarget;& node scripts/render-demo.mjs}
+    finally {$env:CUTOVER_LEGACY_MIGRATION_TARGET=$priorLegacyTarget}
     if($LASTEXITCODE -ne 0){throw 'Platform rendering failed.'}
     Invoke-Kubectl @('apply','-k','.local/kubernetes/demo/namespaces')
     # Diff output may contain generated Secret data, so retain it only in ignored local storage.

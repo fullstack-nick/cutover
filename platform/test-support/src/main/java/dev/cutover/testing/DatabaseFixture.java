@@ -14,15 +14,18 @@ public final class DatabaseFixture implements AutoCloseable {
     private final HikariDataSource source;
     private final Flyway flyway;
     public DatabaseFixture(String service) {
+        this(service,"latest");
+    }
+    public DatabaseFixture(String service,String target) {
         container = new PostgreSQLContainer(System.getProperty("cutover.postgres.image", "postgres:18.6-bookworm"))
-                .withLabel("dev.cutover.purpose", "verification");
+                .withLabel("dev.cutover.project", "cutover").withLabel("dev.cutover.purpose", "verification");
         container.start();
         var config = new HikariConfig();
         config.setJdbcUrl(container.getJdbcUrl()); config.setUsername(container.getUsername()); config.setPassword(container.getPassword());
         config.setMaximumPoolSize(8); config.setConnectionTimeout(3000);
         source = new HikariDataSource(config);
         flyway = Flyway.configure().dataSource(source).locations("classpath:db/platform", "classpath:db/" + service)
-                .cleanDisabled(false).load();
+                .target(target).cleanDisabled(false).load();
         flyway.migrate();
     }
     public DSLContext sql() { return DSL.using(source, SQLDialect.POSTGRES); }

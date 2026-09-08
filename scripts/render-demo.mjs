@@ -45,7 +45,7 @@ for (const [name, owner] of [['legacy-core', 'core'], ['equipment-adapter', 'ada
 secret('adapter-equipment', apps, { 'adapter.p12': readFileSync(resolve(root, '.local/secrets/equipment/adapter.p12')), 'trust.p12': readFileSync(resolve(root, '.local/secrets/equipment/trust.p12')), password: credentials.equipment_store });
 objects.push(config('rabbit-config', platform, { 'rabbitmq.conf': read('infra/compose/rabbitmq.conf'), enabled_plugins: '[rabbitmq_management,rabbitmq_prometheus].\n' }));
 objects.push(config('proxy-config', apps, { 'default.conf': read('infra/compose/proxy.conf').replace('http://keycloak:8080', `http://keycloak.${platform}.svc.cluster.local:8080`)
-  .replace('    location /api/', '    location ~ ^/api/v1/sites/[^/]+/shadow-comparisons(/|$) { proxy_pass http://shadow-scheduler:8080; }\n    location /api/') }));
+  .replace('    location /api/', '    location ~ ^/api/v1/sites/[^/]+/shadow-comparisons(/|$) { proxy_pass http://shadow-scheduler:8080; }\n    location ~ ^/api/v1/sites/[^/]+/execution-tasks(/|$) { proxy_pass http://execution-service:8080; }\n    location /api/') }));
 for (const name of ['collector', 'prometheus', 'tempo']) objects.push(config(`${name}-config`, observability, { 'config.yaml': read(`infra/kubernetes/base/config/${name}.yaml`) }));
 objects.push(config('grafana-datasources', observability, { 'datasources.yaml': JSON.stringify({ apiVersion: 1, datasources: [
   { name: 'Cutover metrics', uid: 'cutover-prometheus', type: 'prometheus', access: 'proxy', url: 'http://prometheus:9090', isDefault: true, editable: false },
@@ -87,7 +87,9 @@ function group(name, contents) {
 group('namespaces', objects.filter(item => item.kind === 'Namespace'));
 group('foundation', objects.filter(item => !['Deployment', 'StatefulSet'].includes(item.kind) || ['application-db', 'rabbitmq'].includes(item.metadata.name)));
 group('runtime', objects.filter(item => ['Deployment', 'StatefulSet'].includes(item.kind) && !['application-db', 'rabbitmq'].includes(item.metadata.name)));
-group('migrations', [migrationJob('legacy-core', 'core', images['legacy-core']), migrationJob('equipment-adapter', 'adapter', images['equipment-adapter']), migrationJob('execution-service', 'execution', images['execution-service']), migrationJob('shadow-scheduler', 'shadow', images['execution-service'], 'execution-service')]);
+const legacyTarget=process.env.CUTOVER_LEGACY_MIGRATION_TARGET??'latest';
+if(!['latest','109'].includes(legacyTarget))throw new Error('Use legacy schema target 109 for the original baseline, or latest for the verified task boundary.');
+group('migrations', [migrationJob('legacy-core', 'core', images['legacy-core'], 'legacy-core', legacyTarget), migrationJob('equipment-adapter', 'adapter', images['equipment-adapter']), migrationJob('execution-service', 'execution', images['execution-service']), migrationJob('shadow-scheduler', 'shadow', images['execution-service'], 'execution-service')]);
 group('identity-migration', [identityMigrationJob(images.keycloak)]);
 writeFileSync(resolve(directory, 'manifest.json'), JSON.stringify({ renderedAt: new Date().toISOString(), simulatorAddress, images, resources: objects.map(item => `${item.kind}/${item.metadata.namespace ?? ''}/${item.metadata.name}`) }, null, 2));
 console.log(`Rendered ${objects.length} scoped Kubernetes resources and five migration Jobs under ignored local storage.`);
