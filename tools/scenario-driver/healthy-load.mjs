@@ -28,10 +28,15 @@ function batchQuery(owner,ids,makeSql) {
   return result;
 }
 async function stopSampler() {
-  if(sampler?.connected)sampler.send('stop');
-  if(stoppedSampler)await stoppedSampler;
-  sampler=undefined;
-  if(samplerLog!==undefined){closeSync(samplerLog);samplerLog=undefined;}
+  try {
+    // A suspended host may disconnect the child between this check and send.
+    // Consume the send error and use the child's exit result as the authority.
+    if(sampler?.connected)sampler.send('stop',()=>{});
+    if(stoppedSampler)await stoppedSampler;
+  } finally {
+    sampler=undefined;
+    if(samplerLog!==undefined){closeSync(samplerLog);samplerLog=undefined;}
+  }
 }
 async function offer(kind,index,started,plannedMillis,phase,body) {
   const key=`${id}-${kind}-${index}`,at=Date.now();
@@ -78,7 +83,9 @@ try {
   const launch=promise=>{active.add(promise);allOffers.push(promise);promise.finally(()=>active.delete(promise));};
   for(let tick=0;tick<orderCount;tick++) {
     await delay(Math.max(0,started+tick*500-Date.now()));
-    assert.ok(Date.now()-started-tick*500<2000,'The load driver cannot sustain the declared open-loop arrival schedule.');
+    const latenessMillis=Date.now()-started-tick*500;
+    if(latenessMillis>=2000)evidence.timingFailure={tick,at:new Date().toISOString(),scheduledAt:new Date(started+tick*500).toISOString(),latenessMillis};
+    assert.ok(latenessMillis<2000,'The load driver cannot sustain the declared open-loop arrival schedule.');
     assert.ok(active.size<32,'The bounded HTTP offer concurrency is exhausted.');
     if(Date.now()>=refreshAt){bearer=await token();refreshAt=Date.now()+60000;}
     const phase=tick<warmupSeconds*2?'warmup':'measurement';launch(offer('order',tick,started,tick*500,phase,orderBodies[tick]));
@@ -137,4 +144,9 @@ try {
   console.log(`${diagnostic?'Diagnostic':'A50'} ${cases[0].status}: ${evidence.latency.withinTwoSecondsPercent.toFixed(3)}% / p99 ${evidence.latency.intentEligibilityToDispatchP99Millis} ms. WAL ${evidence.wal.delta.fsyncsPerSecond.toFixed(3)} fsync/s. ${directory}`);
   assert.ok(diagnostic||evidence.latency.withinTwoSecondsPercent>=99,'The declared dispatch target did not pass. Preserve this run and correct the measured cause.');
 }catch(error){evidence.failure=error.message;saveEvidence(id,evidence);throw error;}
-finally{try{await Promise.allSettled(allOffers);writeJson(resolve(directory,'requests.json'),requests);await stopSampler();}finally{unlock();}}
+finally{
+  try{
+    await Promise.allSettled(allOffers);writeJson(resolve(directory,'requests.json'),requests);
+    try{await stopSampler();}catch(error){evidence.cleanupFailure=error.message;saveEvidence(id,evidence);if(!evidence.failure)throw error;}
+  }finally{unlock();}
+}

@@ -11,7 +11,7 @@ import type { Order, OrderPage, Equipment, Task, ExecutionTask, Command } from '
 type View = 'overview' | 'orders' | 'equipment' | 'migrations' | 'returns' | 'tasks' | 'recovery' | 'audit';
 const names: Record<View, string> = { overview: 'Overview', orders: 'Orders', tasks: 'Tasks', returns: 'Returns', equipment: 'Equipment', recovery: 'Recovery', migrations: 'Migrations', audit: 'Audit' };
 const currentView = (): View => { const candidate = new URLSearchParams(location.search).get('view'); return candidate && Object.hasOwn(names, candidate) ? candidate as View : 'overview'; };
-const label = (value: string) => value.replaceAll('_', ' ').replaceAll('-', ' ').toLowerCase().replace(/^./, x => x.toUpperCase());
+const label = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ').replaceAll('-', ' ').toLowerCase().replace(/^./, x => x.toUpperCase());
 const date = (value?: string | null) => value ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' }) : '—';
 const short = (value: string) => value.slice(0, 8);
 const terminal = (state: string) => ['COMPLETED', 'COMPLETED_WITH_SHORTAGE', 'SHORTAGE', 'CANCELLED'].includes(state);
