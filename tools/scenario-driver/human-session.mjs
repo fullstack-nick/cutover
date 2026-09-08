@@ -16,7 +16,12 @@ export async function humanSession(username, { offline = false, onRequest = () =
       if (allowed) await route.continue(); else await route.abort('internetdisconnected');
     });
     const page = await context.newPage();
-    let authorization;
+    let authorization, identityToken;
+    page.on('response', async response => {
+      if (response.url() === 'http://localhost:8780/identity/realms/cutover/protocol/openid-connect/token' && response.ok()) {
+        try { const tokens = await response.json(); if (typeof tokens.id_token === 'string') identityToken = tokens.id_token; } catch { /* A closed page cannot provide additional token evidence. */ }
+      }
+    });
     page.on('request', request => {
       if (request.url().startsWith('http://localhost:8780/api/v1/sites/')) {
         const value = request.headers().authorization;
@@ -37,7 +42,7 @@ export async function humanSession(username, { offline = false, onRequest = () =
     }
     await page.getByRole('button', { name: 'Sign out', exact: true }).waitFor({ state: 'visible', timeout: 20000 });
     if (!authorization) await page.waitForRequest(request => request.url().startsWith('http://localhost:8780/api/v1/sites/') && request.headers().authorization?.startsWith('Bearer '), { timeout: 15000 });
-    return { page, bearer: () => authorization, close: () => browser.close() };
+    return { page, bearer: () => authorization, idToken: () => identityToken, close: () => browser.close() };
   } catch {
     await browser.close();
     // Playwright call logs from a failed fill can include its argument; do not expose that error.

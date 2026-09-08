@@ -9,7 +9,7 @@ type Work = Task | ExecutionTask | ReturnTask;
 type RecoveryItem = { commandId: string; owner: string; state: string; version: number; failureAttempts: number; lastError: string | null; createdAt: string };
 type RecoveryQueue = { observedAt: string; items: RecoveryItem[] };
 type Selection = { movement: string; task?: Work };
-const label = (value: string) => value.replaceAll('_', ' ').replaceAll('-', ' ').toLowerCase().replace(/^./, value => value.toUpperCase());
+const label = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').replaceAll('_', ' ').replaceAll('-', ' ').toLowerCase().replace(/^./, value => value.toUpperCase());
 const date = (value?: string | null) => value ? new Date(value).toLocaleString() : 'Not recorded';
 const finished = (state: string) => ['COMPLETED', 'CANCELLED', 'REJECTED_BEFORE_EXECUTION'].includes(state);
 const routes: Record<string, string> = { 'legacy-core': 'tasks', 'execution-service': 'execution-tasks', 'returns-service': 'return-tasks' };

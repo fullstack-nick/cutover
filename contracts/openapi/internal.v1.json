@@ -612,6 +612,94 @@
           }
         }
       }
+    },
+    "/internal/v1/sites/{site}/messaging/shadow-observations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/site"
+        }
+      ],
+      "get": {
+        "operationId": "readShadowObservationBacklog",
+        "description": "Legacy core only. Site-scoped operator, supervisor, platform administrator or service read. Returns up to 100 retained pending observations.",
+        "responses": {
+          "200": {
+            "description": "Retained optional observation transport evidence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/shadow-backlog.v1.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/sites/{site}/messaging/shadow-observations/{id}/replay": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/site"
+        },
+        {
+          "$ref": "#/components/parameters/id"
+        }
+      ],
+      "post": {
+        "operationId": "recordShadowObservationReplay",
+        "description": "Legacy core only, supervisor required. Reopens only a paused unpublished observation without an active lease. Expected version fences explicit recovery actions. Original event ID, bytes and pending quota are preserved; this action grants no business task or physical command authority.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/key"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audited original observation retry recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "eventId",
+                    "state",
+                    "version"
+                  ],
+                  "properties": {
+                    "eventId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "const": "RETRY_RECORDED"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {

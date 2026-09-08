@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.MappedJwtClaimSetConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -27,6 +28,13 @@ public class JwtSecurityConfiguration {
                                 @Value("${cutover.security.jwks-uri}") String jwks,
                                 @Value("${cutover.security.audience}") String audience) {
         var decoder=NimbusJwtDecoder.withJwkSetUri(jwks).build();
+        var claimTypes=MappedJwtClaimSetConverter.withDefaults(Map.of());
+        decoder.setClaimSetConverter(claims->{
+            var converted=claimTypes.convert(claims);
+            // The default converter supplies an iat from exp. This platform requires an issued-at claim from the signed token itself.
+            if(claims.get("iat")==null)converted.remove("iat");
+            return converted;
+        });
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(new JwtIssuerValidator(issuer),new JwtTimestampValidator(Duration.ofSeconds(15)),jwt -> {
             if (jwt.getExpiresAt()==null || jwt.getIssuedAt()==null || !jwt.getAudience().contains(audience))
                 return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token","Required time bounds or audience are absent.",null));

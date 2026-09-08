@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cutover:shadow-backlog:v1",
+  "title": "Retained shadow observation backlog",
+  "type": "object",
+  "required": ["observedAt", "pending", "paused", "items"],
+  "properties": {
+    "observedAt": { "type": "string", "format": "date-time" },
+    "pending": { "type": "integer", "minimum": 0 },
+    "paused": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array", "maxItems": 100,
+      "items": {
+        "type": "object",
+        "required": ["eventId", "inputHash", "version", "attempts", "paused", "lastError", "createdAt"],
+        "properties": {
+          "eventId": { "type": "string", "format": "uuid" },
+          "inputHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "version": { "type": "integer", "minimum": 0, "description": "Monotonic explicit recovery revision; transport attempts are separate." },
+          "attempts": { "type": "integer", "minimum": 0 },
+          "paused": { "type": "boolean" },
+          "lastError": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
