@@ -1,0 +1,64 @@
+# Acceptance status
+
+Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency, deployed inbox-batch regressions, separate database/monitoring outages, queue overflow, prepared offline operation and the timed reviewer path remain open.
+
+The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
+
+| ID | Evidence available / remaining qualification |
+| --- | --- |
+| A01 | Actual ambient/chilled baseline and platform workflows; renewed functional HTTP driver pending. |
+| A02 | Exact partial/total shortages in PostgreSQL checks and `order-register-1788866584899`; renewed functional HTTP driver pending. |
+| A03 | Original-key/business-reference uniqueness in baseline and PostgreSQL checks; renewed functional HTTP driver pending. |
+| A04 | Changed payload conflicts in core/returns/cancellation/recovery checks; `work-console-1788869826870` includes actual recovery conflicts. Renewed outbound HTTP check pending. |
+| A05 | Twelve concurrent PostgreSQL last-unit requests conserve stock. The new six-request deployed HTTP race is pending. |
+| A06 | `returns-1788838277326`: mixed reusable/cleaning/damaged destinations and independent count/physical reconciliation. |
+| A07 | The same returns run publishes repeated requests/completions with new event IDs and proves single effects. |
+| A08 | `cancellation-1788817068207`: unstarted cancellation releases once; started/unknown work retains its reservation. |
+| A09 | PostgreSQL checks reject regressing/conflicting observations; `storage-repair-1788819273019` exposes a sequence gap and repairs it through original-event replay. |
+| A10 | Bounded input/site/enum checks in owner components and actual returns APIs. Expanded deployed malformed-input driver pending. |
+| A11 | `process-crash-1788870086499`: actual process exit after business commit. Repeat on the new inbox-batch runtime pending. |
+| A12 | The same process run exits after publisher confirmation and records duplicate transport with single effects. Repeat pending. |
+| A13 | The same process run exits after effect commit before acknowledgement. New multi-message commit/crash component checks pass; deployed repeat pending. |
+| A14 | `mandatory-return-1788870649419`: positive confirm with mandatory return retains the original; routing repair succeeds. Repeat after publisher changes pending. |
+| A15 | `broker-capacity-1788870391246`: actual broker absence, 800 accepted requests/1,600 events, controlled refusals and 802 single effects after recovery. |
+| A16 | Real quorum reject-publish component checks pass. Full deployed critical/shadow queue overflow is pending. |
+| A17 | `storage-repair-1788819273019`: poison exhaustion, retained bytes, predecessor correction and audited reprocessing; typed raw-quarantine ownership regressions pass in components. |
+| A18 | `equipment-recovery-1788814389493`: lost response resolves against the same command, with one execution. |
+| A19 | The same equipment run proves retained pre-acceptance absence before resending the original ID. |
+| A20 | The same equipment run restarts the simulator and preserves its atomic load position/ledger. |
+| A21 | The same equipment run verifies adapter and simulator rejection of changed immutable payloads. |
+| A22 | The same equipment run and [restoration checks](restore-2026-09-08.md) retain explicit evidence gaps rather than inventing physical history. |
+| A23 | `returns-1788838277326`: alternate compatible outbound work and independent returns continue during one outbound-lane fault. |
+| A24 | Two scoped runs pass adapter process absence with both products retained. The complete resilience run remains open after a database-response fault. |
+| A25 | Finite telemetry configuration is deployed. Actual monitoring-process outage/recovery qualification is pending. |
+| A26 | `volume-pressure-1788851160214` applies actual bounded filesystem pressure; `volume-observation-1788851871227` expires observations across all five database owners. |
+| A27 | `shadow-1788869933650`: 1,000 persisted identical-input comparisons with zero unexplained differences and real observation delivery. |
+| A28 | The same shadow run denies dispatch independently of the mode flag. `authentication-1788880772251` additionally denies business intake while preserving permitted snapshot reads. |
+| A29 | `zone-migration-1788870698705`: finite ambient drain while chilled work flows, reconciled inventory, single active owner/epoch. |
+| A30 | The same migration run rejects former-owner commands; an already terminal command can return its retained result. |
+| A31 | `migration-crash-1788870805198`: five actual phase-specific adapter exits/restarts resume the durable session. |
+| A32 | `migration-reversal-1788831400131`: concurrent real supervisor sessions produce one transition and a version conflict. |
+| A33 | The same reversal run remains blocked on an identified unknown command; a timeout cannot authorize the switch. |
+| A34 | Actual predecessor adapter image operates on expanded schema in rollback/volume-observation runs. Prepared offline rollback repeat is pending. |
+| A35 | `migration-reversal-1788831400131`: old allocated work drains first; retained unassigned work receives the new epoch without duplication. |
+| A36 | [Frozen N−1 schemas and producer fixtures](../../contracts/compatibility/README.md): both optional-addition directions pass and a breaking quantity type fails. These are schema-consumer checks; actual image operation is A34. |
+| A37 | Full Maven generation from disposable empty databases, guarded previous-schema migrations, schema-readiness checks and actual runtime DDL/site/owner-boundary denials. [Boundary evidence](assignment-boundary-2026-09-08.md). |
+| A38 | [Returns scaffold provenance and onboarding](../onboarding/returns-service.md), separate schema/models, independent reactor dependencies and live product coexistence. |
+| A39 | Cancellation, migration, returns and work-console browser/API runs deny operator recovery and record reasoned supervisor actions with versions/audit. |
+| A40 | Actual site-a/site-b lists, lookups and mutations are denied across the six owner APIs in authentication and work-console runs; event-site checks have separate durable-inbox regressions. |
+| A41 | `authentication-1788880772251` verifies actual signatures, wrong audience, tampered claims, absent/unknown keys, real expiry and refreshed PKCE. Trusted-signer invalid-claim combinations also have decoder component checks. |
+| A42 | The same authentication run denies ordinary core publication on the adapter exchange and quarantines spoofed source claims without state changes. |
+| A43 | The same authentication run rejects absent/untrusted client certificates and accepts the retained adapter certificate. Secret-file ACL/public-source checks are separate. |
+| A44 | `policy-1788852008554`: 83 actual traffic assertions covering DNS, product/service boundaries, equipment and telemetry. |
+| A45 | Separate application and broker restarts pass. The database process restart exposed an incorrect 403; the 503 correction passes MVC checks and awaits deployment/retest. |
+| A46 | `restore-1788849841860`: six databases, 211 fingerprints, 1,207 original replay events and 183 matching physical/command records. Release took 648.572 seconds. |
+| A47 | `stale-restore-1788848295108`: one later known completion and three absent intents are distinguished without repeated physical work. RPO gap 516.516 seconds. |
+| A48 | Prepared runtime login, both products, recovery, restart, cached rollback and dashboards under scoped external-egress denial: pending. |
+| A49 | Warmed Maven/npm checks pass. Exact cache inventory and isolated empty-file-cache detection: pending. |
+| A50 | **Failed.** `load-1788880017964`: 85.9% within two seconds, original-eligibility p99 8,340.798 ms; all 3,000 measured movements included, all 3,300 total effects single. Inbox batching requires a new full measurement. |
+| A51 | Actual order/returns/task/recovery/migration/audit workflows, mobile views, stale data, version conflicts, keyboard close and focus restoration are recorded. Final screenshots after the latest console build are pending. |
+| A52 | `demo-lifecycle-1788866307975` preserves data on stop/start. `reset-bootstrap-1788866919366` validates explicit checkpoint-backed new-world reset and fresh platform creation without changing unrelated containers. |
+| A53 | Private archive exclusion, public source, MIT and disabled Actions are established. Final tracked/history/secret/asset review and publication remain pending. |
+| A54 | The exact documented six-command rehearsal and final console images are implemented but unexecuted. Prepared fresh-bootstrap rehearsal remains pending. |
+
+All IDs are required. A failed latency target or missing runtime check prevents final completion, even when every component test passes.

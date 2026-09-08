@@ -1,6 +1,6 @@
 # Cutover — acceptance and evidence matrix
 
-Status: specification only, 7 September 2026. None of these project tests has run yet. This matrix is the completion contract for the future implementation.
+Completion contract established 7 September 2026. The criteria below remain the implementation contract; see the separate [executed acceptance status](../evidence/acceptance-results.md) for current results and open gates.
 
 Every run records commit, exact image IDs/digests, versions, profile, host resource allocation, seed, world ID, start/end time, attempted/accepted/rejected counts, invariant results, and commands to reproduce it. Store raw output in ignored local storage; publish selected redacted evidence. Do not replace database/simulator assertions with screenshots.
 
