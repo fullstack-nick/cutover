@@ -22,7 +22,7 @@ The application runs entirely on one machine with synthetic data and equipment. 
 | Handle a lost equipment response | Immutable command IDs, an independent physical journal and [supervised investigation](docs/operations/command-investigation.md) with one physical/business effect. |
 | Reuse the platform for another product | [Returns](docs/evidence/returns-2026-09-08.md) owns its tables and models; it continues through an unrelated outbound-lane fault. |
 | Recover older application data honestly | [Six-database restoration](docs/evidence/restore-2026-09-08.md), original-event replay and reconciliation against unchanged physical history. Missing later intent stays quarantined. |
-| Run the prepared lab offline | [Executed offline walkthrough](docs/evidence/prepared-offline-2026-09-08.md): login, both products, recovery, whole-lab restart, cached image rollback and populated dashboards under scoped external-egress denial. |
+| Run the prepared lab offline | [Executed offline walkthrough](docs/evidence/prepared-offline-2026-09-09.md): login, both products, recovery, whole-lab restart, cached image rollback and populated dashboards under scoped external-egress denial. |
 | Inspect the actual product | [Reviewer walkthrough and console gallery](docs/evidence/reviewer-walkthrough-2026-09-08.md): orders, returns, retained task history and migration proof from the running local system. |
 
 ## Two-minute architecture
