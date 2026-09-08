@@ -17,6 +17,7 @@ public final class ExecutionScheduler {
     public ExecutionScheduler(DSLContext database,DispatchPort adapter,Clock clock){this.database=database;this.adapter=adapter;this.clock=clock;}
     public int poll(){
         if(database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0,Boolean.class))return 0;
+        if(!database.fetchOne("SELECT EXISTS(SELECT 1 FROM execution_tasks WHERE state NOT IN ('COMPLETED','CANCELLED') AND NOT transport_paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz))",now(),now()).get(0,Boolean.class))return 0;
         var tasks=database.transactionResult(configuration->{var sql=DSL.using(configuration);
             if(!Database.workersMayWrite(sql))return sql.fetch("SELECT * FROM execution_tasks WHERE false");
             var rows=sql.fetch("SELECT * FROM execution_tasks WHERE state NOT IN ('COMPLETED','CANCELLED') AND NOT transport_paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz) ORDER BY priority DESC,eligible_at,movement_id LIMIT 16 FOR UPDATE SKIP LOCKED",now(),now());

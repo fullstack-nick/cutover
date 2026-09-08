@@ -33,14 +33,15 @@ export function platformResources(images, settings) {
   add(service('application-db', platform, [['postgres', 5432]]), workload('application-db', platform, images.postgres, {
     user: 999, readOnly: false, port: 5432, memory: '512Mi', cpu: '1000m',
     env: [secret('POSTGRES_PASSWORD', 'password', 'database-admin'), literal('POSTGRES_INITDB_ARGS', '--auth-host=scram-sha-256')],
-    args: ['postgres', '-c', 'shared_buffers=64MB', '-c', 'max_connections=100', '-c', 'timezone=UTC'],
+    args: ['postgres', '-c', 'shared_buffers=64MB', '-c', 'max_connections=100', '-c', 'timezone=UTC', '-c', 'track_wal_io_timing=on'],
     readiness: { exec: { command: ['pg_isready', '-U', 'postgres'] }, periodSeconds: 3 },
     storage: { path: '/var/lib/postgresql', size: '3Gi' }, volumes: [credential('database-init')], mounts: [mount('database-init', '/docker-entrypoint-initdb.d/010-owners.sql', 'init.sql')],
   }));
   add(service('rabbitmq', platform, [['amqp', 5672], ['metrics', 15692]]), workload('rabbitmq', platform, images.rabbitmq, {
     user: 999, readOnly: false, port: 5672, memory: '512Mi', cpu: '1000m', storage: { path: '/var/lib/rabbitmq', size: '1Gi' },
     env: [literal('RABBITMQ_NODENAME', 'rabbit@rabbitmq-0'), literal('RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS', '+S 2:2'), literal('RABBITMQ_ENABLED_PLUGINS_FILE', '/etc/rabbitmq/enabled_plugins')],
-    readiness: { exec: { command: ['rabbitmq-diagnostics', '-q', 'ping'] }, periodSeconds: 5, timeoutSeconds: 5, failureThreshold: 24 },
+    // Periodic CLI probes join Erlang distribution and compete with message processing.
+    readiness: { tcpSocket: { port: 5672 }, periodSeconds: 5, timeoutSeconds: 2, failureThreshold: 6 },
     volumes: [configuration('rabbit-config'), credential('rabbit-definitions')],
     mounts: [mount('rabbit-config', '/etc/rabbitmq/rabbitmq.conf', 'rabbitmq.conf'), mount('rabbit-config', '/etc/rabbitmq/enabled_plugins', 'enabled_plugins'), mount('rabbit-definitions', '/etc/rabbitmq/definitions.json', 'definitions.json')],
   }));
@@ -61,6 +62,7 @@ export function platformResources(images, settings) {
     const extra = {};
     if (name !== 'equipment-adapter') env.push(literal('CUTOVER_ADAPTER_URL', 'http://equipment-adapter:8080'), secret('CUTOVER_CLIENT_SECRET', 'clientSecret', `${name}-runtime`), literal('CUTOVER_CLIENT_ID', name), literal('CUTOVER_SERVICE_NAME', name), literal('CUTOVER_SHADOW_MODE', name === 'shadow-scheduler'));
     else {
+      env.push(literal('CUTOVER_CORE_URL', 'http://legacy-core:8080'), literal('CUTOVER_EXECUTION_URL', 'http://execution-service:8080'), secret('CUTOVER_CLIENT_SECRET', 'clientSecret', `${name}-runtime`));
       env.push(literal('CUTOVER_EQUIPMENT_URL', `https://equipment-simulator.${platform}.svc.cluster.local:8443`), literal('CUTOVER_ADAPTER_KEY_STORE', '/etc/cutover/adapter.p12'), literal('CUTOVER_EQUIPMENT_TRUST_STORE', '/etc/cutover/trust.p12'), secret('CUTOVER_EQUIPMENT_STORE_PASSWORD', 'password', 'adapter-equipment'));
       extra.volumes = [credential('adapter-equipment')]; extra.mounts = [mount('adapter-equipment', '/etc/cutover')];
     }

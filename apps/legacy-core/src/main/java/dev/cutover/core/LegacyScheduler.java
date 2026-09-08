@@ -25,6 +25,7 @@ public final class LegacyScheduler {
     public LegacyScheduler(DSLContext database,DispatchPort adapter,OrderService orders,Clock clock,ShadowObservations observations){this.database=database;this.adapter=adapter;this.orders=orders;this.clock=clock;this.observations=observations;}
     public int poll(){
         if(database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0,Boolean.class))return 0;
+        if(!database.fetchOne("SELECT EXISTS(SELECT 1 FROM legacy_tasks t JOIN orders o ON o.order_id=t.order_id WHERE t.state NOT IN ('COMPLETED','CANCELLED') AND NOT t.transport_paused AND NOT o.cancellation_pending AND t.next_attempt_at<=?::timestamptz AND (t.lease_until IS NULL OR t.lease_until<?::timestamptz))",now(),now()).get(0,Boolean.class))return 0;
         var tasks=database.transactionResult(configuration->{
             var sql=DSL.using(configuration);
             if(!Database.workersMayWrite(sql))return sql.fetch("SELECT t.*,m.movement FROM legacy_tasks t JOIN movement_intents m ON m.movement_id=t.movement_id WHERE false");

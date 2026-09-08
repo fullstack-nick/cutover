@@ -25,6 +25,9 @@ public final class OutboxRelay {
 
     /** At most one leased event per stream; an earlier paused event also blocks overtaking. */
     public Claimed claim() {
+        // An empty poll must not lock a tuple and force a WAL flush. This read is
+        // only a fast path; the transaction below still guards every real write.
+        if (!database.fetchOne("SELECT EXISTS(SELECT 1 FROM outbox WHERE published_at IS NULL AND NOT paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz))", now(), now()).get(0, Boolean.class)) return null;
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             if (!Database.workersMayWrite(sql)) return null;

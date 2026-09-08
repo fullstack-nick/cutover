@@ -70,6 +70,8 @@ public final class SimulatorEngine {
     }
 
     public int advance() {
+        var due = OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+        if (!database.fetchOne("SELECT EXISTS(SELECT 1 FROM simulator_commands c JOIN lanes l ON l.site_id=c.site_id AND l.lane_id=c.lane_id WHERE c.state IN ('ACCEPTED','EXECUTING') AND c.execute_after<=?::timestamptz AND NOT l.blocked)", due).get(0,Boolean.class)) return 0;
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             if (sql.fetchOne("SELECT workers_paused OR critical_storage FROM service_control WHERE singleton FOR SHARE").get(0,Boolean.class)) return 0;

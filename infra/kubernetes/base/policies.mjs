@@ -30,6 +30,8 @@ export function policies(simulatorAddress) {
   connect(a, 'shadow-scheduler', a, 'equipment-adapter', [8080]); // API identity denies command/allocation writes independently of this read path.
   connect(a, 'migrate-shadow-scheduler', p, 'application-db', [5432]); connect(o, 'prometheus', a, 'shadow-scheduler', [9091]);
   connect(a, 'proxy', a, 'shadow-scheduler', [8080]);
+  connect(a, 'equipment-adapter', a, 'legacy-core', [8080]);
+  connect(a, 'equipment-adapter', a, 'execution-service', [8080]);
   for (const [index, link] of links.entries()) {
     const ports = link.ports.map(port => ({ protocol: 'TCP', port }));
     add(link.fromNs, `allow-${index}-to-${link.to}`, pod(link.from), { policyTypes: ['Egress'], egress: [{ to: [peer(link.toNs, link.to)], ports }] });

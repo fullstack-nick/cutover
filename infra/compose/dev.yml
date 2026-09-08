@@ -168,6 +168,7 @@ services:
       CUTOVER_DATABASE_URL: jdbc:postgresql://application-db:5432/cutover_adapter
       CUTOVER_DATABASE_USER: cutover_adapter_runtime
       CUTOVER_DATABASE_PASSWORD: ${CUTOVER_ADAPTER_RUNTIME}
+      CUTOVER_CLIENT_SECRET: ${CUTOVER_CLIENT_EQUIPMENT_ADAPTER}
       CUTOVER_EQUIPMENT_URL: https://equipment-simulator:8443
       CUTOVER_ADAPTER_KEY_STORE: /etc/cutover/adapter.p12
       CUTOVER_EQUIPMENT_TRUST_STORE: /etc/cutover/trust.p12

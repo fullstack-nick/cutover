@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "siteId": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "string"
+          },
+          "sourceOwner": {
+            "type": "string",
+            "enum": [
+              "legacy-core",
+              "execution-service"
+            ]
+          },
+          "targetOwner": {
+            "type": "string",
+            "enum": [
+              "legacy-core",
+              "execution-service"
+            ]
+          },
+          "sourceEpoch": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "targetEpoch": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "DRAINING",
+              "RECONCILING",
+              "READY_TO_SWITCH",
+              "OBSERVING",
+              "COMPLETED",
+              "REVERSING",
+              "REVERSED",
+              "SUPERSEDED",
+              "CANCELLED"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reversesSessionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "inventoryCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "verifiedCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "inventoryHash": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "checkpointHash": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "checkpoint": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "inventoryHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "worldId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "journalGeneration": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "journalHighWater": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "proofChunkHashes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "maxItems": 313
+              }
+            },
+            "required": [
+              "inventoryHash",
+              "count",
+              "worldId",
+              "journalGeneration",
+              "journalHighWater",
+              "proofChunkHashes"
+            ],
+            "additionalProperties": true
+          },
+          "blockers": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "reason": {
+                      "type": "string"
+                    },
+                    "movementId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "allocationId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "allocationState": {
+                      "type": "string"
+                    },
+                    "commandState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "reason"
+                  ],
+                  "additionalProperties": true
+                },
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "count",
+              "items"
+            ],
+            "additionalProperties": true
+          },
+          "observation": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "sampleCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "dispatchP99Millis": {
+                "type": "number",
+                "minimum": 0
+              },
+              "withinTwoSeconds": {
+                "type": "boolean"
+              },
+              "proofHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "movements": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "movementId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "dispatchMillis": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "movementId",
+                    "dispatchMillis"
+                  ],
+                  "additionalProperties": true
+                },
+                "maxItems": 10
+              },
+              "proof": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "maxItems": 10
+              }
+            },
+            "required": [
+              "sampleCount",
+              "dispatchP99Millis",
+              "withinTwoSeconds",
+              "proofHash",
+              "movements",
+              "proof"
+            ],
+            "additionalProperties": true
+          },
+          "transportAttempts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "transportPaused": {
+            "type": "boolean"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "switchedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "sessionId",
+          "siteId",
+          "zoneId",
+          "sourceOwner",
+          "targetOwner",
+          "sourceEpoch",
+          "targetEpoch",
+          "phase",
+          "version",
+          "actor",
+          "reason",
+          "reversesSessionId",
+          "inventoryCount",
+          "verifiedCount",
+          "inventoryHash",
+          "checkpointHash",
+          "checkpoint",
+          "blockers",
+          "observation",
+          "transportAttempts",
+          "transportPaused",
+          "lastError",
+          "createdAt",
+          "switchedAt",
+          "finishedAt",
+          "observedAt"
+        ],
+        "additionalProperties": true
+      },
+      "maxItems": 50
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "items",
+    "observedAt"
+  ],
+  "additionalProperties": true
+}

@@ -69,6 +69,7 @@ public final class CommandJournal {
     /** Network operations happen only after the journal transaction has committed. */
     public int work() {
         if (database.fetchOne("SELECT workers_paused FROM service_control WHERE singleton").get(0,Boolean.class)) return 0;
+        if (!database.fetchOne("SELECT EXISTS(SELECT 1 FROM command_journal WHERE state NOT IN ('COMPLETED','QUARANTINED','REJECTED_BEFORE_EXECUTION') AND failure_attempts<5 AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz))",now(),now()).get(0,Boolean.class)) return 0;
         var ids=database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             if (!Database.workersMayWrite(sql)) return java.util.List.<UUID>of();

@@ -53,6 +53,7 @@ public final class ShadowObservations {
         if(publisher==null || clock.instant().isBefore(nextPublish))return 0;
         int count=0;
         while(count<16){
+            if(!database.fetchOne("SELECT EXISTS(SELECT 1 FROM shadow_observation_outbox WHERE published_at IS NULL AND NOT paused AND next_attempt_at<=?::timestamptz AND (lease_until IS NULL OR lease_until<?::timestamptz))",now(),now()).get(0,Boolean.class))break;
             var claimed=database.transactionResult(configuration->{
                 var sql=DSL.using(configuration);if(!Database.workersMayWrite(sql))return null;
                 if(sql.fetchOne("SELECT relay_paused FROM service_control WHERE singleton").get(0,Boolean.class))return null;

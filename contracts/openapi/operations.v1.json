@@ -819,7 +819,14 @@
         "description": "Operator/supervisor read of the independent execution task owner; at most 100 tasks ordered by characterized priority, eligibility and stable movement ID.",
         "responses": {
           "200": {
-            "description": "Owned execution tasks and recovery state"
+            "description": "Independent execution task owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/execution-task-list"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -874,6 +881,293 @@
         "responses": {
           "200": {
             "description": "Audited status investigation requested"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/zones": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listZoneRoutes",
+        "description": "Site-scoped operator/supervisor observation. Retained sessions are bounded; observation times identify stale data.",
+        "responses": {
+          "200": {
+            "description": "Current migration observations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/zone-route-list"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/migrations": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listMigrations",
+        "description": "Site-scoped operator/supervisor observation. Retained sessions are bounded; observation times identify stale data.",
+        "responses": {
+          "200": {
+            "description": "Current migration observations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/migration-list"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/migrations/{id}": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getMigration",
+        "description": "Site-scoped operator/supervisor observation. Retained sessions are bounded; observation times identify stale data.",
+        "responses": {
+          "200": {
+            "description": "Current migration observations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/migration-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/zones/{zoneId}/migrations": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "zoneId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "startMigration",
+        "description": "Supervisor starts drain with an expected route version and reason. New intents remain unassigned; all allocated work and physical evidence must reconcile before an atomic epoch change. A reversal is another complete drain.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/migration-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Durably recorded session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/migration-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/migrations/{id}/recovery": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "recoverMigration",
+        "description": "Supervisor resumes the same session after six exhausted owner-evidence transport attempts. Expected session version and reason are required. No physical identity or proof is replaced.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Durably recorded session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/migration-view"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{siteId}/migrations/{id}/cancellation": {
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "cancelMigration",
+        "description": "Supervisor cancels only an unswitched session with the expected session version and reason. Existing owner/epoch remain; pending unassigned work is released. After switching, use a new reverse migration.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Durably recorded session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/migration-view"
+                }
+              }
+            }
           },
           "default": {
             "$ref": "#/components/responses/problem"
@@ -1304,6 +1598,18 @@
           "comparedAt"
         ],
         "additionalProperties": true
+      },
+      "zone-route-list": {
+        "$ref": "../schemas/zone-route-list.v1.json"
+      },
+      "migration-view": {
+        "$ref": "../schemas/migration-view.v1.json"
+      },
+      "migration-list": {
+        "$ref": "../schemas/migration-list.v1.json"
+      },
+      "execution-task-list": {
+        "$ref": "../schemas/execution-task-list.v1.json"
       }
     },
     "securitySchemes": {

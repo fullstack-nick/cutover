@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "movementId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "allocationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "zoneId": {
+        "type": "string"
+      },
+      "state": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "epoch": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "lastError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "eligibleAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "transportFailures": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "transportPaused": {
+        "type": "boolean"
+      },
+      "dispatchAcceptedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      }
+    },
+    "required": [
+      "id",
+      "movementId",
+      "allocationId",
+      "zoneId",
+      "state",
+      "owner",
+      "epoch",
+      "version",
+      "lastError",
+      "eligibleAt",
+      "transportFailures",
+      "transportPaused",
+      "dispatchAcceptedAt"
+    ],
+    "additionalProperties": true
+  },
+  "maxItems": 100
+}

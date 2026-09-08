@@ -26,4 +26,5 @@ public class ServiceApplication {
     @Bean MessageHandler messageHandler(@Value("${cutover.shadow-mode:false}") boolean shadow){return shadow?new ShadowMessages():new ExecutionMessages();}
     @Bean DispatchPort dispatchPort(@Value("${cutover.adapter.url}") URI url,@Value("${cutover.clients.token-uri}") URI tokenUri,@Value("${cutover.clients.id}") String id,@Value("${cutover.clients.secret}") String secret){return new AdapterHttpClient(new ServiceHttp(url,new ClientCredentials(tokenUri,id,secret)));}
     @Bean ExecutionScheduler executionScheduler(DSLContext database,DispatchPort adapter,Clock clock){return new ExecutionScheduler(database,adapter,clock);}
+    @Bean MigrationEvidence migrationEvidence(DSLContext database,Clock clock){return new MigrationEvidence(database,clock);}
 }

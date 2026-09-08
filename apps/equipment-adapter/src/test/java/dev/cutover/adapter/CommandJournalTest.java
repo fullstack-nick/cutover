@@ -53,6 +53,20 @@ class CommandJournalTest {
     }
     void tick() { clock.advance(Duration.ofSeconds(2));simulator.advance();observations.refresh();journal.work(); }
 
+    @Test void emptyEquipmentAndAssignmentPollsDoNotDirtyTheDurabilityGuard() {
+        adapterDb.sql().transaction(configuration -> {
+            var sql = org.jooq.impl.DSL.using(configuration); sql.execute("SET TRANSACTION READ ONLY");
+            assertThat(new Allocations(sql, clock).releasePending()).isZero();
+            assertThat(new CommandJournal(sql, port, observations, clock).work()).isZero();
+            assertThat(sql.fetchOne("SELECT pg_current_xact_id_if_assigned()::text").get(0)).isNull();
+        });
+        simulatorDb.sql().transaction(configuration -> {
+            var sql = org.jooq.impl.DSL.using(configuration); sql.execute("SET TRANSACTION READ ONLY");
+            assertThat(new SimulatorEngine(sql, clock).advance()).isZero();
+            assertThat(sql.fetchOne("SELECT pg_current_xact_id_if_assigned()::text").get(0)).isNull();
+        });
+    }
+
     @Test void acceptedAndCompletedAreSeparateAndTerminalStateIsRetained() {
         UUID id=UUID.randomUUID();var movement=movement(id);record(id,movement);journal.work();
         assertThat(journal.get("site-a",id).path("state").asString()).isEqualTo("ACCEPTED_BY_SIMULATOR");

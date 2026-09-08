@@ -13,7 +13,7 @@ const password = key => credentials.passwords[key] ??= randomBytes(32).toString(
 const owners = ['core', 'adapter', 'execution', 'returns', 'keycloak', 'shadow'];
 const databaseNames = [...owners, 'simulator'];
 for (const owner of databaseNames) for (const purpose of ['migrator', 'runtime']) password(`${owner}_${purpose}`);
-for (const key of ['postgres_admin', 'simulator_postgres_admin', 'keycloak_admin', 'grafana_admin', 'equipment_store', 'operator_a', 'supervisor_a', 'operator_b', 'platform_admin']) password(key);
+for (const key of ['postgres_admin', 'simulator_postgres_admin', 'keycloak_admin', 'grafana_admin', 'equipment_store', 'operator_a', 'supervisor_a', 'supervisor_a2', 'operator_b', 'platform_admin']) password(key);
 const clients = ['legacy-core', 'equipment-adapter', 'execution-service', 'returns-service', 'shadow-scheduler', 'scenario-driver'];
 for (const client of clients) password(`client_${client}`);
 for (const owner of ['core', 'adapter', 'execution', 'returns', 'shadow', 'scenario', 'admin']) password(`rabbit_${owner}`);
@@ -68,6 +68,7 @@ const realm = {
     ...[
       ['operator-a', 'operator_a', ['operator'], 'site-a'],
       ['supervisor-a', 'supervisor_a', ['operator', 'supervisor'], 'site-a'],
+      ['supervisor-a2', 'supervisor_a2', ['operator', 'supervisor'], 'site-a'],
       ['operator-b', 'operator_b', ['operator'], 'site-b'],
       ['platform-admin', 'platform_admin', ['platform-admin'], 'site-a'],
     ].map(([username, key, realmRoles, site]) => ({ username, enabled: true, firstName: 'Local', lastName: username, email: `${username}@cutover.invalid`, emailVerified: true, realmRoles, attributes: { sites: [site] }, credentials: [{ type: 'password', value: password(key), temporary: false }] })),

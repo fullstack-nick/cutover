@@ -3,7 +3,7 @@ import { credentials } from './client.mjs';
 
 /** Real local Authorization Code/PKCE login. Credentials and observed tokens stay in memory. */
 export async function humanSession(username) {
-  const keys = { 'operator-a': 'operator_a', 'operator-b': 'operator_b', 'supervisor-a': 'supervisor_a', 'platform-admin': 'platform_admin' };
+  const keys = { 'operator-a': 'operator_a', 'operator-b': 'operator_b', 'supervisor-a': 'supervisor_a', 'supervisor-a2': 'supervisor_a2', 'platform-admin': 'platform_admin' };
   if (!Object.hasOwn(keys, username)) throw new Error('Only seeded fictional lab users can be used in this check.');
   const browser = await chromium.launch({ headless: true });
   try {

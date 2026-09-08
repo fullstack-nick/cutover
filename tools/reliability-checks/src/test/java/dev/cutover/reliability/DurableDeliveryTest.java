@@ -71,6 +71,21 @@ class DurableDeliveryTest {
     String state(UUID id) { return db.sql().fetchOne("SELECT state FROM inbox WHERE event_id=?", id).get(0, String.class); }
     static final class Crash extends Error {}
 
+    @Test void emptyDeliveryPollsNeedNoWriteTransactionAndStillNoticeLaterWork() {
+        db.sql().transaction(configuration -> {
+            var sql = DSL.using(configuration);
+            sql.execute("SET TRANSACTION READ ONLY");
+            assertThat(new OutboxRelay(sql, rabbit, clock, DeliveryHooks.NONE).poll(16)).isZero();
+            assertThat(new DurableInbox(sql, EFFECT, clock, Set.of("producer"), Set.of("site-a")).retry(16)).isZero();
+            assertThat(sql.fetchOne("SELECT pg_current_xact_id_if_assigned()::text").get(0)).isNull();
+        });
+        UUID event = append(UUID.randomUUID(), 1);
+        assertThat(relay(DeliveryHooks.NONE).poll(16)).isEqualTo(1);
+        assertThat(rabbit.consume(queue, inbox, 16)).isEqualTo(1);
+        assertThat(state(event)).isEqualTo("APPLIED");
+        assertThat(count("effects")).isEqualTo(1);
+    }
+
     @Test void publishedHistoryHasASeparateHardBudgetAndIntakeHeadroom() {
         db.sql().execute("UPDATE admission SET retained_outbox_limit=65536");
         int committed=0;

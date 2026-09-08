@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "siteId": {
+        "type": "string"
+      },
+      "zoneId": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "epoch": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "state": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "siteId",
+      "zoneId",
+      "owner",
+      "epoch",
+      "state",
+      "version"
+    ],
+    "additionalProperties": true
+  },
+  "maxItems": 3
+}

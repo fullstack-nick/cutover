@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cutover:migration-process-fault-request:v1",
+  "type": "object",
+  "properties": {
+    "phase": { "enum": ["DRAINING", "RECONCILING", "READY_TO_SWITCH", "OBSERVING", "COMPLETED"] },
+    "expectedVersion": { "type": "integer", "minimum": 0 },
+    "reason": { "type": "string", "minLength": 8, "maxLength": 500 },
+    "sessionId": { "type": ["string", "null"], "format": "uuid" }
+  },
+  "required": ["phase", "expectedVersion", "reason"],
+  "additionalProperties": false
+}

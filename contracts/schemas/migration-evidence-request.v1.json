@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cutover:migration-evidence-request:v1",
+  "type": "object",
+  "properties": {
+    "movementIds": {
+      "type": "array", "minItems": 0, "maxItems": 64, "uniqueItems": true,
+      "items": { "type": "string", "format": "uuid" }
+    }
+  },
+  "required": ["movementIds"],
+  "additionalProperties": false
+}

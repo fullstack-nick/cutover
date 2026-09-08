@@ -19,6 +19,7 @@ import java.util.Set;
 public class CoreApplication {
     public static void main(String[] args){SpringApplication.run(CoreApplication.class,args);}
     @Bean OrderService orderService(DSLContext database,Clock clock){return new OrderService(database,clock);}
+    @Bean MigrationEvidence migrationEvidence(DSLContext database,Clock clock){return new MigrationEvidence(database,clock);}
     @Bean ShadowObservations shadowObservations(DSLContext database,Clock clock,org.springframework.beans.factory.ObjectProvider<RabbitDelivery> rabbit){return new ShadowObservations(database,clock,rabbit.getIfAvailable());}
     @Bean DispatchPort dispatchPort(@Value("${cutover.adapter.url}") URI url,@Value("${cutover.clients.token-uri}") URI tokenUri,@Value("${cutover.clients.secret}") String secret){
         return new AdapterHttpClient(new ServiceHttp(url,new ClientCredentials(tokenUri,"legacy-core",secret)));

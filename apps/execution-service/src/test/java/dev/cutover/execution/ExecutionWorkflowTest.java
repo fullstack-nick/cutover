@@ -38,7 +38,7 @@ class ExecutionWorkflowTest {
             @Override public Reply command(UUID id){try{return new Reply(200,simulator.status(id));}catch(Problem absent){if(absent.status()!=404)throw absent;return new Reply(404,simulator.equipment());}}
             @Override public Reply send(UUID id,JsonNode payload){var result=simulator.accept(id,payload);if(loseEquipmentReply.getAndSet(false))throw new Unavailable("Response lost after physical acceptance");return new Reply(200,result.result());}
         };
-        observations=new EquipmentObservations(adapter.sql(),equipment,clock);observations.refresh();allocations=new Allocations(adapter.sql());journal=new CommandJournal(adapter.sql(),equipment,observations,clock);orders=new OrderService(core.sql(),clock);
+        observations=new EquipmentObservations(adapter.sql(),equipment,clock);observations.refresh();allocations=new Allocations(adapter.sql(),clock);journal=new CommandJournal(adapter.sql(),equipment,observations,clock);orders=new OrderService(core.sql(),clock);
         legacy=new LegacyScheduler(core.sql(),new dev.cutover.core.DispatchPort(){
             @Override public JsonNode allocate(String site,JsonNode movement){throw new AssertionError("Post-boundary legacy tasks already have durable assignments.");}
             @Override public JsonNode command(String site,UUID id){return journal.get(site,id);}
@@ -51,7 +51,7 @@ class ExecutionWorkflowTest {
             @Override public JsonNode dispatch(String site,UUID id,UUID allocation,long epoch,String lane,JsonNode movement){dispatchCalls.incrementAndGet();var result=journal.record(site,"execution-service",id,allocation,epoch,lane,movement);if(loseDispatchReply.getAndSet(false))throw new ServiceHttp.Unavailable("Response lost after adapter commit");return result;}
         };
         scheduler=new ExecutionScheduler(execution.sql(),port,clock);
-        adapterInbox=new DurableInbox(adapter.sql(),new AdapterMessages(),clock,Set.of("legacy-core"),Set.of("site-a"));
+        adapterInbox=new DurableInbox(adapter.sql(),new AdapterMessages(clock),clock,Set.of("legacy-core"),Set.of("site-a"));
         coreInbox=new DurableInbox(core.sql(),new CoreMessages(clock),clock,Set.of("equipment-adapter"),Set.of("site-a"));
         executionInbox=new DurableInbox(execution.sql(),new ExecutionMessages(),clock,Set.of("equipment-adapter"),Set.of("site-a"));
     }
@@ -60,7 +60,7 @@ class ExecutionWorkflowTest {
         for(var row:core.sql().fetch("SELECT event_id,envelope FROM outbox ORDER BY aggregate_id,aggregate_version"))if(coreDelivered.add(row.get("event_id",UUID.class)))adapterInbox.receive("cutover.legacy-core.v1",row.get("event_id").toString(),row.get("envelope").toString().getBytes(StandardCharsets.UTF_8));
         for(var row:adapter.sql().fetch("SELECT event_id,envelope FROM outbox ORDER BY aggregate_id,aggregate_version"))if(adapterDelivered.add(row.get("event_id",UUID.class))){var bytes=row.get("envelope").toString().getBytes(StandardCharsets.UTF_8);coreInbox.receive("cutover.equipment-adapter.v1",row.get("event_id").toString(),bytes);executionInbox.receive("cutover.equipment-adapter.v1",row.get("event_id").toString(),bytes);}
     }
-    void tick(){clock.advance(Duration.ofMillis(500));observations.refresh();messages();legacy.poll();scheduler.poll();journal.work();simulator.advance();messages();}
+    void tick(){clock.advance(Duration.ofMillis(500));observations.refresh();allocations.releasePending();messages();legacy.poll();scheduler.poll();journal.work();simulator.advance();messages();}
     void finish(UUID order){for(int n=0;n<40&&!orders.get("site-a",order).path("state").asString().equals("COMPLETED");n++)tick();assertThat(orders.get("site-a",order).path("state").asString()).isEqualTo("COMPLETED");}
     UUID movement(UUID order){return core.sql().fetchOne("SELECT movement_id FROM movement_intents WHERE order_id=?",order).get(0,UUID.class);}
     int count(DatabaseFixture db,String table){return db.sql().fetchOne("SELECT count(*) FROM "+table).get(0,Integer.class);}

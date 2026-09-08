@@ -29,7 +29,15 @@ export async function api(path, { method = 'GET', body, key, bearer, target = 'c
   if (key) headers['Idempotency-Key'] = key;
   const response = await fetch(origins[target] + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(8000) });
   const text = await response.text();
-  return { status: response.status, body: text ? JSON.parse(text) : null };
+  let parsed = null;
+  if (text) {
+    try { parsed = JSON.parse(text); }
+    catch {
+      if (response.ok) throw new Error('A successful local API response violated its JSON contract.');
+      parsed = { code: `HTTP_${response.status}`, detail: 'The local proxy returned a non-JSON error response.' };
+    }
+  }
+  return { status: response.status, body: parsed };
 }
 export function simulator(path, body, identity = 'scenario', method = body === undefined ? 'GET' : 'POST') {
   if (!['GET','POST','PUT','DELETE'].includes(method)) throw new Error('Unsupported equipment HTTP operation.');

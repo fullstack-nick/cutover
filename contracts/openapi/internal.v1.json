@@ -458,6 +458,160 @@
           }
         }
       }
+    },
+    "/internal/v1/sites/{site}/zones/{zone}/migration-evidence": {
+      "parameters": [
+        {
+          "name": "site",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "zone",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "readOwnerMigrationEvidence",
+        "description": "Read-only core/execution API restricted to the authenticated equipment-adapter service. At most 64 unique movement IDs; an empty core request checks that the guarded assignment boundary is installed. Missing and wrong-zone movements are explicit. Each owner reads only its own database.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/migration-evidence-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bounded owner proof and assignment-boundary capability"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/sites/{site}/test-controls/migration-faults": {
+      "parameters": [
+        {
+          "name": "site",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listMigrationProcessFaults",
+        "responses": {
+          "200": {
+            "description": "Latest 100 one-shot process faults"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "armMigrationProcessFault",
+        "description": "Explicitly enabled scenario-driver/test-control only. Expected adapter control version. Saves a one-shot fault before an actual process halt with exit 73 after the selected durable phase commits. A selected existing session or a session created after arming can consume it. Consumption is committed before halt; restart cannot repeat it.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/migration-process-fault-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recorded fault identity and version"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
+    },
+    "/internal/v1/sites/{site}/test-controls/migration-faults/{id}/clear": {
+      "parameters": [
+        {
+          "name": "site",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "clearMigrationProcessFault",
+        "description": "Explicit scenario-driver/test-control clears an armed fault with expected fault version and an audited reason.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/reconciliation-request.v1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cleared fault record"
+          },
+          "default": {
+            "$ref": "#/components/responses/problem"
+          }
+        }
+      }
     }
   },
   "components": {

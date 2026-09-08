@@ -74,6 +74,7 @@ public final class DurableInbox {
 
     public int retry(int limit) {
         if (limit < 1 || limit > 32) throw new IllegalArgumentException("Inbox batch must be 1..32");
+        if (!database.fetchOne("SELECT EXISTS(SELECT 1 FROM inbox WHERE state IN ('RECEIVED','PENDING') AND next_attempt_at<=?::timestamptz)", now()).get(0, Boolean.class)) return 0;
         return database.transactionResult(configuration -> {
             var sql = DSL.using(configuration);
             if (!Database.workersMayWrite(sql)) return 0;

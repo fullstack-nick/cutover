@@ -316,6 +316,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{siteId}/zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Site-scoped operator/supervisor observation. Retained sessions are bounded; observation times identify stale data. */
+        get: operations["listZoneRoutes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/migrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Site-scoped operator/supervisor observation. Retained sessions are bounded; observation times identify stale data. */
+        get: operations["listMigrations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/migrations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Site-scoped operator/supervisor observation. Retained sessions are bounded; observation times identify stale data. */
+        get: operations["getMigration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/zones/{zoneId}/migrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                zoneId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supervisor starts drain with an expected route version and reason. New intents remain unassigned; all allocated work and physical evidence must reconcile before an atomic epoch change. A reversal is another complete drain. */
+        post: operations["startMigration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/migrations/{id}/recovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supervisor resumes the same session after six exhausted owner-evidence transport attempts. Expected session version and reason are required. No physical identity or proof is replaced. */
+        post: operations["recoverMigration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{siteId}/migrations/{id}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supervisor cancels only an unswitched session with the expected session version and reason. Existing owner/epoch remain; pending unassigned work is released. After switching, use a new reverse migration. */
+        post: operations["cancelMigration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -440,6 +558,10 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        "zone-route-list": components["schemas"]["zone-route-list.v1"];
+        "migration-view": components["schemas"]["migration-view.v1"];
+        "migration-list": components["schemas"]["migration-list.v1"];
+        "execution-task-list": components["schemas"]["execution-task-list.v1"];
         "order-page.v1": {
             items: ({
                 /** Format: uuid */
@@ -688,6 +810,216 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        "execution-task-list.v1": ({
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            allocationId: string;
+            zoneId: string;
+            state: string;
+            owner: string;
+            epoch: number;
+            version: number;
+            lastError: string | null;
+            /** Format: date-time */
+            eligibleAt: string;
+            transportFailures: number;
+            transportPaused: boolean;
+            /** Format: date-time */
+            dispatchAcceptedAt: string | null;
+        } & {
+            [key: string]: unknown;
+        })[];
+        "zone-route-list.v1": ({
+            siteId: string;
+            zoneId: string;
+            owner: string;
+            epoch: number;
+            state: string;
+            version: number;
+        } & {
+            [key: string]: unknown;
+        })[];
+        "migration-list.v1": {
+            items: ({
+                /** Format: uuid */
+                sessionId: string;
+                siteId: string;
+                zoneId: string;
+                /** @enum {string} */
+                sourceOwner: "legacy-core" | "execution-service";
+                /** @enum {string} */
+                targetOwner: "legacy-core" | "execution-service";
+                sourceEpoch: number;
+                targetEpoch: number | null;
+                /** @enum {string} */
+                phase: "DRAINING" | "RECONCILING" | "READY_TO_SWITCH" | "OBSERVING" | "COMPLETED" | "REVERSING" | "REVERSED" | "SUPERSEDED" | "CANCELLED";
+                version: number;
+                actor: string;
+                reason: string;
+                /** Format: uuid */
+                reversesSessionId: string | null;
+                inventoryCount: number;
+                verifiedCount: number;
+                inventoryHash: string | null;
+                checkpointHash: string | null;
+                checkpoint: ({
+                    inventoryHash: string;
+                    count: number;
+                    /** Format: uuid */
+                    worldId: string;
+                    /** Format: uuid */
+                    journalGeneration: string;
+                    journalHighWater: number;
+                    proofChunkHashes: string[];
+                } & {
+                    [key: string]: unknown;
+                }) | null;
+                blockers: {
+                    count: number;
+                    items: ({
+                        reason: string;
+                        /** Format: uuid */
+                        movementId?: string;
+                        /** Format: uuid */
+                        allocationId?: string;
+                        owner?: string;
+                        allocationState?: string;
+                        commandState?: string;
+                    } & {
+                        [key: string]: unknown;
+                    })[];
+                } & {
+                    [key: string]: unknown;
+                };
+                observation: ({
+                    sampleCount: number;
+                    dispatchP99Millis: number;
+                    withinTwoSeconds: boolean;
+                    proofHash: string;
+                    movements: ({
+                        /** Format: uuid */
+                        movementId: string;
+                        dispatchMillis: number;
+                    } & {
+                        [key: string]: unknown;
+                    })[];
+                    proof: {
+                        [key: string]: unknown;
+                    }[];
+                } & {
+                    [key: string]: unknown;
+                }) | null;
+                transportAttempts: number;
+                transportPaused: boolean;
+                lastError: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                switchedAt: string | null;
+                /** Format: date-time */
+                finishedAt: string | null;
+                /** Format: date-time */
+                observedAt: string;
+            } & {
+                [key: string]: unknown;
+            })[];
+            /** Format: date-time */
+            observedAt: string;
+        } & {
+            [key: string]: unknown;
+        };
+        "migration-view.v1": {
+            /** Format: uuid */
+            sessionId: string;
+            siteId: string;
+            zoneId: string;
+            /** @enum {string} */
+            sourceOwner: "legacy-core" | "execution-service";
+            /** @enum {string} */
+            targetOwner: "legacy-core" | "execution-service";
+            sourceEpoch: number;
+            targetEpoch: number | null;
+            /** @enum {string} */
+            phase: "DRAINING" | "RECONCILING" | "READY_TO_SWITCH" | "OBSERVING" | "COMPLETED" | "REVERSING" | "REVERSED" | "SUPERSEDED" | "CANCELLED";
+            version: number;
+            actor: string;
+            reason: string;
+            /** Format: uuid */
+            reversesSessionId: string | null;
+            inventoryCount: number;
+            verifiedCount: number;
+            inventoryHash: string | null;
+            checkpointHash: string | null;
+            checkpoint: ({
+                inventoryHash: string;
+                count: number;
+                /** Format: uuid */
+                worldId: string;
+                /** Format: uuid */
+                journalGeneration: string;
+                journalHighWater: number;
+                proofChunkHashes: string[];
+            } & {
+                [key: string]: unknown;
+            }) | null;
+            blockers: {
+                count: number;
+                items: ({
+                    reason: string;
+                    /** Format: uuid */
+                    movementId?: string;
+                    /** Format: uuid */
+                    allocationId?: string;
+                    owner?: string;
+                    allocationState?: string;
+                    commandState?: string;
+                } & {
+                    [key: string]: unknown;
+                })[];
+            } & {
+                [key: string]: unknown;
+            };
+            observation: ({
+                sampleCount: number;
+                dispatchP99Millis: number;
+                withinTwoSeconds: boolean;
+                proofHash: string;
+                movements: ({
+                    /** Format: uuid */
+                    movementId: string;
+                    dispatchMillis: number;
+                } & {
+                    [key: string]: unknown;
+                })[];
+                proof: {
+                    [key: string]: unknown;
+                }[];
+            } & {
+                [key: string]: unknown;
+            }) | null;
+            transportAttempts: number;
+            transportPaused: boolean;
+            lastError: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            switchedAt: string | null;
+            /** Format: date-time */
+            finishedAt: string | null;
+            /** Format: date-time */
+            observedAt: string;
+        } & {
+            [key: string]: unknown;
+        };
+        "migration-request.v1": {
+            reason: string;
+            expectedVersion: number;
+            /** @enum {unknown} */
+            targetOwner: "legacy-core" | "execution-service";
+        };
         "equipment-command.v1": {
             /** Format: uuid */
             commandId: string;
@@ -732,12 +1064,6 @@ export interface components {
             payload: Record<string, never>;
         } & {
             [key: string]: unknown;
-        };
-        "migration-request.v1": {
-            reason: string;
-            expectedVersion: number;
-            /** @enum {unknown} */
-            targetOwner: "legacy-core" | "execution-service";
         };
         "movement.v1": {
             /** Format: uuid */
@@ -1235,12 +1561,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Owned execution tasks and recovery state */
+            /** @description Independent execution task owner */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["execution-task-list.v1"];
+                };
             };
             default: components["responses"]["problem"];
         };
@@ -1269,6 +1597,166 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    listZoneRoutes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current migration observations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["zone-route-list.v1"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    listMigrations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current migration observations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["migration-list.v1"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    getMigration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current migration observations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["migration-view.v1"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    startMigration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                zoneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["migration-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Durably recorded session */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["migration-view.v1"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    recoverMigration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Durably recorded session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["migration-view.v1"];
+                };
+            };
+            default: components["responses"]["problem"];
+        };
+    };
+    cancelMigration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                siteId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["reconciliation-request.v1"];
+            };
+        };
+        responses: {
+            /** @description Durably recorded session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["migration-view.v1"];
+                };
             };
             default: components["responses"]["problem"];
         };

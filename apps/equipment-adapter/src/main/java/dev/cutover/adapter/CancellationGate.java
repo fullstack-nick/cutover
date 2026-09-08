@@ -86,8 +86,9 @@ public final class CancellationGate {
             for (JsonNode movement:movements) {
                 UUID id=Database.uuid(movement,"movementId");String zone=movement.path("zoneId").asString();
                 Record route=routes.get(zone);
+                boolean active="ACTIVE".equals(route.get("state",String.class));
                 sql.execute("INSERT INTO movement_allocations(allocation_id,movement_id,site_id,zone_id,source,movement,payload_hash,owner,epoch,state,version,completed_at) VALUES (?,?,?,?,'legacy-core',?::jsonb,?,?,?,'CANCELLED',1,?::timestamptz) ON CONFLICT(site_id,movement_id) DO UPDATE SET state='CANCELLED',version=movement_allocations.version+1,completed_at=EXCLUDED.completed_at",
-                        UUID.randomUUID(),id,site,zone,JsonSupport.write(movement),JsonSupport.hash(movement),route.get("owner"),route.get("epoch"),now());
+                        UUID.randomUUID(),id,site,zone,JsonSupport.write(movement),JsonSupport.hash(movement),active?route.get("owner"):null,active?route.get("epoch"):null,now());
                 sql.execute("UPDATE command_journal SET state='REJECTED_BEFORE_EXECUTION',version=version+1,lease_until=NULL,last_error='CANCELLED_BEFORE_SUBMISSION' WHERE site_id=? AND movement_id=?",site,id);
                 JsonNode cancelled=Allocations.view(sql,site,id);
                 Events.append(sql,site,"equipment-adapter","movement",id,cancelled.path("version").asLong(),"MovementCancelled.v1",cancellation,cancelled);

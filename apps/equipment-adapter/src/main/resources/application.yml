@@ -48,6 +48,7 @@ server:
 cutover:
   messaging-enabled: ${CUTOVER_MESSAGING_ENABLED:true}
   service-name: equipment-adapter
+  test-controls-enabled: ${CUTOVER_TEST_CONTROLS_ENABLED:false}
   workers-enabled: ${CUTOVER_WORKERS_ENABLED:true}
   security:
     issuer: ${CUTOVER_ISSUER:http://localhost:8780/identity/realms/cutover}
@@ -58,3 +59,9 @@ cutover:
     key-store: ${CUTOVER_ADAPTER_KEY_STORE}
     trust-store: ${CUTOVER_EQUIPMENT_TRUST_STORE}
     store-password: ${CUTOVER_EQUIPMENT_STORE_PASSWORD}
+  owners:
+    core-url: ${CUTOVER_CORE_URL:http://legacy-core:8080}
+    execution-url: ${CUTOVER_EXECUTION_URL:http://execution-service:8080}
+  clients:
+    token-uri: ${CUTOVER_TOKEN_URI}
+    secret: ${CUTOVER_CLIENT_SECRET}

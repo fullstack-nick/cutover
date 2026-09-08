@@ -53,6 +53,8 @@ try {
     Invoke-Kubectl @('apply','-k','.local/kubernetes/demo/runtime')
     foreach($entry in @(@('cutover-platform','deployment/keycloak'),@('cutover-apps','deployment/equipment-adapter'),@('cutover-apps','deployment/legacy-core'),@('cutover-apps','deployment/proxy'),@('cutover-observability','deployment/collector'),@('cutover-observability','statefulset/prometheus'),@('cutover-observability','statefulset/tempo'),@('cutover-observability','statefulset/grafana'))){Invoke-Kubectl @('-n',$entry[0],'rollout','status',$entry[1],'--timeout=240s')}
     & (Join-Path $PSScriptRoot 'forward.ps1') -Action Start -Target console
+    & node scripts/ensure-local-users.mjs
+    if($LASTEXITCODE -ne 0){throw 'Local identity fixture verification failed.'}
     foreach($name in @('execution-service','shadow-scheduler')){Invoke-Kubectl @('-n','cutover-apps','rollout','status',"deployment/$name",'--timeout=240s')}
     Write-Host 'Cutover local platform rolled out. Verify its behavior before recording acceptance.'
 }finally{Pop-Location}
