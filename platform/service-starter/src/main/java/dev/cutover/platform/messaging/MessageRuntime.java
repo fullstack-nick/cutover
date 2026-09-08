@@ -29,6 +29,7 @@ public final class MessageRuntime implements AutoCloseable {
         workers.scheduleWithFixedDelay(new Guard("relay", () -> relay.poll(16)), 100, 50, TimeUnit.MILLISECONDS);
         workers.scheduleWithFixedDelay(new Guard("consumer", () -> {
             if (!database.fetchOne("SELECT workers_paused OR consumer_paused FROM service_control WHERE singleton").get(0, Boolean.class)) rabbit.consume(queue, inbox, 16);
+            else rabbit.pauseConsumer();
         }), 100, 50, TimeUnit.MILLISECONDS);
         workers.scheduleWithFixedDelay(new Guard("inbox-retry", () -> inbox.retry(16)), 250, 150, TimeUnit.MILLISECONDS);
         workers.scheduleWithFixedDelay(new Guard("message-retention", () -> retention.compact()), 30000, 30000, TimeUnit.MILLISECONDS);
@@ -37,6 +38,7 @@ public final class MessageRuntime implements AutoCloseable {
         workers.shutdownNow();
         try { workers.awaitTermination(8, TimeUnit.SECONDS); }
         catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+        rabbit.pauseConsumer();
     }
     private static final class Guard implements Runnable {
         private final String operation;

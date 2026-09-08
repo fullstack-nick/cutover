@@ -527,6 +527,49 @@ class DurableDeliveryTest {
         assertThat(db.sql().fetch("SELECT deliveries FROM inbox").getValues(0, Integer.class)).containsOnly(2);
     }
 
+    @Test void subscriptionPrefetchIsBoundedAndPauseReturnsEveryUncommittedDelivery() throws Exception {
+        assertThat(rabbit.consume(queue,inbox,8)).isZero();
+        awaitQueue(0,1);
+        for(int n=0;n<20;n++)append(UUID.randomUUID(),1);
+        assertThat(relay(DeliveryHooks.NONE).poll(32)).isEqualTo(20);
+        // Twenty confirmed originals: eight unacknowledged at this consumer, twelve still ready at the broker.
+        awaitQueue(12,1);assertThat(count("effects")).isZero();
+        rabbit.pauseConsumer();
+        awaitQueue(20,0);assertThat(count("inbox")).isZero();
+        drainSubscription(20,8);
+        assertThat(count("effects")).isEqualTo(20);assertThat(count("inbox")).isEqualTo(20);
+    }
+
+    @Test void connectionLossRequeuesPrefetchedOriginalsAndUsesANewAcknowledgementChannel() throws Exception {
+        assertThat(rabbit.consume(queue,inbox,8)).isZero();
+        for(int n=0;n<20;n++)append(UUID.randomUUID(),1);
+        relay(DeliveryHooks.NONE).poll(32);awaitQueue(12,1);
+        connections.resetConnection();
+        awaitQueue(20,0);
+        drainSubscription(20,8);
+        assertThat(count("effects")).isEqualTo(20);
+        assertThat(db.sql().fetch("SELECT deliveries FROM inbox").getValues(0,Integer.class)).containsOnly(1);
+    }
+
+    void awaitQueue(int ready,int consumers) throws Exception {
+        try(var channel=admin.createChannel()){
+            long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            var state=channel.queueDeclarePassive(queue);
+            while((state.getMessageCount()!=ready || state.getConsumerCount()!=consumers) && System.nanoTime()<deadline){
+                Thread.sleep(10);state=channel.queueDeclarePassive(queue);
+            }
+            assertThat(state.getMessageCount()).as("broker ready messages").isEqualTo(ready);
+            assertThat(state.getConsumerCount()).as("registered broker subscriptions").isEqualTo(consumers);
+        }
+    }
+    void drainSubscription(int expected,int limit) {
+        int received=0;long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        while(received<expected && System.nanoTime()<deadline){
+            int batch=rabbit.consume(queue,inbox,limit);assertThat(batch).isBetween(0,limit);received+=batch;
+        }
+        assertThat(received).isEqualTo(expected);
+    }
+
     @Test void inboxBatchRollsBackEveryTransferWhenTheLastAdmissionCannotBeStored() throws Exception {
         UUID first=append(UUID.randomUUID(),1),second=append(UUID.randomUUID(),1);
         relay(DeliveryHooks.NONE).poll(16);
@@ -537,7 +580,7 @@ class DurableDeliveryTest {
                 .mapToLong(row->row.get(0).toString().getBytes(StandardCharsets.UTF_8).length).sum();
         long original=268435456L-bytes+1;
         db.sql().execute("UPDATE message_storage SET retained_bytes=?",original);
-        assertThatThrownBy(()->rabbit.consume(queue,inbox,16)).hasRootCauseInstanceOf(Problem.class);
+        assertThatThrownBy(()->rabbit.consume(queue,inbox,16)).isInstanceOfSatisfying(Problem.class,problem->assertThat(problem.code()).isEqualTo("INBOX_CAPACITY"));
         assertThat(effectAttempts.get()).isEqualTo(1);
         assertThat(count("inbox")).isZero();assertThat(count("effects")).isZero();assertThat(count("stream_entry")).isZero();
         assertThat(db.sql().fetchOne("SELECT retained_bytes FROM message_storage").get(0,Long.class)).isEqualTo(original);
@@ -638,7 +681,7 @@ class DurableDeliveryTest {
     @Test void inboxCapacityRetainsBrokerOwnershipAndDoesNotAcknowledgeUnpersistedWork() throws Exception {
         append(UUID.randomUUID(), 1); relay(DeliveryHooks.NONE).poll(16);
         db.sql().execute("UPDATE message_storage SET active_messages=10000");
-        assertThatThrownBy(() -> rabbit.consume(queue, inbox, 16)).hasRootCauseInstanceOf(Problem.class);
+        assertThatThrownBy(() -> rabbit.consume(queue, inbox, 16)).isInstanceOfSatisfying(Problem.class,problem->assertThat(problem.code()).isEqualTo("INBOX_CAPACITY"));
         assertThat(count("inbox")).isZero(); assertThat(count("effects")).isZero();
         try (var channel = admin.createChannel()) {
             var retained = channel.basicGet(queue, false); assertThat(retained).isNotNull(); channel.basicNack(retained.getEnvelope().getDeliveryTag(), false, true);

@@ -3,7 +3,14 @@ package dev.cutover.platform.messaging;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.ArrayList;
-import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Delivery;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.ShutdownSignalException;
+import java.io.IOException;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.amqp.core.Message;
@@ -12,9 +19,10 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
-public final class RabbitDelivery implements OutboxRelay.Publisher {
+public final class RabbitDelivery implements OutboxRelay.Publisher, AutoCloseable {
     private final RabbitTemplate template;
     private final DeliveryHooks hooks;
+    private InboxConsumer consumer;
     public RabbitDelivery(RabbitTemplate template, DeliveryHooks hooks) {
         this.template = template; this.hooks = hooks;
         template.setMandatory(true);
@@ -54,46 +62,73 @@ public final class RabbitDelivery implements OutboxRelay.Publisher {
         catch (Exception unavailable) { throw DeliveryFailure.pending("CONFIRM_UNAVAILABLE"); }
     }
 
-    /** Basic-get has no prefetch bound: this explicit batch bounds memory and unacknowledged deliveries. */
-    public int consume(String queue, DurableInbox inbox, int limit) {
+    /** One long-lived subscription; broker prefetch bounds buffered plus processing deliveries together. */
+    public synchronized int consume(String queue, DurableInbox inbox, int limit) {
         if (limit < 1 || limit > 32) throw new IllegalArgumentException("Consumer batch must be 1..32");
-        Integer count = template.execute(channel -> {
-            var deliveries = new ArrayList<GetResponse>(limit);
-            try {
-                while (deliveries.size() < limit) {
-                    var delivery = channel.basicGet(queue, false);
-                    if (delivery == null) break;
-                    deliveries.add(delivery);
-                }
-            } catch (java.io.IOException | RuntimeException unavailable) {
-                channel.abort(); throw unavailable;
+        try {
+            if (consumer != null && (!consumer.usable() || !consumer.queue.equals(queue) || consumer.limit != limit)) pauseConsumer();
+            if (consumer == null) {
+                var channel = template.getConnectionFactory().createConnection().createChannel(false);
+                consumer = new InboxConsumer(channel, queue, limit);
+                channel.basicQos(limit);
+                channel.basicConsume(queue, false, consumer);
             }
-            if (deliveries.isEmpty()) return 0;
-            int acknowledged = 0;
-            try {
-                var receipts = inbox.receiveBatch(deliveries.stream().map(delivery -> new DurableInbox.Delivery(
-                        delivery.getEnvelope().getExchange(), delivery.getProps().getMessageId(), delivery.getBody())).toList());
-                for (int index = 0; index < receipts.size(); index++) {
-                    hooks.reached("AFTER_EFFECT_BEFORE_ACK", receipts.get(index).id());
-                    channel.basicAck(deliveries.get(index).getEnvelope().getDeliveryTag(), false);
-                    acknowledged++;
-                }
-            } catch (RuntimeException failure) {
-                // No failed transfer is acknowledged. Already committed peers may redeliver safely.
-                try {
-                    for (int index = acknowledged; index < deliveries.size(); index++)
-                        channel.basicNack(deliveries.get(index).getEnvelope().getDeliveryTag(), false, true);
-                } catch (java.io.IOException unavailable) {
-                    failure.addSuppressed(unavailable); channel.abort();
-                }
-                throw failure; // Runtime applies a transport backoff before trying again.
-            } catch (Error crash) {
-                channel.abort(); throw crash;
-            } catch (java.io.IOException unavailable) {
-                channel.abort(); throw unavailable;
+            var current = consumer;
+            var deliveries = new ArrayList<Delivery>(limit);
+            var first = current.deliveries.poll(50, TimeUnit.MILLISECONDS);
+            if (!current.usable()) throw DeliveryFailure.pending("CONSUMER_UNAVAILABLE");
+            if (first == null) return 0;
+            deliveries.add(first);
+            // Collect an immediately arriving burst for at most 50 ms, never wait for a full batch.
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(50);
+            while (deliveries.size() < limit) {
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0) break;
+                var next = current.deliveries.poll(remaining, TimeUnit.NANOSECONDS);
+                if (next == null) break;
+                deliveries.add(next);
             }
-            return acknowledged;
-        });
-        return count == null ? 0 : count;
+            if (!current.usable()) throw DeliveryFailure.pending("CONSUMER_UNAVAILABLE");
+            var receipts = inbox.receiveBatch(deliveries.stream().map(delivery -> new DurableInbox.Delivery(
+                    delivery.getEnvelope().getExchange(), delivery.getProperties().getMessageId(), delivery.getBody())).toList());
+            for (int index = 0; index < receipts.size(); index++) {
+                hooks.reached("AFTER_EFFECT_BEFORE_ACK", receipts.get(index).id());
+                current.getChannel().basicAck(deliveries.get(index).getEnvelope().getDeliveryTag(), false);
+            }
+            return receipts.size();
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt(); pauseConsumer();
+            throw DeliveryFailure.pending("CONSUMER_INTERRUPTED");
+        } catch (IOException unavailable) {
+            pauseConsumer(); throw DeliveryFailure.pending("CONSUMER_UNAVAILABLE");
+        } catch (RuntimeException | Error failure) {
+            // Closing this exact channel requeues every unacknowledged delivery, including buffered peers.
+            // Committed effects whose acknowledgements were lost safely redeliver with their original IDs.
+            pauseConsumer(); throw failure;
+        }
+    }
+    public synchronized void pauseConsumer() {
+        if (consumer == null) return;
+        var previous = consumer; consumer = null; previous.stopped = true;
+        try { previous.getChannel().abort(); } catch (IOException | RuntimeException alreadyClosed) { /* Broker retains unacknowledged originals. */ }
+        finally { previous.deliveries.clear(); }
+    }
+    @Override public void close() { pauseConsumer(); }
+
+    private static final class InboxConsumer extends DefaultConsumer {
+        private final String queue;
+        private final int limit;
+        private final ArrayBlockingQueue<Delivery> deliveries;
+        private volatile boolean stopped;
+        InboxConsumer(Channel channel, String queue, int limit) {
+            super(channel); this.queue = queue; this.limit = limit; this.deliveries = new ArrayBlockingQueue<>(limit);
+        }
+        boolean usable() { return !stopped && getChannel().isOpen(); }
+        @Override public void handleDelivery(String tag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+            if (stopped) return;
+            if (body.length > DurableInbox.MAX_MESSAGE_BYTES || !deliveries.offer(new Delivery(envelope, properties, body))) stopped = true;
+        }
+        @Override public void handleCancel(String tag) { stopped = true; }
+        @Override public void handleShutdownSignal(String tag, ShutdownSignalException signal) { stopped = true; }
     }
 }
