@@ -1,6 +1,6 @@
 # ADR 0025: refresh expired evidence within a scheduling batch
 
-Date: 9 September 2026. Status: implemented; nine focused execution workflow checks passed; complete verification and deployed qualification pending.
+Date: 9 September 2026. Status: implemented; nine focused execution workflow checks and all 199 repository checks passed; deployed qualification pending.
 
 The execution coordinator reads one bounded context from the adapter for its leased tasks. A previous dispatch or durable database operation can take long enough that this batch's snapshot exceeds the five-second observation lifetime. The coordinator previously continued evaluating that old snapshot even when the adapter had already recorded a newer valid observation. Remaining tasks then became blocked and waited for another polling turn.
 
@@ -11,5 +11,7 @@ Before another decision, the coordinator now checks the retained observation's a
 The focused regression uses four real owner databases and a controllable clock. The first dispatch advances time by six seconds. When the adapter has a new observation, the second movement must still obtain its durable command record in the same turn. When equipment evidence remains stale, it must stay blocked. The corrected fixture failed the first case and passed the second against the previous code at 01:01:03 Europe/Berlin. The earlier fixture error mixed two dispatch owners; that failed attempt is retained separately.
 
 All nine execution workflow cases passed after the correction at 01:05:06, including lost replies, retry limits, checkpoint freezing, physical uncertainty and retained-decision capacity. No physical effect is invented by the regression. Full repository verification and deployed measurement follow separately. Host storage stalls were also captured during the preceding diagnostic; this change addresses the confirmed stale-batch amplifier and makes no claim that it eliminates every latency outlier.
+
+Full offline verification of `5b7a2e583ab2e451b997e9c21af710d0a20315a8` passed at 01:16:15 Europe/Berlin: 199 checks in 25 classes, zero failures, errors or skips, in 553 seconds. [Per-class evidence](../evidence/backend-checks.json) records the original log hash. Deployment and sustained runtime qualification remain separate gates.
 
 Private log SHA-256 values: corrected before `822f0dc07bb7a2cbc0f342551c85ae59242a16b0c38b11448b6620e5ca5ff9c0`; focused after `d15ad5c920db48a5e5334d239e64c02d8e8a41b0ffd09fab139873adab9a2edd`.
