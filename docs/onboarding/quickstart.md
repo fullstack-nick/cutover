@@ -29,7 +29,7 @@ The seeded site has 100 synthetic products, 10 stores, ambient/chilled outbound 
 
 ## A 10–15 minute reviewer path
 
-This path uses a fresh, healthy bootstrap with legacy-owned outbound zones. The individual drivers have recorded runtime checks; the complete timed reviewer rehearsal remains a final acceptance gate. Run commands sequentially and inspect their result directories when a check fails.
+This path starts with healthy, legacy-owned outbound zones, either after a fresh bootstrap or the documented supervised reversal. The [complete rehearsal](../evidence/reviewer-walkthrough-2026-09-08.md) passed all six commands in 4 minutes 49.5 seconds, followed by populated console captures. Allow additional time to inspect the views and architecture. Run commands sequentially and inspect their result directories when a check fails.
 
 1. **See both products.** Run `node tools/scenario-driver/platform-smoke.mjs`, then `node tools/scenario-driver/returns-smoke.mjs`. In the console, open Orders and Returns; inspect the generated references and movement details. These drivers check real owner APIs, single physical/business effects, duplicate receipt handling and progress during an unrelated lane fault.
 2. **Compare before switching.** Run `node tools/scenario-driver/shadow-smoke.mjs`. In Migrations, open a stored Shadow decision and inspect its input/hash and both proposals. The driver verifies 1,000 persisted comparisons and the actual shadow identity's command denial.
@@ -39,7 +39,7 @@ This path uses a fresh, healthy bootstrap with legacy-owned outbound zones. The 
 
 The drivers add synthetic records and deliberately exercise the stated faults or ownership changes. They use authorized APIs for business actions and owner-specific observer credentials for assertions. Do not run them during a checkpoint, restore, load benchmark or another fault experiment.
 
-The same six commands can be rehearsed with `node tools/scenario-driver/reviewer-walkthrough.mjs`. It checks the starting ownership, records each command's duration and result, and captures the current console. It refuses to qualify an incomplete or failed sequence. Its timed acceptance result is still pending.
+The same six commands can be rehearsed with `node tools/scenario-driver/reviewer-walkthrough.mjs`. It checks the starting ownership, records each command's duration and result, and captures the populated current console. It refuses to qualify an incomplete or failed sequence. Each rehearsal retains 1,000 shadow comparisons; its explicit capacity check refuses a repeat without sufficient headroom. Existing evidence and task history are preserved.
 
 For a prepared lab whose local image build is already verified, `./scripts/bootstrap.ps1 -SkipBuild` exercises platform creation with those recorded images. This is the bootstrap variant used by the checkpoint-backed fresh-dataset rehearsal. Initial acquisition and source building remain separate from the short reviewer path.
 

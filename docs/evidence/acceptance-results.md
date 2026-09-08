@@ -1,6 +1,6 @@
 # Acceptance status
 
-Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency and the timed reviewer path remain open.
+Status: final verification in progress, 8 September 2026. The implementation is **not yet fully qualified**: sustained latency remains open.
 
 The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
 
@@ -54,11 +54,11 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A46 | `restore-1788849841860`: six databases, 211 fingerprints, 1,207 original replay events and 183 matching physical/command records. Release took 648.572 seconds. |
 | A47 | `stale-restore-1788848295108`: one later known completion and three absent intents are distinguished without repeated physical work. RPO gap 516.516 seconds. |
 | A48 | [Prepared offline rehearsal](prepared-offline-2026-09-08.md), `offline-1788887275782`: actual login, both products, lost-response recovery, simulator and whole-lab restarts, cached predecessor import/rollback, telemetry and populated dashboards under scoped denial; exact firewall cleanup verified. |
-| A49 | `cache-1788887175088`: all 4,050 installed assets match, excluding mutable Chromium diagnostic logs. An isolated empty-file-cache fixture fails explicitly and identifies all missing tools, Maven/npm packages, image archives and browser revisions; existing caches/daemon images remain intact. |
+| A49 | `cache-1788892286758`: all 4,050 installed assets match the final images, excluding mutable Chromium diagnostic logs. An isolated empty-file-cache fixture fails explicitly and identifies all missing tools, Maven/npm packages, image archives and browser revisions; existing caches/daemon images remain intact. |
 | A50 | **Failed.** `load-1788880017964`: 85.9% within two seconds, original-eligibility p99 8,340.798 ms; all 3,000 measured movements included, all 3,300 total effects single. Inbox batching requires a new full measurement. |
-| A51 | Actual order/returns/task/recovery/migration/audit workflows, mobile views, stale data, version conflicts, keyboard close and focus restoration are recorded. Final screenshots after the latest console build are pending. |
+| A51 | Actual order/returns/task/recovery/migration/audit workflows, mobile views, stale data, version conflicts, keyboard close and focus restoration are recorded. [Final populated console captures](reviewer-walkthrough-2026-09-08.md) come from the passed complete reviewer rehearsal. |
 | A52 | `demo-lifecycle-1788866307975` preserves data on stop/start. `reset-bootstrap-1788887847395` repeats explicit checkpoint-backed new-world reset and fresh platform creation without changing unrelated containers; prepared-image bootstrap took 604.419 seconds. |
 | A53 | Private archive exclusion, public source, MIT and disabled Actions are established. Final tracked/history/secret/asset review and publication remain pending. |
-| A54 | The exact documented six-command rehearsal and final console images are implemented but unexecuted. `reset-bootstrap-1788887847395` establishes the separate prepared-image fresh bootstrap in 604.419 seconds. |
+| A54 | [Complete reviewer rehearsal](reviewer-walkthrough-2026-09-08.md), `reviewer-1788893203051`: six commands passed sequentially in 289.463 seconds, followed by five inspected populated views. `reset-bootstrap-1788887847395` establishes the separate prepared-image fresh bootstrap in 604.419 seconds. |
 
 All IDs are required. A failed latency target or missing runtime check prevents final completion, even when every component test passes.

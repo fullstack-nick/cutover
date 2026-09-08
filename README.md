@@ -6,7 +6,9 @@ Cutover is a local portfolio lab for grocery fulfilment and reusable-crate retur
 
 Java 21 · Spring Boot · jOOQ/PostgreSQL · RabbitMQ · React/TypeScript · Keycloak · kind/Calico · OpenTelemetry
 
-**Status: final implementation and acceptance verification in progress.** Working runtime evidence covers owner migration and reversal, independent returns, unknown-command recovery, process failures, restoration and the prepared offline walkthrough. The latest full load completed all 3,300 movements once but missed the dispatch target. The complete reviewer evidence bundle remains open. The [implementation ledger](docs/planning/implementation-progress.md) records passed checks, failed measurements and remaining work.
+![Cutover operations console with current orders, owner boundaries and equipment-backed completion](docs/evidence/images/console-overview.png)
+
+**Status: final acceptance verification in progress.** The [complete reviewer walkthrough](docs/evidence/reviewer-walkthrough-2026-09-08.md) passed all six commands in 4 minutes 49.5 seconds, with five populated console captures. Working evidence also covers owner migration/reversal, independent returns, unknown-command recovery, process failures, restoration and prepared offline operation. The latest full load completed all 3,300 movements once but missed the dispatch target; renewed sustained-load qualification remains open. The [implementation ledger](docs/planning/implementation-progress.md) records the measured results and failed attempts.
 
 The application runs entirely on one machine with synthetic data and equipment. GitHub hosts source; builds, tests and deployment are invoked locally. There is no cloud runtime, CI/CD or hosted authentication.
 
@@ -21,6 +23,7 @@ The application runs entirely on one machine with synthetic data and equipment. 
 | Reuse the platform for another product | [Returns](docs/evidence/returns-2026-09-08.md) owns its tables and models; it continues through an unrelated outbound-lane fault. |
 | Recover older application data honestly | [Six-database restoration](docs/evidence/restore-2026-09-08.md), original-event replay and reconciliation against unchanged physical history. Missing later intent stays quarantined. |
 | Run the prepared lab offline | [Executed offline walkthrough](docs/evidence/prepared-offline-2026-09-08.md): login, both products, recovery, whole-lab restart, cached image rollback and populated dashboards under scoped external-egress denial. |
+| Inspect the actual product | [Reviewer walkthrough and console gallery](docs/evidence/reviewer-walkthrough-2026-09-08.md): orders, returns, retained task history and migration proof from the running local system. |
 
 ## Two-minute architecture
 
