@@ -1,13 +1,13 @@
 {
   "command": "./mvnw.cmd -o verify",
-  "productionSource": "b911f143d0b228523352c08d5ba9a4a9daa41b3e",
-  "finishedAt": "2026-09-08T22:08:50+02:00",
-  "durationSeconds": 626,
-  "tests": 193,
+  "productionSource": "ebdb0c09ea215ac5b0511b1ba41812d9f041217d",
+  "finishedAt": "2026-09-08T22:51:52+02:00",
+  "durationSeconds": 576,
+  "tests": 196,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
-  "originalLogSha256": "a035b1f805a9b2b74d5c0de7c8b6a64bef7d56a7ea5472fa30d1ec7f5bfd5431",
+  "originalLogSha256": "1c4c03ce7efe98deeac414caa39d817f5ced29f49d897868be2b00b41a887d61",
   "classes": [
     {
       "name": "dev.cutover.adapter.CommandJournalTest",
@@ -53,7 +53,7 @@
     },
     {
       "name": "dev.cutover.core.LegacyWorkflowTest",
-      "tests": 23,
+      "tests": 24,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -67,7 +67,7 @@
     },
     {
       "name": "dev.cutover.execution.ExecutionWorkflowTest",
-      "tests": 6,
+      "tests": 7,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -151,7 +151,7 @@
     },
     {
       "name": "dev.cutover.returns.ReturnsWorkflowTest",
-      "tests": 19,
+      "tests": 20,
       "failures": 0,
       "errors": 0,
       "skipped": 0
