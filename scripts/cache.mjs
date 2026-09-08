@@ -71,7 +71,8 @@ if(action==='Record'){
     for(const name of ['chromium','chromium-headless-shell','ffmpeg']){
       const selected=versions.find(item=>item.name===name);assert.ok(selected);const folder=resolve(browserRoot,`${name.replaceAll('-','_')}-${selected.revision}`);
       index.browsers.push({name,revision:selected.revision,version:selected.browserVersion??null});
-      const files=walk(folder);if(!files.length)missing.push(`browser: ${name} revision ${selected.revision}`);
+      // Chromium can write diagnostics beside its executable. Those mutable logs are not installed runtime assets.
+      const files=walk(folder,path=>!['debug.log','chrome_debug.log'].includes(basename(path).toLowerCase()));if(!files.length)missing.push(`browser: ${name} revision ${selected.revision}`);
       for(const path of files)add('browser',`${name}/${relative(folder,path).replaceAll('\\','/')}`,path);
     }
   }
