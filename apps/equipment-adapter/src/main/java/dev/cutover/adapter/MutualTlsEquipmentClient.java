@@ -39,6 +39,16 @@ public final class MutualTlsEquipmentClient implements EquipmentPort {
         return reply.body();
     }
     @Override public Reply command(UUID id) { return request("GET","/sim/v1/commands/"+id,null); }
+    public JsonNode history(long after,int limit) {
+        if(after<0 || limit<1 || limit>100)throw new IllegalArgumentException("Invalid bounded history cursor.");
+        Reply reply=request("GET","/sim/v1/history?after="+after+"&limit="+limit,null);
+        if(reply.status()!=200)throw new Unavailable("Physical history is unavailable.");return reply.body();
+    }
+    public JsonNode recoveryInventory(UUID after,int limit) {
+        if(limit<1 || limit>32)throw new IllegalArgumentException("Invalid recovery inventory page size.");
+        Reply reply=request("GET","/sim/v1/recovery-inventory?limit="+limit+(after==null?"":"&after="+after),null);
+        if(reply.status()!=200)throw new Unavailable("Physical command inventory is unavailable.");return reply.body();
+    }
     @Override public Reply send(UUID id,JsonNode command) { return request("PUT","/sim/v1/commands/"+id,command); }
     private Reply request(String method,String path,JsonNode body) {
         try {

@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes, createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { volumeStatusSql } from './lib/volume-probe.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const directory = resolve(root, '.local/secrets');
@@ -37,6 +38,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE ${migrator} IN SCHEMA public GRANT SELECT,INSE
 ALTER DEFAULT PRIVILEGES FOR ROLE ${migrator} IN SCHEMA public GRANT USAGE,SELECT ON SEQUENCES TO ${runtime};
 ALTER DEFAULT PRIVILEGES FOR ROLE ${migrator} IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 ALTER DEFAULT PRIVILEGES FOR ROLE ${migrator} IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO ${runtime};
+${owner === 'keycloak' ? '' : volumeStatusSql(owner)}
 `;
   }).join('\n');
 }

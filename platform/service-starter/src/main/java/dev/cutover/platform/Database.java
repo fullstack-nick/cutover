@@ -23,6 +23,9 @@ public final class Database {
     }
     public static void requireDurability(DSLContext sql, boolean intake) {
         var control = sql.fetchOne("SELECT * FROM service_control WHERE singleton FOR SHARE");
+        // The adapter adds this column when restoration support is installed; older/other owner schemas remain valid.
+        if (control != null && control.field("restoration_required") != null && Boolean.TRUE.equals(control.get("restoration_required", Boolean.class)))
+            throw new Problem(503, "RESTORATION_REQUIRED", "Dispatch remains held until the restored application checkpoint is reconciled with current physical history.");
         if (control == null || control.get("critical_storage", Boolean.class)
                 || control.get("workers_paused", Boolean.class)
                 || control.get(intake ? "intake_paused" : "dispatch_paused", Boolean.class)) {

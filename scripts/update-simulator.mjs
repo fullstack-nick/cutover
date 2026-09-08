@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { simulator, root } from '../tools/scenario-driver/client.mjs';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { installComposeVolumeStatus } from './lib/volume-probe.mjs';
 
 const name = 'cutover-dev-equipment-simulator-1';
 async function docker(args, capture = false, environment = process.env) {
@@ -27,6 +28,8 @@ const worldBefore = (await simulator('/sim/v1/equipment')).body;
 let updated = false;
 try {
   await docker([...compose, 'stop', 'equipment-simulator']);
+  await docker([...compose, 'up', '-d', '--no-deps', '--wait', '--wait-timeout', '120', 'simulator-db', 'equipment-volume-probe']);
+  installComposeVolumeStatus('simulator');
   await docker([...compose, 'run', '--rm', '--no-deps', 'migrate-simulator']);
   await docker([...compose, 'up', '-d', '--no-deps', '--wait', '--wait-timeout', '120', 'equipment-simulator']);
   updated = true;

@@ -1,0 +1,13 @@
+# Database filesystem pressure
+
+New intake or dispatch returning `503 STORAGE_OBSERVATION` means the local PostgreSQL filesystem has insufficient headroom or its observation is missing, stale or invalid. The response includes `Retry-After`; retry an intake request with its original key after recovery. Accepted records and known outcome processing remain retained. A logical owner quota may instead report `STORAGE_HEADROOM` or `OUTBOX_CAPACITY`.
+
+A platform administrator can read each owner's `/internal/v1/platform/storage` endpoint. Its `volume` member reports observation age, total/available/reserved bytes and `HEALTHY`, `CRITICAL`, `STALE` or `UNAVAILABLE`. Reserve is the greater of 20% of the backing filesystem or 64 MiB. Reports expire after 15 seconds. The local storage-class size is not a dedicated filesystem quota; the report measures the actual filesystem.
+
+For `STALE` or `UNAVAILABLE`, inspect the `volume-probe` container in `application-db-0`, or the independent `equipment-volume-probe` Compose service. Check its fixed read-only database mount and separate report mount. Redeploy the reviewed configuration or use the scoped simulator update procedure to repair it. Do not synthesize a healthy report or grant runtime users server-file access.
+
+For `CRITICAL`, stop submitting new work. Inspect storage consumers and preserve unresolved journals, message payloads, database volumes and checkpoint evidence. Free only identified, expendable files within resources you own. Do not prune Docker globally, remove accepted business records, reset the simulator, or clear a Boolean flag to bypass measured pressure. If safe space cannot be reclaimed, preserve the stopped application and expand the backing storage through the host's normal administration procedure.
+
+After a fresh report becomes `HEALTHY`, verify that the original accepted order/receipt is still discoverable and that its existing task resumes without a replacement movement. A transport retry budget may require the documented audited task recovery action; never change its identity. Check the independent physical ledger and owner inventory/sorting ledger for single effects.
+
+`node tools/scenario-driver/volume-pressure-smoke.mjs` uses an isolated, bounded PostgreSQL tmpfs and a real local core HTTP process. Its equipment boundary is a counted refusal endpoint. It never fills a demonstration or shared host volume. The separate component tests verify actual reserved-space refusal, completion writes, probe expiry and restricted function permissions; see ADR 0015 and the implementation ledger for executed results.

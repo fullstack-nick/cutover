@@ -11,8 +11,11 @@ import org.jooq.impl.DSL;
 public final class MessageRetention {
     private final DSLContext database;
     private final Clock clock;
-    public MessageRetention(DSLContext database,Clock clock) { this.database=database;this.clock=clock; }
+    private final boolean restorationHeld;
+    public MessageRetention(DSLContext database,Clock clock) { this(database,clock,false); }
+    public MessageRetention(DSLContext database,Clock clock,boolean restorationHeld) { this.database=database;this.clock=clock;this.restorationHeld=restorationHeld; }
     public int compact() {
+        if(restorationHeld)return 0; // Preserve checkpoint replay bytes until the explicit recovery profile is released.
         OffsetDateTime cutoff=OffsetDateTime.ofInstant(clock.instant(),ZoneOffset.UTC).minusDays(7);
         // Keep these transactions separate: the inbox owns its storage lock before it invokes a handler.
         int published=database.transactionResult(configuration -> {

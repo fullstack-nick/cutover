@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication @EnableScheduling @Import(ProblemHandler.class)
+@SpringBootApplication @EnableScheduling @Import({ProblemHandler.class,dev.cutover.platform.SchemaConfiguration.class})
 public class SimulatorApplication {
     public static void main(String[] args) { SpringApplication.run(SimulatorApplication.class,args); }
     @Bean SimulatorEngine simulatorEngine(DSLContext database) { return new SimulatorEngine(database,Clock.systemUTC()); }

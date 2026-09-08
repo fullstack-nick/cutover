@@ -27,9 +27,9 @@ export function privateDirectory(path) {
 }
 export function call(tool, args, options = {}) {
   const result = spawnSync(tool, args, { cwd: root, encoding: 'utf8', windowsHide: true, maxBuffer: 16 * 1024 * 1024, timeout: 60000, ...options });
-  if (result.status !== 0) {
+  if (result.error || result.status !== 0) {
     const directory = resolve(root, '.local/operations'); mkdirSync(directory, { recursive: true });
-    writeFileSync(resolve(directory, 'last-platform-command-error.log'), result.stderr ?? result.error?.message ?? `Exit ${result.status}`, { mode: 0o600 });
+    writeFileSync(resolve(directory, 'last-platform-command-error.log'), result.stderr || result.error?.message || `Exit ${result.status}`, { mode: 0o600 });
     throw new Error(`${tool} failed; details are in .local/operations/last-platform-command-error.log.`);
   }
   return result.stdout?.trim();
@@ -131,7 +131,7 @@ export function cleanupAbandonedForwards(parentPid, cluster = 'cutover') {
   }
 }
 export function simulatorRead(path, credentials = jsonFile(resolve(root, '.local/secrets/credentials.json'))) {
-  if (!/^\/sim\/v1\/(equipment|history(?:\?after=\d+&limit=\d+)?|commands\/[0-9a-f-]{36}|test-controls\/faults)$/.test(path)) throw new Error('Unrecognized read-only simulator operation.');
+  if (!/^\/sim\/v1\/(equipment|history(?:\?after=\d+&limit=\d+)?|recovery-inventory\?limit=(?:[1-9]|[12][0-9]|3[0-2])|commands\/[0-9a-f-]{36}|test-controls\/faults)$/.test(path)) throw new Error('Unrecognized read-only simulator operation.');
   return new Promise((done, failed) => {
     const request = https.get(`https://localhost:18784${path}`, { pfx: readFileSync(resolve(root, '.local/secrets/equipment/scenario.p12')), passphrase: credentials.passwords.equipment_store, ca: readFileSync(resolve(root, '.local/secrets/equipment/ca.pem')), timeout: 8000 }, response => {
       const parts = []; let bytes = 0;

@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
+import { resolve } from 'node:path';
+import { root, call, target } from '../../scripts/lib/local-platform.mjs';
 process.env.CUTOVER_PROFILE = 'demo';
 const { saveEvidence } = await import('./client.mjs');
 const runId = `telemetry-${Date.now()}`;
@@ -10,6 +12,8 @@ async function json(port, path) {
   return response.json();
 }
 try {
+  target('demo').verify();
+  for (const name of ['prometheus', 'tempo', 'grafana']) call('pwsh', ['-NoProfile', '-NonInteractive', '-File', resolve(root, 'scripts/forward.ps1'), '-Profile', 'demo', '-Target', name, '-Action', 'Start']);
   const targets = await json(8781, '/api/v1/targets');
   assert.equal(targets.status, 'success');
   const active = targets.data.activeTargets;

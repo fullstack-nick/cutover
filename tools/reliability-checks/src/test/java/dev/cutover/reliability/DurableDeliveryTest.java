@@ -72,6 +72,23 @@ class DurableDeliveryTest {
     String state(UUID id) { return db.sql().fetchOne("SELECT state FROM inbox WHERE event_id=?", id).get(0, String.class); }
     static final class Crash extends Error {}
 
+    @Test void checkpointReplayRetainsOriginalBytesAndIdentityWithoutRewritingConfirmedOutbox() throws Exception {
+        UUID id=append(UUID.randomUUID(),1);relay(DeliveryHooks.NONE).poll(16);rabbit.consume(queue,inbox,16);
+        var row=db.sql().fetchOne("SELECT encode(sha256(convert_to(envelope::text,'UTF8')),'hex'),to_jsonb(o)::text FROM outbox o WHERE event_id=?",id);
+        var selected=java.util.List.of(new CheckpointReplay.Event(id,row.get(0,String.class)));
+        var replay=new CheckpointReplay(db.sql(),"producer",rabbit);
+        assertThatThrownBy(()->replay.replay(selected)).isInstanceOf(Problem.class).hasMessageContaining("closed intake");
+        db.sql().execute("UPDATE service_control SET intake_paused=true,dispatch_paused=true");
+        assertThat(replay.replay(selected)).containsExactly(id);assertThat(replay.replay(selected)).containsExactly(id);
+        rabbit.consume(queue,inbox,16);
+        assertThat(count("effects")).isEqualTo(1);assertThat(count("inbox")).isEqualTo(1);
+        assertThat(db.sql().fetchOne("SELECT to_jsonb(o)::text FROM outbox o WHERE event_id=?",id).get(0,String.class)).isEqualTo(row.get(1,String.class));
+        var invalid=java.util.List.of(selected.getFirst(),new CheckpointReplay.Event(UUID.randomUUID(),"a".repeat(64)));
+        assertThatThrownBy(()->replay.replay(invalid)).isInstanceOf(Problem.class).hasMessageContaining("do not match");
+        try(var channel=admin.createChannel()){assertThat(channel.queueDeclarePassive(queue).getMessageCount()).isZero();}
+        assertThatThrownBy(()->new CheckpointReplay(db.sql(),"another-owner",rabbit).replay(selected)).isInstanceOf(Problem.class);
+    }
+
     @Test void emptyDeliveryPollsNeedNoWriteTransactionAndStillNoticeLaterWork() {
         db.sql().transaction(configuration -> {
             var sql = DSL.using(configuration);
@@ -114,7 +131,8 @@ class DurableDeliveryTest {
         UUID unpublished=append(UUID.randomUUID(),1);
         var retention=new MessageRetention(db.sql(),clock);
         clock.advance(Duration.ofDays(6));assertThat(retention.compact()).isZero();
-        clock.advance(Duration.ofDays(2));assertThat(retention.compact()).isEqualTo(2);
+        clock.advance(Duration.ofDays(2));assertThat(new MessageRetention(db.sql(),clock,true).compact()).isZero();
+        assertThat(retention.compact()).isEqualTo(2);
         assertThat(db.sql().fetchExists(DSL.table("outbox"),DSL.field("event_id").eq(published))).isFalse();
         assertThat(db.sql().fetchOne("SELECT envelope,raw_body,payload_bytes FROM inbox WHERE event_id=?",published).intoArray()).containsExactly(null,null,0);
         assertThat(db.sql().fetchExists(DSL.table("outbox"),DSL.field("event_id").eq(unpublished))).isTrue();

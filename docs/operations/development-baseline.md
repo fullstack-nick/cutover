@@ -19,6 +19,6 @@ The page and local identity are served at `http://localhost:8780`. The scenario 
 
 Passwords, certificate keys, realm configuration, image manifests, and raw evidence are generated under ignored `.local/`. Keep that directory private. Rerunning configuration preserves existing credentials and world data. Never run a demonstration reset to solve a migration or uncertain-equipment error.
 
-`Stop` preserves named volumes. Application and simulator data use different database containers and volumes. This baseline script only addresses the `cutover-dev` Compose project. The final kind platform has a separate lifecycle. No build, test, or deployment runs on a schedule or through a hosted pipeline.
+`Stop` preserves named volumes. Application and simulator data use different database containers and volumes. This baseline script only addresses the `cutover-dev` Compose project. It keeps a simulator used by a running kind environment available, and Start refuses to activate an older development database copy when a preserved Cutover kind node exists. The kind platform has a separate lifecycle. No build, test, or deployment runs on a schedule or through a hosted pipeline.
 
 Windows can reserve TCP ranges even when no listener appears. The initial simulator port fell into such a reserved range on this host and was changed to 18784. A bind failure requires checking `netsh interface ipv4 show excludedportrange protocol=tcp`; do not remove Windows reservations or stop unrelated applications to claim the port.

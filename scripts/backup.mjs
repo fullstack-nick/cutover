@@ -54,6 +54,7 @@ try {
     assert.equal(Number(platform.sql(owner, 'SELECT count(*) FROM process_faults WHERE remaining>0;')), 0, 'Clear armed process-exit faults before checkpoint capture.');
   }
   assert.equal(Number(platform.sql('adapter', 'SELECT count(*) FROM migration_process_faults WHERE remaining>0;')), 0, 'Clear armed migration-exit faults before checkpoint capture.');
+  assert.equal(platform.sql('adapter', "SELECT coalesce((to_jsonb(c)->>'restoration_required')::boolean,false) FROM service_control c WHERE singleton;"), 'f', 'Complete the current restoration before capturing another application checkpoint.');
   const identity = platform.owned(platform.get('deployment', 'keycloak', 'cutover-platform'));
   assert.equal(identity.spec.replicas, 1); assert.equal(identity.status.readyReplicas, 1);
   proxy = await platform.forward('proxy');
@@ -103,7 +104,7 @@ try {
   for (const owner of databases) {
     const rowsBefore = fingerprints(platform, owner);
     const file = `${owner}.dump`, fd = openSync(resolve(directory, file), 'wx', 0o600);
-    try { platform.kube(['-n', 'cutover-platform', 'exec', 'application-db-0', '--', 'sh', '-c', `export PGPASSWORD="$POSTGRES_PASSWORD"; exec pg_dump -h 127.0.0.1 -U postgres --role=cutover_${owner}_migrator -d cutover_${owner} -Fc --no-owner --no-acl`], { stdio: ['ignore', fd, 'pipe'], timeout: 180000 }); }
+    try { platform.kube(['-n', 'cutover-platform', 'exec', 'application-db-0', '--', 'sh', '-c', `export PGPASSWORD="$POSTGRES_PASSWORD"; exec pg_dump -h 127.0.0.1 -U postgres --role=cutover_${owner}_migrator -d cutover_${owner} -Fc --no-owner --no-acl --exclude-schema=cutover_ops`], { stdio: ['ignore', fd, 'pipe'], timeout: 180000 }); }
     finally { closeSync(fd); }
     assert.deepEqual(fingerprints(platform, owner), rowsBefore, `${owner} tables changed during their dump.`);
     const schema = owner === 'keycloak' ? JSON.parse(platform.sql(owner, "SELECT jsonb_agg(jsonb_build_object('id',id,'author',author,'checksum',md5sum) ORDER BY orderexecuted) FROM databasechangelog;")) : JSON.parse(platform.sql(owner, "SELECT jsonb_agg(jsonb_build_object('version',version,'script',script,'checksum',checksum,'success',success) ORDER BY installed_rank) FROM flyway_schema_history;"));

@@ -44,6 +44,7 @@ for (const [name, owner] of [['legacy-core', 'core'], ['equipment-adapter', 'ada
 }
 secret('adapter-equipment', apps, { 'adapter.p12': readFileSync(resolve(root, '.local/secrets/equipment/adapter.p12')), 'trust.p12': readFileSync(resolve(root, '.local/secrets/equipment/trust.p12')), password: credentials.equipment_store });
 objects.push(config('rabbit-config', platform, { 'rabbitmq.conf': read('infra/compose/rabbitmq.conf'), enabled_plugins: '[rabbitmq_management,rabbitmq_prometheus].\n' }));
+objects.push(config('volume-probe', platform, { 'volume-probe.sh': read('platform/service-starter/src/main/resources/ops/volume-probe.sh') }));
 objects.push(config('proxy-config', apps, { 'default.conf': read('infra/compose/proxy.conf').replace('http://keycloak:8080', `http://keycloak.${platform}.svc.cluster.local:8080`)
   .replace('    location /api/', '    location ~ ^/api/v1/sites/[^/]+/shadow-comparisons(/|$) { proxy_pass http://shadow-scheduler:8080; }\n    location ~ ^/api/v1/sites/[^/]+/execution-tasks(/|$) { proxy_pass http://execution-service:8080; }\n    location ~ ^/api/v1/sites/[^/]+/(return-receipts|return-counters|return-tasks)(/|$) { proxy_pass http://returns-service:8080; }\n    location /api/') }));
 for (const name of ['collector', 'prometheus', 'tempo']) objects.push(config(`${name}-config`, observability, { 'config.yaml': read(`infra/kubernetes/base/config/${name}.yaml`) }));
@@ -76,7 +77,7 @@ for (const workload of objects.filter(item => ['Deployment', 'StatefulSet'].incl
     if (!value) throw new Error(`Missing local configuration reference: ${reference}`);
     return { kind, name, data: value.data };
   });
-  workload.spec.template.metadata.annotations = { 'dev.cutover/config-sha256': createHash('sha256').update(JSON.stringify(inputs)).digest('hex') };
+  workload.spec.template.metadata.annotations = { ...workload.spec.template.metadata.annotations, 'dev.cutover/config-sha256': createHash('sha256').update(JSON.stringify(inputs)).digest('hex') };
 }
 const directory = resolve(root, '.local/kubernetes/demo'); mkdirSync(directory, { recursive: true });
 function group(name, contents) {

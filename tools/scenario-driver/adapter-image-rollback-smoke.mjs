@@ -61,6 +61,7 @@ try {
   }
   const state = await controls();
   for (const field of ['workersPaused', 'dispatchPaused', 'criticalStorage']) assert.equal(state[field], false);
+  assert.equal(query('adapter', "SELECT coalesce((to_jsonb(c)->>'restoration_required')::boolean,false) FROM service_control c WHERE singleton;"), 'f', 'A predecessor without the restoration gate cannot run while recovery is held.');
   await gate(true);
   assert.equal(query('adapter', "SELECT count(*) FROM migration_sessions WHERE phase IN ('DRAINING','RECONCILING','READY_TO_SWITCH','OBSERVING','REVERSING');"), '0', 'This predecessor lacks the migration worker, so all sessions must be settled before image rollback.');
   assert.equal(query('adapter', "SELECT count(*) FROM movement_allocations WHERE state IN ('PENDING','ASSIGNED');"), '0');

@@ -25,7 +25,8 @@ public class MessageConfiguration {
     }
     @Bean OutboxRelay outboxRelay(DSLContext database, RabbitDelivery rabbit, Clock clock, DeliveryHooks hooks) { return new OutboxRelay(database, rabbit, clock, hooks); }
     @Bean(initMethod = "start", destroyMethod = "close")
-    MessageRuntime messageRuntime(DSLContext database, OutboxRelay relay, DurableInbox inbox, RabbitDelivery rabbit, MessageSubscription subscription, Clock clock) {
-        return new MessageRuntime(database, relay, inbox, rabbit, subscription.queue(),new MessageRetention(database,clock));
+    MessageRuntime messageRuntime(DSLContext database, OutboxRelay relay, DurableInbox inbox, RabbitDelivery rabbit, MessageSubscription subscription, Clock clock,
+            @org.springframework.beans.factory.annotation.Value("${cutover.restore-retention-held:false}") boolean restorationHeld) {
+        return new MessageRuntime(database, relay, inbox, rabbit, subscription.queue(),new MessageRetention(database,clock,restorationHeld));
     }
 }

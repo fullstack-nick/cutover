@@ -31,6 +31,7 @@ class SimulatorController {
     }
     @GetMapping("/sim/v1/equipment") JsonNode equipment() { return engine.equipment(); }
     @GetMapping("/sim/v1/history") JsonNode history(@RequestParam(defaultValue="0") long after,@RequestParam(defaultValue="100") int limit) { return engine.history(after,limit); }
+    @GetMapping("/sim/v1/recovery-inventory") JsonNode recoveryInventory(@RequestParam(required=false) UUID after,@RequestParam(defaultValue="32") int limit) { return engine.recoveryInventory(after,limit); }
     record Fault(String kind, UUID commandId, int count, int delayMillis) {}
     @PostMapping("/sim/v1/test-controls/faults") JsonNode fault(@RequestBody Fault fault) {
         requireControls(); UUID id=engine.fault(fault.kind(),fault.commandId(),fault.count(),fault.delayMillis());

@@ -37,6 +37,14 @@ export function platformResources(images, settings) {
     readiness: { exec: { command: ['pg_isready', '-U', 'postgres'] }, periodSeconds: 3 },
     storage: { path: '/var/lib/postgresql', size: '3Gi' }, volumes: [credential('database-init')], mounts: [mount('database-init', '/docker-entrypoint-initdb.d/010-owners.sql', 'init.sql')],
   }));
+  const databasePod = result.find(item => item.kind === 'StatefulSet' && item.metadata.name === 'application-db').spec.template.spec;
+  result.find(item => item.kind === 'StatefulSet' && item.metadata.name === 'application-db').spec.template.metadata.annotations = { 'kubectl.kubernetes.io/default-container': 'application-db' };
+  databasePod.volumes.push(configuration('volume-probe'), { name: 'volume-observation', emptyDir: { medium: 'Memory', sizeLimit: '1Mi' } });
+  databasePod.containers[0].volumeMounts.push(mount('volume-observation', '/run/cutover-volume'));
+  databasePod.containers.push({ name: 'volume-probe', image: images.postgres, imagePullPolicy: 'Never', command: ['sh', '/etc/cutover/volume-probe.sh'],
+    resources: { requests: { cpu: '5m', memory: '8Mi' }, limits: { cpu: '100m', memory: '32Mi' } },
+    securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ['ALL'] } },
+    volumeMounts: [mount('data', '/var/lib/postgresql'), mount('volume-probe', '/etc/cutover'), { name: 'volume-observation', mountPath: '/run/cutover-volume' }] });
   add(service('rabbitmq', platform, [['amqp', 5672], ['metrics', 15692]]), workload('rabbitmq', platform, images.rabbitmq, {
     user: 999, readOnly: false, port: 5672, memory: '512Mi', cpu: '1000m', storage: { path: '/var/lib/rabbitmq', size: '1Gi' },
     env: [literal('RABBITMQ_NODENAME', 'rabbit@rabbitmq-0'), literal('RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS', '+S 2:2'), literal('RABBITMQ_ENABLED_PLUGINS_FILE', '/etc/rabbitmq/enabled_plugins')],
@@ -67,6 +75,9 @@ export function platformResources(images, settings) {
       extra.volumes = [credential('adapter-equipment')]; extra.mounts = [mount('adapter-equipment', '/etc/cutover')];
     }
     add(service(name, apps, [['http', 8080], ['management', 9091]]), workload(name, apps, images[name === 'shadow-scheduler' ? 'execution-service' : name], { env, ...extra }));
+    const process = result.at(-1).spec.template.spec.containers[0];
+    process.startupProbe = { ...health(9091, '/actuator/health/liveness'), periodSeconds: 3, failureThreshold: 60 };
+    process.livenessProbe = { ...health(9091, '/actuator/health/liveness'), periodSeconds: 15, failureThreshold: 3 };
   }
   const simulatorService = service('equipment-simulator', platform, [['https', 8443], ['management', 9091]]); delete simulatorService.spec.selector;
   add(simulatorService, { apiVersion: 'discovery.k8s.io/v1', kind: 'EndpointSlice', metadata: { ...metadata('equipment-simulator', platform), labels: { ...labels('equipment-simulator'), 'kubernetes.io/service-name': 'equipment-simulator', 'endpointslice.kubernetes.io/managed-by': 'cutover-renderer' } }, addressType: 'IPv4', ports: [{ name: 'https', port: 8443, protocol: 'TCP' }, { name: 'management', port: 9091, protocol: 'TCP' }], endpoints: [{ addresses: [settings.simulatorAddress], conditions: { ready: true } }] });

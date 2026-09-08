@@ -32,7 +32,7 @@ management:
       show-details: never
       group:
         readiness:
-          include: readinessState,db
+          include: readinessState,db,schemaReadiness
 logging:
   structured:
     format:
@@ -46,6 +46,8 @@ server:
       max: 32
     max-connections: 200
 cutover:
+  schema:
+    required-versions: 107,116
   messaging-enabled: ${CUTOVER_MESSAGING_ENABLED:true}
   service-name: returns-service
   workers-enabled: ${CUTOVER_WORKERS_ENABLED:true}

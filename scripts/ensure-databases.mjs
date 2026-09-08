@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { volumeStatusSql } from './lib/volume-probe.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const kc = ['--kubeconfig', resolve(root, '.local/kubeconfig'), '--context', 'kind-cutover', '-n', 'cutover-platform'];
@@ -32,6 +33,7 @@ for (const owner of ['core', 'adapter', 'execution', 'returns', 'keycloak', 'sha
   sql += "ALTER DEFAULT PRIVILEGES FOR ROLE " + migrator + " IN SCHEMA public GRANT USAGE,SELECT ON SEQUENCES TO " + runtime + ";\n";
   sql += "ALTER DEFAULT PRIVILEGES FOR ROLE " + migrator + " IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;\n";
   sql += "ALTER DEFAULT PRIVILEGES FOR ROLE " + migrator + " IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO " + runtime + ";\n";
+  if (owner !== 'keycloak') sql += volumeStatusSql(owner);
   kubectl(['exec', '-i', 'application-db-0', '--', 'sh', '-c', 'export PGPASSWORD="$POSTGRES_PASSWORD"; exec psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d postgres -q'], sql);
   console.log('Verified isolated database and role grants: ' + database);
 }

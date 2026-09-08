@@ -17,6 +17,8 @@ Names are immutable. The scripts use only `.local/kubeconfig`, context `kind-cut
 
 Each private checkpoint records the source revision and actual container identities, schema checksums, routing epochs, outstanding commands, source outbox replay identities, simulator world/generation and journal positions at the start/freeze/end. Every database table has a count and sorted row-content SHA-256 before and after capture. All databases are checked again after the final dump; sequential dumps must describe the same stopped-writer interval. The PostgreSQL and RabbitMQ volumes stay mounted, and normal cleanup restores the observed controls and writer replicas.
 
+The administrator-owned `cutover_ops` schema contains only a fixed filesystem-observation function and is excluded from business dumps. It is provisioned on the destination; its transient free-space report must describe the destination's current filesystem. Application table fingerprints cover the owner-managed `public` schema.
+
 `manifest.json`, `manifest.sha256`, six PostgreSQL custom-format dumps, scoped resource manifests, image inventory and required local credentials stay under `.local/checkpoints/<name>`. Windows permissions remove inherited access and grant the current account and SYSTEM; other platforms use a private directory. These artifacts contain credentials and business fixtures. Keep them out of Git, screenshots and public evidence. A same-host checkpoint does not protect against loss of the host disk.
 
 ## Interrupted capture

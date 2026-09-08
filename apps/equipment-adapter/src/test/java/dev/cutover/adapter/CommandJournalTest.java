@@ -67,6 +67,24 @@ class CommandJournalTest {
         });
     }
 
+    @Test void restorationHoldCannotBeClearedByOrdinaryControlsAndStillAllowsKnownCompletion() {
+        UUID accepted=UUID.randomUUID();record(accepted,movement(accepted));journal.work();
+        UUID waiting=UUID.randomUUID();var waitingMovement=movement(waiting);var allocation=allocations.register("site-a","legacy-core",waitingMovement);
+        adapterDb.sql().execute("UPDATE service_control SET restoration_required=true");
+        var controls=new dev.cutover.platform.control.RuntimeControls(adapterDb.sql());
+        controls.change("scenario","site-a","ordinary-resume",JsonSupport.MAPPER.valueToTree(Map.of("expectedVersion",0,"workersPaused",false,"dispatchPaused",false,"intakePaused",false,"reason","Ordinary controls cannot bypass an unresolved application restoration.")));
+        assertThatThrownBy(()->journal.record("site-a","legacy-core",waiting,Database.uuid(allocation,"allocationId"),0,"ambient-a",waitingMovement))
+            .isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).code()).isEqualTo("RESTORATION_REQUIRED"));
+        UUID fresh=UUID.randomUUID();
+        assertThatThrownBy(()->allocations.register("site-a","legacy-core",movement(fresh))).isInstanceOf(Problem.class)
+            .satisfies(error->assertThat(((Problem)error).code()).isEqualTo("RESTORATION_REQUIRED"));
+        tick();
+        assertThat(journal.get("site-a",accepted).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(adapterDb.sql().fetchOne("SELECT restoration_required FROM service_control").get(0,Boolean.class)).isTrue();
+        assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal WHERE command_id=?",waiting).get(0,Integer.class)).isZero();
+        assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isEqualTo(1);
+    }
+
     @Test void checkpointFreezePreventsManualInvestigationAndRetainsTheSameCommandForResume() {
         UUID id=UUID.randomUUID();record(id,movement(id));simulator.fault("BEFORE_ACCEPT",id,1,0);journal.work();
         var before=journal.get("site-a",id);

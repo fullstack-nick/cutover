@@ -28,7 +28,7 @@ if (mode === 'capture') {
   for (const owner of owners) {
     const file = `${owner}.dump`; const path = resolve(directory, file); const fd = openSync(path, 'w');
     try {
-      call('docker', ['exec', '--env', 'PGPASSWORD', 'cutover-dev-application-db-1', 'pg_dump', '-h', '127.0.0.1', '-U', `cutover_${owner}_migrator`, '-d', `cutover_${owner}`, '-Fc', '--no-owner', '--no-acl'], { env: { ...process.env, PGPASSWORD: credential[`${owner}_migrator`] }, stdio: ['ignore', fd, 'pipe'] });
+      call('docker', ['exec', '--env', 'PGPASSWORD', 'cutover-dev-application-db-1', 'pg_dump', '-h', '127.0.0.1', '-U', `cutover_${owner}_migrator`, '-d', `cutover_${owner}`, '-Fc', '--no-owner', '--no-acl', '--exclude-schema=cutover_ops'], { env: { ...process.env, PGPASSWORD: credential[`${owner}_migrator`] }, stdio: ['ignore', fd, 'pipe'] });
     } finally { closeSync(fd); }
     manifest.databases.push({ owner, file, sha256: sha(path) });
   }

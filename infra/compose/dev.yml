@@ -80,7 +80,7 @@ services:
     networks: [application]
     environment: { POSTGRES_PASSWORD: '${CUTOVER_POSTGRES_ADMIN}', POSTGRES_INITDB_ARGS: '--auth-host=scram-sha-256' }
     command: [postgres, -c, shared_buffers=64MB, -c, max_connections=100, -c, timezone=UTC]
-    volumes: [application-data:/var/lib/postgresql, ./.local/secrets/application-init.sql:/docker-entrypoint-initdb.d/010-owners.sql:ro]
+    volumes: [application-data:/var/lib/postgresql, application-volume-observation:/run/cutover-volume:ro, ./.local/secrets/application-init.sql:/docker-entrypoint-initdb.d/010-owners.sql:ro]
     healthcheck: { test: [CMD-SHELL, 'pg_isready -U postgres'], interval: 3s, timeout: 3s, retries: 30 }
   simulator-db:
     <<: *common
@@ -89,8 +89,32 @@ services:
     networks: [equipment]
     environment: { POSTGRES_PASSWORD: '${CUTOVER_SIMULATOR_POSTGRES_ADMIN}', POSTGRES_INITDB_ARGS: '--auth-host=scram-sha-256' }
     command: [postgres, -c, shared_buffers=32MB, -c, max_connections=40, -c, timezone=UTC]
-    volumes: [equipment-data:/var/lib/postgresql, ./.local/secrets/simulator-init.sql:/docker-entrypoint-initdb.d/010-owner.sql:ro]
+    volumes: [equipment-data:/var/lib/postgresql, equipment-volume-observation:/run/cutover-volume:ro, ./.local/secrets/simulator-init.sql:/docker-entrypoint-initdb.d/010-owner.sql:ro]
     healthcheck: { test: [CMD-SHELL, 'pg_isready -U postgres'], interval: 3s, timeout: 3s, retries: 30 }
+  application-volume-probe:
+    <<: *common
+    image: ${CUTOVER_POSTGRES_IMAGE}
+    pull_policy: never
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 32m
+    cpus: 0.1
+    entrypoint: [sh, /etc/cutover/volume-probe.sh]
+    volumes: [application-data:/var/lib/postgresql:ro, application-volume-observation:/run/cutover-volume, ./platform/service-starter/src/main/resources/ops/volume-probe.sh:/etc/cutover/volume-probe.sh:ro]
+  equipment-volume-probe:
+    <<: *common
+    image: ${CUTOVER_POSTGRES_IMAGE}
+    pull_policy: never
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 32m
+    cpus: 0.1
+    entrypoint: [sh, /etc/cutover/volume-probe.sh]
+    volumes: [equipment-data:/var/lib/postgresql:ro, equipment-volume-observation:/run/cutover-volume, ./platform/service-starter/src/main/resources/ops/volume-probe.sh:/etc/cutover/volume-probe.sh:ro]
   rabbitmq:
     <<: *common
     image: ${CUTOVER_RABBITMQ_IMAGE}
@@ -209,3 +233,5 @@ volumes:
   application-data: { name: cutover-dev-application-data, labels: { dev.cutover.project: cutover } }
   broker-data: { name: cutover-dev-broker-data, labels: { dev.cutover.project: cutover } }
   equipment-data: { name: cutover-equipment-data, labels: { dev.cutover.project: cutover } }
+  application-volume-observation: { name: cutover-dev-application-volume-observation, labels: { dev.cutover.project: cutover } }
+  equipment-volume-observation: { name: cutover-equipment-volume-observation, labels: { dev.cutover.project: cutover } }

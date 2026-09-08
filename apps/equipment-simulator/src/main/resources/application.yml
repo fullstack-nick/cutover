@@ -29,7 +29,7 @@ management:
       show-details: never
       group:
         readiness:
-          include: readinessState,db
+          include: readinessState,db,schemaReadiness
 logging:
   structured:
     format:
@@ -53,5 +53,7 @@ server:
       max: 32
     max-connections: 200
 cutover:
+  schema:
+    required-versions: 104,107
   service-name: equipment-simulator
   workers-enabled: ${CUTOVER_WORKERS_ENABLED:true}

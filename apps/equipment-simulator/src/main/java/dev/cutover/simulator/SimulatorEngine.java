@@ -170,4 +170,21 @@ public final class SimulatorEngine {
         if (after<0 || limit<1 || limit>100) throw Problem.invalid("Invalid history cursor or limit.");
         return Database.json(database, "SELECT COALESCE(jsonb_agg(to_jsonb(e)), '[]'::jsonb) FROM (SELECT * FROM execution_ledger WHERE sequence> ? ORDER BY sequence LIMIT ?) e", after, limit);
     }
+    /** Recovery must also account for accepted commands that have not produced an execution-ledger row. */
+    public JsonNode recoveryInventory(UUID after,int limit) {
+        if(limit<1 || limit>32)throw Problem.invalid("A recovery inventory page must contain 1–32 commands.");
+        return Database.json(database,"""
+            WITH page AS (
+              SELECT command_id,site_id,movement_id,state,payload,version,accepted_at,completed_at,
+                (SELECT sequence FROM execution_ledger e WHERE e.command_id=c.command_id) AS execution_sequence
+              FROM simulator_commands c WHERE (?::uuid IS NULL OR command_id>?::uuid) ORDER BY command_id LIMIT ?
+            )
+            SELECT jsonb_build_object('worldId',w.world_id,'journalGeneration',w.journal_generation,'completeHistory',w.complete_history,
+              'observedAt',now(),'totalCommands',(SELECT count(*) FROM simulator_commands),
+              'journalHighWater',(SELECT coalesce(max(sequence),0) FROM execution_ledger),
+              'items',(SELECT coalesce(jsonb_agg(to_jsonb(p) ORDER BY command_id),'[]'::jsonb) FROM page p),
+              'nextCursor',(SELECT command_id FROM page ORDER BY command_id DESC LIMIT 1))
+            FROM simulation_world w WHERE singleton
+            """,after,after,limit);
+    }
 }

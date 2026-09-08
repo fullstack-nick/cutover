@@ -69,6 +69,24 @@ class SimulatorEngineTest {
         assertThatThrownBy(()->engine.accept(id,correct)).isInstanceOf(Problem.class);
         assertThat(fixture.sql().fetchOne("SELECT count(*) FROM simulator_commands").get(0,Integer.class)).isZero();
     }
+    @Test void recoveryInventoryIncludesUnfinishedCommandsAndPagesWithoutChangingPhysicalState() {
+        UUID first=UUID.fromString("10000000-0000-0000-0000-000000000001"),second=UUID.fromString("90000000-0000-0000-0000-000000000002");
+        engine.blockLane("site-a","ambient-a",true);
+        var blocked=command(first,"ambient-a");engine.accept(first,blocked);engine.accept(second,command(second,"ambient-b"));advance();
+        var page=engine.recoveryInventory(null,1);
+        assertThat(page.path("totalCommands").asInt()).isEqualTo(2);assertThat(page.path("journalHighWater").asInt()).isEqualTo(1);
+        assertThat(page.path("items").get(0).path("command_id").asString()).isEqualTo(first.toString());
+        assertThat(page.path("items").get(0).path("state").asString()).isEqualTo("ACCEPTED");
+        assertThat(JsonSupport.hash(page.path("items").get(0).path("payload"))).isEqualTo(JsonSupport.hash(blocked));
+        var next=engine.recoveryInventory(UUID.fromString(page.path("nextCursor").asString()),1);
+        assertThat(next.path("items").get(0).path("command_id").asString()).isEqualTo(second.toString());
+        assertThat(next.path("items").get(0).path("state").asString()).isEqualTo("COMPLETED");
+        assertThat(next.path("items").get(0).path("execution_sequence").asInt()).isEqualTo(1);
+        assertThat(engine.recoveryInventory(second,32).path("items").size()).isZero();
+        assertThatThrownBy(()->engine.recoveryInventory(null,33)).isInstanceOf(Problem.class);
+        assertThat(engine.status(first).path("state").asString()).isEqualTo("ACCEPTED");
+        assertThat(fixture.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isEqualTo(1);
+    }
     @Test void executionHoldSurvivesEngineRestartAndRetainsAtomicLoadLedger() {
         UUID id=UUID.randomUUID(); engine.fault("HOLD_EXECUTING",id,1,10000); engine.accept(id,command(id,"ambient-a")); advance();
         assertThat(engine.status(id).path("state").asString()).isEqualTo("EXECUTING");
