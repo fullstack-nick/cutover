@@ -1,5 +1,7 @@
 # Cutover — implementation plan
 
+**Lifecycle update, 9 September 2026:** the owner ended development at the current baseline. The [development closeout](development-closeout.md) records the delivered work and retained A50 failure. The original plan below remains the historical specification; further implementation or qualification requires a new owner instruction.
+
 Research baseline: 7 September 2026. Status: ready for development; owner decisions are settled, and software implementation and runtime acceptance tests have not started.
 
 Cutover is an independent, local portfolio project demonstrating how to modernize a database-heavy grocery fulfilment system while simulated warehouse work continues. A smaller reusable-crate returns application proves that the platform supports another product without sharing fulfilment's business tables.

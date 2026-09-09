@@ -93,3 +93,7 @@ For A18, for example, show one external order, one reservation, one logical move
 Tests use isolated datasets/resources and deterministic fault switches. Use bounded condition polling rather than long arbitrary sleeps. A test may query an owning service's database for assertions under a dedicated read-only test credential; runtime applications still cannot read another owner's tables.
 
 All A-IDs are required for the final portfolio scope. A documented failure remains a failure. If an environmental limit blocks a scenario, report that specific limitation and do not call the implementation complete.
+
+## Development closeout — 9 September 2026
+
+The owner ended development at the current baseline. This matrix and its thresholds remain unchanged; A50 is a documented failure and full qualification was not achieved. Further qualification is cancelled for this development stage. See the [closeout](development-closeout.md) and [recorded results](../evidence/acceptance-results.md).

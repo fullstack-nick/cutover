@@ -8,7 +8,7 @@ Java 21 · Spring Boot · jOOQ/PostgreSQL · RabbitMQ · React/TypeScript · Key
 
 ![Cutover operations console with current orders, owner boundaries and equipment-backed completion](docs/evidence/images/console-overview.png)
 
-**Status: final acceptance verification in progress.** The [complete reviewer walkthrough](docs/evidence/reviewer-walkthrough-2026-09-08.md) passed all six commands in 4 minutes 49.5 seconds, with five populated console captures. Working evidence also covers owner migration/reversal, independent returns, unknown-command recovery, process failures, restoration and prepared offline operation. The latest full load completed all 3,300 movements once but missed the dispatch target; renewed sustained-load qualification remains open. The [implementation ledger](docs/planning/implementation-progress.md) records the measured results and failed attempts.
+**Development concluded on 9 September 2026, with a documented performance limitation.** The [complete reviewer walkthrough](docs/evidence/reviewer-walkthrough-2026-09-08.md) passed all six commands in 4 minutes 49.5 seconds, with five populated console captures. Working evidence also covers owner migration/reversal, independent returns, unknown-command recovery, process failures, restoration and prepared offline operation. The latest full load completed all 3,300 movements once but missed the dispatch target. The [development closeout](docs/planning/development-closeout.md) records the decision to end development with that limitation; the [implementation ledger](docs/planning/implementation-progress.md) retains measured results and failed attempts.
 
 The application runs entirely on one machine with synthetic data and equipment. GitHub hosts source; builds, tests and deployment are invoked locally. There is no cloud runtime, CI/CD or hosted authentication.
 
@@ -83,7 +83,7 @@ The [latest full load qualification](docs/evidence/healthy-load.md) used the `dd
 
 The development host has an Intel Core i9-13900H, 32 GiB host RAM and an approximately 15.4 GiB Docker VM. Other local workloads share its CPU and disk. Recorded quiescent-checkpoint restoration took **10 minutes 49 seconds**. These are local experiments, not production guarantees.
 
-All [54 acceptance scenarios](docs/planning/acceptance-matrix.md) are required. The [acceptance status table](docs/evidence/acceptance-results.md) distinguishes component tests, runtime checks and unresolved results. Prepared runtime/restart/rollback under external-egress denial is separate from a source build using warmed package caches.
+The original contract covers [54 acceptance scenarios](docs/planning/acceptance-matrix.md). Development closed with A50 still failed; full qualification was not achieved. The [acceptance status table](docs/evidence/acceptance-results.md) distinguishes component tests, runtime checks and the retained limitation. Prepared runtime/restart/rollback under external-egress denial is separate from a source build using warmed package caches.
 
 ## Scope
 

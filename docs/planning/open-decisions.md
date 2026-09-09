@@ -53,3 +53,7 @@ This does not block all development. Begin with small development/test profiles,
 | Completion | All 54 acceptance scenarios; no replacement of central work with optional features. |
 
 Owner replies should become a dated addendum in the local planning archive and a clear accepted decision in the public planning files. The original supplied text must remain unchanged.
+
+## Confirmed: development concluded — 9 September 2026
+
+The owner explicitly instructed that development end at the current state after final housekeeping. The [development closeout](development-closeout.md) records the final portfolio baseline. A50 remains failed with its original threshold and measured evidence intact; no further development, load qualification or administrator tracing is pending. Any future work requires a new owner instruction.

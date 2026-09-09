@@ -1,6 +1,8 @@
 # Working on Cutover
 
-Read `docs/planning/implementation-plan.md`, `acceptance-matrix.md`, and `implementation-progress.md` before changing scope. All 54 acceptance scenarios are required for completion. Keep the progress ledger honest; a component test does not establish a platform acceptance result.
+Development concluded on 9 September 2026 at the owner's request. Read `docs/planning/development-closeout.md` for the final disposition. Do not resume development, performance qualification or the cancelled administrator trace unless the owner explicitly requests new work.
+
+For any newly requested work, read `docs/planning/implementation-plan.md`, `acceptance-matrix.md`, and `implementation-progress.md` before changing scope. The original 54-scenario qualification contract is preserved; A50 remains failed at closeout. Keep the progress ledger honest; a component test does not establish a platform acceptance result.
 
 Use Java 21, the Maven Wrapper, PostgreSQL migrations, and the established owner boundaries. Run meaningful checks for the changes. Database tests require the Docker Linux engine and use disposable, project-labelled containers. Keep domain types and persistence entities out of shared technical modules.
 

@@ -1,6 +1,6 @@
 # Acceptance status
 
-Status: final verification in progress, 9 September 2026. The implementation is **not yet fully qualified**: sustained latency remains open.
+Status: **development concluded with a known limitation**, 9 September 2026. A50 remains failed, so the original full qualification was not achieved. The owner ended further development and investigation; see the [closeout](../planning/development-closeout.md).
 
 The [acceptance contract](../planning/acceptance-matrix.md) defines the required outcomes. This table maps every ID to its evidence and remaining check. Historical runtime results establish only their recorded application versions. [Selected runtime provenance](runtime-runs.json) includes commands, source/build revisions, actual running image identities, assertions and hashes of the private original results. A component check is identified explicitly; it does not establish an unexecuted platform scenario. Failed attempts remain in the [implementation ledger](../planning/implementation-progress.md).
 
@@ -61,4 +61,4 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A53 | [Publication review](publication-review.json) covers the source/evidence snapshot `fc3004a`: 504 tracked files, reachable history, 44 current generated credential values, the unchanged private archive prefix and 243 local documentation links. No findings or missing local targets; GitHub is public, MIT-licensed and Actions-disabled. The failed A50 result is disclosed explicitly. |
 | A54 | [Complete reviewer rehearsal](reviewer-walkthrough-2026-09-08.md), `reviewer-1788893203051`: six commands passed sequentially in 289.463 seconds, followed by five inspected populated views. `reset-bootstrap-1788887847395` establishes the separate prepared-image fresh bootstrap in 604.419 seconds. |
 
-All IDs are required. A failed latency target or missing runtime check prevents final completion, even when every component test passes.
+All IDs remain part of the original qualification contract. The failed A50 latency target prevents a full qualification claim. The owner's decision to close development preserves that result and ends further work on this stage.

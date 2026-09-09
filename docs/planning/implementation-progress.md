@@ -1,6 +1,6 @@
 # Cutover — implementation progress
 
-Implementation goal started 7 September 2026. The implementation plan and all 54 acceptance scenarios remain the completion contract. Research is the baseline; runtime results below must come from executed checks.
+Implementation started 7 September 2026 and concluded at the owner's request on 9 September 2026. The [closeout](development-closeout.md) records the final disposition: A50 remains a documented failure, and further development and investigation are cancelled. The original 54-scenario qualification contract and the chronological evidence below are preserved.
 
 | Phase | Status | Evidence / next work |
 | --- | --- | --- |
@@ -12,8 +12,8 @@ Implementation goal started 7 September 2026. The implementation plan and all 54
 | 5. Extraction and shadow | Verified | Guarded baseline transfer, 1,000 persisted identical-input comparisons, restricted shadow identity and assignment-created tasks under the extracted owner. |
 | 6. Cutover and rollback | Verified | Finite drain and epoch fencing, concurrent supervision, uncertain-outcome reversal, five actual migration process exits and cached predecessor image rollback. |
 | 7. Second product | Verified | Independent receipt/counter/task ownership, duplicate suppression, browser workflow, shared platform conventions and live coexistence under lane failure. |
-| 8. Full operations verification | In progress | Fresh/stale six-database restoration, volume pressure, observation expiry, real process failures and prepared offline operation pass. A50's unchanged sustained dispatch target remains open after a measured lock-order regression. |
-| 9. Portfolio finish | In progress | Architecture, ADRs, onboarding, runbooks, all-54 evidence mapping, five inspected screenshots and the complete timed reviewer rehearsal are recorded. Final performance evidence and publication review remain. |
+| 8. Full operations verification | Closed with limitation | Fresh/stale six-database restoration, volume pressure, observation expiry, real process failures and prepared offline operation pass. A50 remains failed; the owner ended further qualification. |
+| 9. Portfolio finish | Complete | Architecture, ADRs, onboarding, runbooks, all-54 evidence mapping, inspected screenshots, reviewer rehearsal, measured performance failures, public-source review and the development closeout are recorded. |
 
 ## Setup observations
 
@@ -530,3 +530,8 @@ Three-minute `load-diagnostic-1788933725206` and `load-diagnostic-1788934202319`
 ## 9 September — reviewed public source and evidence snapshot
 
 The [publication receipt](../evidence/publication-review.json) binds the inspected source and evidence to `fc3004aa9da9255bda248f9828d581be92221ccb` and its Git tree. The review covered 504 tracked files, 1,116 reachable historical blobs and 44 actual current generated credential values, with no findings; the original private archive prefix remains intact. All 243 local Markdown targets across 88 documents resolved. GitHub readback confirms a public MIT repository with Actions disabled. Failed load evidence and the incomplete acceptance state remain explicit. A53 is supported for this snapshot; the overall implementation goal remains open because A50 has not passed.
+
+
+## 9 September — development concluded by owner
+
+The owner instructed that development end at the current state after final housekeeping. [The closeout](development-closeout.md) records the delivered baseline and known A50 limitation. README, phase status, acceptance disposition and the archived handoff now reflect that decision. Further development, performance qualification and the proposed administrator trace are cancelled. A50 remains failed; no acceptance result or threshold was changed. The supplied planning archive received an append-only decision, with its complete prior contents preserved byte for byte. Closeout changes documentation and lifecycle records only; existing runtime checks and their original evidence remain intact.

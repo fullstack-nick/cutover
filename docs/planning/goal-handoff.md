@@ -1,5 +1,7 @@
 # Cutover — future implementation goal handoff
 
+**Archived handoff:** development concluded on 9 September 2026 at the owner's request. The [development closeout](development-closeout.md) supersedes the instructions below to initiate or continue work. The original objective is retained as historical planning; A50 remains failed. Do not launch a new goal or resume diagnostics from this handoff without a new owner instruction.
+
 Prepared 7 September 2026. This is a prompt and completion contract for a later implementation goal. It does not start a goal, schedule work, or claim that implementation has begun.
 
 The owner has confirmed the name Cutover and the MIT repository license. Preserve the root LICENSE and separate upstream notices. Local execution, public GitHub hosting, project independence, and no CI/CD are already settled. No further owner decision is needed to begin development.
