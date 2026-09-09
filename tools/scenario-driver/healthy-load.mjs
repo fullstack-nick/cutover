@@ -10,7 +10,7 @@ process.env.CUTOVER_PROFILE='demo';
 const { api, token, query, provisionObservers, saveEvidence }=await import('./client.mjs');
 const { root, target, until, simulatorRead, privateDirectory, writeJson, maintenanceLock, call }=await import('../../scripts/lib/local-platform.mjs');
 const argumentsList=process.argv.slice(2);
-assert.ok(argumentsList.length<=1 && argumentsList.every(value=>/^--diagnostic=(30|60|120)$/.test(value)), 'Usage: healthy-load.mjs [--diagnostic=30|60|120]');
+assert.ok(argumentsList.length<=1 && argumentsList.every(value=>/^--diagnostic=(30|60|120|180)$/.test(value)), 'Usage: healthy-load.mjs [--diagnostic=30|60|120|180]');
 const diagnostic=argumentsList.length!==0,warmupSeconds=diagnostic?10:60,measurementSeconds=diagnostic?Number(argumentsList[0].split('=')[1]):600;
 const totalSeconds=warmupSeconds+measurementSeconds,orderCount=totalSeconds*2,receiptCount=totalSeconds,movementCount=totalSeconds*5;
 const id=`load-${diagnostic?'diagnostic-':''}${Date.now()}`,directory=resolve(root,'.local/evidence',id),seed=20260908;

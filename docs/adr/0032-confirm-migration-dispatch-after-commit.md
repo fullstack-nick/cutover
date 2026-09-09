@@ -1,6 +1,6 @@
 # ADR 0032: confirm migration dispatch after commit
 
-Date: 9 September 2026. Status: implemented; all 206 repository checks passed; deployed qualification pending.
+Date: 9 September 2026. Status: implemented; all 206 repository checks and deployed migration qualification passed.
 
 The migration observation gate used `command_journal.created_at`. That value is written inside the adapter transaction. A row created promptly can still commit after the two-second deadline. The migration must not qualify such a sample from its early timestamp.
 
@@ -24,3 +24,5 @@ The additional database check passed at **07:26:11 Europe/Berlin**: absent, malf
 - migration-timing-console-build: `6edbef1315a2cfc993c0064bc03847895ede8abc90e73ed4af9608c3e7b1d939`
 
 Complete offline verification of `38dc3a1e5bd2eefeb7e45c743017835c9d994ec0` passed at **2026-09-09T07:39:11+02:00**: **206 checks in 25 classes**, zero failures/errors/skips, in **530 seconds**. Original log SHA-256: `c8a99dd407e3b9f4c867ec2f35e6a05937022012c3823d260e6403418369def1`. [Per-class evidence](../evidence/backend-checks.json) records the run. Deployed qualification remains separate.
+
+The deployed `822d376` images passed explicit reversal (`migration-reversal-1788932786983`) and forward migration with five actual process exits (`migration-crash-1788932966281`). Reconciliation retained 1,335 and 1,345 inventory records respectively; each switch changed ownership once. Their original ten-movement confirmation bounds were **579.663 ms** and **657.299 ms**. Real PKCE console verification confirmed both new samples and the distinct, unchanged historical labels; screenshots were inspected. [Structured timing evidence](../evidence/migration-timing.json) preserves the run identities and original result hashes. This establishes these controlled migration scenarios; A50 remains failed.

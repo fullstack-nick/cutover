@@ -508,3 +508,8 @@ Migration observation still compared eligibility against `command_journal.create
 
 
 Complete offline verification of `38dc3a1e5bd2eefeb7e45c743017835c9d994ec0` passed at **2026-09-09T07:39:11+02:00**: **206 checks in 25 classes**, zero failures/errors/skips, in **530 seconds**. Original log SHA-256: `c8a99dd407e3b9f4c867ec2f35e6a05937022012c3823d260e6403418369def1`. [Per-class evidence](../evidence/backend-checks.json) records the run. Deployed qualification remains separate.
+
+
+## 9 September — deployed migration timing qualification
+
+Clean `822d376` images passed preserved rollout `runtime-rollout-1788932671209` and both-product causal verification `causal-trace-1788932708829`. Explicit reversal `migration-reversal-1788932786983` passed concurrent supervisors, the unknown-outcome barrier and 1,335-record reconciliation. Forward `migration-crash-1788932966281` then passed all five actual process-exit boundaries and 1,345-record reconciliation; the same session switched ownership once. Both original ten-movement samples have the corrected confirmation basis, with bounds of 579.663 ms and 657.299 ms. Real PKCE console check `migration-timing-console-1788933362989` distinguished those verified samples from unchanged historical rows; its screenshots were inspected. [Structured timing evidence](../evidence/migration-timing.json) retains exact revisions and original hashes. The actual packaged dependency inventory was refreshed and 76 passed runs are curated. The diagnostic driver now permits a 180-second observation window to cover the previously observed approximately 150-second storage-delay pattern; the full A50 workload, duration and threshold are unchanged. A50 and final publication qualification remain open.

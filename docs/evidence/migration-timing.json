@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "recordedAt": "2026-09-09T06:01:01.697Z",
+  "basis": "Simulator acceptance proves that the preceding adapter journal commit has returned; the bound includes subsequent scheduling and transport. It does not prove the simulator commit time.",
+  "observations": [
+    {
+      "runId": "migration-reversal-1788932786983",
+      "originalResultsSha256": "1de084f90063e32fc140e85f59c80e697677c71a660e4b91af756ad1e4ef5d56",
+      "sourceRevision": "822d3765c2d7098e01a497acedb9a0b362ac7755",
+      "imageRevision": "822d3765c2d7098e01a497acedb9a0b362ac7755",
+      "phase": "COMPLETED",
+      "sourceOwner": "execution-service",
+      "targetOwner": "legacy-core",
+      "sourceEpoch": 1,
+      "targetEpoch": 2,
+      "inventoryCount": 1335,
+      "verifiedCount": 1335,
+      "finishedAt": "2026-09-09T05:48:25.419145+00:00",
+      "observation": {
+        "timingBasis": "SIMULATOR_ACCEPTANCE_UPPER_BOUND",
+        "sampleCount": 10,
+        "dispatchP99Millis": 579.663,
+        "withinTwoSeconds": true
+      }
+    },
+    {
+      "runId": "migration-crash-1788932966281",
+      "originalResultsSha256": "fb3f93fad43aed22ee8f1e6af4a4527c6186361e5e0063ed0b911672f837204c",
+      "sourceRevision": "822d3765c2d7098e01a497acedb9a0b362ac7755",
+      "imageRevision": "822d3765c2d7098e01a497acedb9a0b362ac7755",
+      "phase": "COMPLETED",
+      "sourceOwner": "legacy-core",
+      "targetOwner": "execution-service",
+      "sourceEpoch": 2,
+      "targetEpoch": 3,
+      "inventoryCount": 1345,
+      "verifiedCount": 1345,
+      "finishedAt": "2026-09-09T05:53:08.764479+00:00",
+      "observation": {
+        "timingBasis": "SIMULATOR_ACCEPTANCE_UPPER_BOUND",
+        "sampleCount": 10,
+        "dispatchP99Millis": 657.299,
+        "withinTwoSeconds": true
+      },
+      "actualProcessExitCount": 5
+    }
+  ],
+  "console": {
+    "runId": "migration-timing-console-1788933362989",
+    "originalResultsSha256": "25071273e8911b5e9bd1c13cde3de781cc62f575015773aa896b3d5718dfca47",
+    "currentVerifiedSamples": 2,
+    "historicalUnverifiedSamples": 2,
+    "screenshotsVisuallyInspected": true
+  }
+}

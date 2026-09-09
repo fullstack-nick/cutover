@@ -36,11 +36,11 @@ The [acceptance contract](../planning/acceptance-matrix.md) defines the required
 | A28 | The same shadow run denies dispatch independently of the mode flag. `authentication-1788880772251` additionally denies business intake while preserving permitted snapshot reads. |
 | A29 | `zone-migration-1788870698705`: finite ambient drain while chilled work flows, reconciled inventory, single active owner/epoch. |
 | A30 | The same migration run rejects former-owner commands; an already terminal command can return its retained result. |
-| A31 | `migration-crash-1788870805198`: five actual phase-specific adapter exits/restarts resume the durable session. |
+| A31 | `migration-crash-1788932966281`: five actual phase-specific adapter exits/restarts resume one durable session, with the corrected post-commit observation proof. |
 | A32 | `migration-reversal-1788831400131`: concurrent real supervisor sessions produce one transition and a version conflict. |
 | A33 | The same reversal run remains blocked on an identified unknown command; a timeout cannot authorize the switch. |
 | A34 | Actual predecessor adapter image operates on expanded schema in rollback/volume-observation runs. `offline-1788887275782` additionally verifies cached predecessor import, actual rollback and restoration of the current image under scoped external-egress denial. |
-| A35 | `migration-reversal-1788831400131`: old allocated work drains first; retained unassigned work receives the new epoch without duplication. |
+| A35 | `migration-reversal-1788932786983`: old allocated work drains first; retained unassigned work receives the new epoch without duplication; all ten new-owner movements retain post-commit timing proof. |
 | A36 | [Frozen N−1 schemas and producer fixtures](../../contracts/compatibility/README.md): both optional-addition directions pass and a breaking quantity type fails. These are schema-consumer checks; actual image operation is A34. |
 | A37 | Full Maven generation from disposable empty databases, guarded previous-schema migrations, schema-readiness checks and actual runtime DDL/site/owner-boundary denials. [Boundary evidence](assignment-boundary-2026-09-08.md). |
 | A38 | [Returns scaffold provenance and onboarding](../onboarding/returns-service.md), separate schema/models, independent reactor dependencies and live product coexistence. |
