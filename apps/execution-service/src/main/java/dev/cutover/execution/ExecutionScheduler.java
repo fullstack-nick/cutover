@@ -73,7 +73,10 @@ public final class ExecutionScheduler {
         var evidence=new HashMap<UUID,JsonNode>();context.path("movements").forEach(item->evidence.put(Database.uuid(item,"movementId"),item));
         unresolved.clear();
         for(var task:tasks){UUID id=task.get("movement_id",UUID.class);var item=evidence.get(id);
-            if(item!=null&&item.hasNonNull("command"))observe(task,item.path("command"));else unresolved.put(id,task);
+            if(item!=null&&item.hasNonNull("command")){
+                try{observe(task,item.path("command"));}
+                catch(Problem invalid){defer(task,invalid.code(),invalid.status()==503);}
+            }else unresolved.put(id,task);
         }
         return snapshot(site,zone,tasks,context,evidence);
     }
@@ -105,7 +108,10 @@ public final class ExecutionScheduler {
     }
     private void defer(Record task,String error,boolean transport){update(task,error.equals("LANE_BLOCKED")?"BLOCKED":"RECONCILIATION_REQUIRED",error,transport,null);}
     private void update(Record task,String state,String error,boolean transport,String acceptedAt){database.transaction(configuration->{var sql=DSL.using(configuration);if(!Database.workersMayWrite(sql))return;
-        int failures=transport?task.get("transport_failures",Integer.class)+1:0;var next=transport?now().plus(RetryDelay.after(task.get("movement_id",UUID.class),failures)):now().plusNanos(300_000_000);
+        int failures=transport?task.get("transport_failures",Integer.class)+1:0;
+        // Completion events remain immediate. Already-recorded commands need only a
+        // bounded status fallback, without rewriting their unchanged view every 300 ms.
+        var next=transport?now().plus(RetryDelay.after(task.get("movement_id",UUID.class),failures)):now().plusNanos(acceptedAt==null?300_000_000:500_000_000);
         sql.execute("UPDATE execution_tasks SET state=?,last_error=?,version=version+1,next_attempt_at=?::timestamptz,lease_id=NULL,lease_until=NULL,transport_failures=?,transport_paused=?,dispatch_accepted_at=COALESCE(dispatch_accepted_at,?::timestamptz),completed_at=CASE WHEN ?='COMPLETED' THEN COALESCE(completed_at,?::timestamptz) ELSE completed_at END WHERE task_id=? AND lease_id=? AND state NOT IN ('COMPLETED','CANCELLED')",state,error,next,failures,failures>=RetryDelay.MAX_ATTEMPTS,acceptedAt,state,now(),task.get("task_id"),task.get("lease_id"));
     });}
     private void retain(JsonNode input,JsonNode proposal){database.transaction(configuration->{var sql=DSL.using(configuration);if(!Database.workersMayWrite(sql))throw new Problem(503,"WORKERS_PAUSED","Execution decision capture is paused for a checkpoint.");

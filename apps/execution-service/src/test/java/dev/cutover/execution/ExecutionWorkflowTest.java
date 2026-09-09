@@ -108,6 +108,27 @@ class ExecutionWorkflowTest {
         assertThat(count(physical,"execution_ledger")).isZero();
         assertThat(count(core,"inventory_ledger")).isZero();
     }
+    @Test void invalidKnownCommandEvidenceDoesNotBlockHealthyObservation(){
+        accept("mixed-command-evidence",new OrderService.Line("SKU-001",1),new OrderService.Line("SKU-003",1));messages();
+        assertThat(scheduler.poll()).isEqualTo(2);journal.work();clock.advance(Duration.ofMillis(500));observations.refresh();
+        var movements=execution.sql().fetch("SELECT movement_id FROM execution_tasks ORDER BY next_attempt_at,priority DESC,eligible_at,movement_id").getValues(0,UUID.class);
+        UUID invalid=movements.getFirst(),healthy=movements.getLast();
+        assertThat(journal.get("site-a",healthy).path("state").asString()).isEqualTo("ACCEPTED_BY_SIMULATOR");
+        var mixed=new DispatchPort(){
+            @Override public JsonNode context(String site,String zone,List<UUID> ids){
+                var result=JsonSupport.read(JsonSupport.write(port.context(site,zone,ids)));
+                for(var item:result.path("movements"))if(invalid.toString().equals(item.path("movementId").asString()))
+                    ((tools.jackson.databind.node.ObjectNode)item.path("command").path("payload")).put("quantity",2);
+                return result;
+            }
+            @Override public JsonNode dispatch(String site,UUID id,UUID allocation,long epoch,String lane,JsonNode movement){throw new AssertionError("An existing command must only be observed.");}
+        };
+        assertThat(new ExecutionScheduler(execution.sql(),mixed,clock).poll()).isEqualTo(2);
+        assertThat(execution.sql().fetchOne("SELECT state,last_error FROM execution_tasks WHERE movement_id=?",healthy).intoArray()).containsExactly("IN_PROGRESS",null);
+        assertThat(execution.sql().fetchOne("SELECT state,last_error FROM execution_tasks WHERE movement_id=?",invalid).intoArray()).containsExactly("RECONCILIATION_REQUIRED","COMMAND_EVIDENCE_MISMATCH");
+        assertThat(journal.get("site-a",invalid).path("payload").path("quantity").asInt()).isEqualTo(1);
+        assertThat(dispatchCalls.get()).isEqualTo(2);assertThat(count(physical,"execution_ledger")).isZero();
+    }
     @Test void twoOwnersConsumeAssignmentsAndCompleteOneInventoryEffectPerPhysicalMovement(){
         UUID order=accept("two-owners",new OrderService.Line("SKU-001",2),new OrderService.Line("SKU-002",3));
         assertThat(count(core,"legacy_tasks")).isZero();assertThat(count(execution,"execution_tasks")).isZero();messages();
