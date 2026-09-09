@@ -1,0 +1,38 @@
+{
+  "format": 1,
+  "recordedAt": "2026-09-09T06:27:33.522Z",
+  "reviewedCommit": "fc3004aa9da9255bda248f9828d581be92221ccb",
+  "reviewedTree": "73c3c1915d0419de421fe77d74614edbcba116e3",
+  "reviewMethod": "All tracked working files, including the staged evidence changes subsequently committed unchanged in reviewedCommit, plus unique objects reachable from every Git ref at the review time. This publication receipt follows that reviewed snapshot.",
+  "repository": {
+    "licenseInfo": {
+      "key": "mit",
+      "name": "MIT License",
+      "nickname": ""
+    },
+    "nameWithOwner": "fullstack-nick/cutover",
+    "url": "https://github.com/fullstack-nick/cutover",
+    "visibility": "PUBLIC",
+    "actionsEnabled": false
+  },
+  "sourceReview": {
+    "recordedAt": "2026-09-09T06:26:16.981Z",
+    "revision": "f8332e6c9a12051d0e0624bb82288597cc6dc149",
+    "trackedFiles": 504,
+    "reachableBlobs": 1116,
+    "reachableBlobBytes": 40095029,
+    "liveCredentialValuesChecked": 44,
+    "originalArchivePrefixPreserved": true,
+    "findings": [],
+    "scope": "All tracked working files and unique objects reachable from every local Git ref. Checks exact current generated secrets, selected high-confidence credential formats, private-key headers, excluded paths and original naming. This is a bounded publication hygiene review, not a claim that every possible secret format is detectable."
+  },
+  "documentationLinks": {
+    "recordedAt": "2026-09-09T06:26:15.450Z",
+    "markdownFiles": 88,
+    "relativeFileLinks": 243,
+    "missing": [],
+    "scope": "Relative file targets in tracked Markdown; external URLs and fragment headings are separate checks."
+  },
+  "acceptanceDisclosure": "README and acceptance table explicitly retain the failed A50 sustained-load target; the project is not represented as fully qualified.",
+  "limits": "The source check covers exact current generated credentials, selected high-confidence credential formats, private-key headers, excluded paths and original naming. It does not claim detection of every possible secret format. Link checks cover local file targets, not remote availability or heading fragments."
+}
