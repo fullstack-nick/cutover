@@ -1,0 +1,11 @@
+# 0027 — Trace business work and transport by default
+
+Status: implemented configuration; deployed tracing and load verification pending.
+
+The local Collector accepted 2,594 spans per second over one measured minute while the lab offered five movements per second. One retained median-latency order trace contained 327 spans: 264 automatic JDBC spans, 41 explicit domain spans, 16 RabbitMQ spans and six HTTP client/server spans. That individual trace is evidence of its composition, not an estimate of all ingested traces. Repeated worker polls also use JDBC, and the configured agent's default sampling retains their root spans. This volume justifies measuring a narrower tracing profile; it does not establish telemetry as the cause of every latency outlier.
+
+The five owner/shadow deployments set `OTEL_INSTRUMENTATION_JDBC_ENABLED=false`. The pinned agent continues to provide explicit domain instrumentation, HTTP and RabbitMQ spans and propagation, log correlation, and the existing bounded exporter. No sampling policy, metric, business record, SQL audit, simulator ledger, durability setting or performance denominator changes. This follows the agent's documented [per-library instrumentation control](https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation).
+
+Traces retain admission, allocation, task dispatch, command recording/investigation and business completion across durable events. Automatic per-query timings are absent from the default profile. Detailed SQL diagnosis requires explicitly enabling JDBC instrumentation in the local manifest and measuring that configuration's overhead; database statistics and retained logs remain available independently.
+
+The causal driver verifies both original HTTP trace IDs, every required domain span, the adapter HTTP client boundary, no JDBC instrumentation scope, and five single physical/business effects. It reads the actual ready pods' configuration through an explicit non-secret allowlist. The load driver records the same settings and pod identities before and after offering and refuses a changed profile. Runtime checks and sustained measurements must establish the resulting behavior; a configuration edit alone does not establish A44 or A50.

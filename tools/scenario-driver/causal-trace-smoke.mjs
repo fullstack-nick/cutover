@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
+import {tracingProfile,requireDomainTracing} from './tracing-profile.mjs';
 process.env.CUTOVER_PROFILE='demo';
 const { api, token, query, provisionObservers, saveEvidence, credentials }=await import('./client.mjs');
 const { root, target, until, call, privateDirectory, writeJson, simulatorRead, maintenanceLock }=await import('../../scripts/lib/local-platform.mjs');
@@ -17,7 +18,7 @@ async function submit(resource,body,bearer) {
 function spansOf(trace) {
   return (trace.batches??trace.resourceSpans??[]).flatMap(batch=>{
     const service=batch.resource?.attributes?.find(item=>item.key==='service.name')?.value?.stringValue;
-    return (batch.scopeSpans??batch.instrumentationLibrarySpans??[]).flatMap(scope=>(scope.spans??[]).map(span=>({service,...span})));
+    return (batch.scopeSpans??batch.instrumentationLibrarySpans??[]).flatMap(scope=>(scope.spans??[]).map(span=>({service,instrumentationScope:scope.scope?.name??scope.instrumentationLibrary?.name,...span})));
   });
 }
 async function traceOf(id,required) {
@@ -26,15 +27,17 @@ async function traceOf(id,required) {
     const response=await fetch(`http://127.0.0.1:8782/api/traces/${id}`,{signal:AbortSignal.timeout(6000)});
     if(response.status===404)return false;
     assert.equal(response.status,200);actual=await response.json();spans=spansOf(actual);
-    return required.every(name=>spans.some(span=>span.name===name));
+    return required.every(name=>spans.some(span=>span.name===name)) && spans.some(span=>span.service==='equipment-adapter'&&span.instrumentationScope==='io.opentelemetry.java-http-client');
   },`domain trace ${id} contains ${required.join(', ')}`,60000);
   const serialized=JSON.stringify(actual);
   for(const value of Object.values(credentials.passwords))if(typeof value==='string' && value.length>=12)assert.ok(!serialized.includes(value),'A credential reached telemetry.');
   writeJson(resolve(directory,`${id}.json`),actual);
-  return {traceId:id,services:[...new Set(spans.map(span=>span.service))].sort(),spanCount:spans.length,domainSpans:spans.filter(span=>span.name.startsWith('cutover.')).map(({name,service,spanId,parentSpanId,attributes})=>({name,service,spanId,parentSpanId,attributes}))};
+  assert.ok(spans.every(span=>!span.instrumentationScope?.startsWith('io.opentelemetry.jdbc')),'The declared profile must suppress automatic JDBC spans while retaining the full domain trace.');
+  return {traceId:id,services:[...new Set(spans.map(span=>span.service))].sort(),instrumentationScopes:[...new Set(spans.map(span=>span.instrumentationScope))].sort(),spanCount:spans.length,domainSpans:spans.filter(span=>span.name.startsWith('cutover.')).map(({name,service,spanId,parentSpanId,attributes})=>({name,service,spanId,parentSpanId,attributes}))};
 }
 try {
   target('demo').verify();provisionObservers();
+  evidence.tracingProfile=tracingProfile();requireDomainTracing(evidence.tracingProfile);
   call('pwsh',['-NoProfile','-NonInteractive','-File',resolve(root,'scripts/forward.ps1'),'-Profile','demo','-Target','tempo','-Action','Start']);
   const bearer=await token();evidence.worldBefore=await simulatorRead('/sim/v1/equipment');
   const order=await submit('orders',{sourceSystem:'scenario-driver',externalOrderRef:`${runId}-order`,storeId:'store-07',priority:5,lines:[{sku:'SKU-091',quantity:1},{sku:'SKU-092',quantity:1}]},bearer);
@@ -61,6 +64,7 @@ try {
   assert.ok(evidence.receiptTrace.services.includes('returns-service') && evidence.receiptTrace.services.includes('equipment-adapter'));
   cases.push({status:'passed',name:'Original HTTP trace IDs join durable messaging, scheduling, equipment observation and single business completion',orderTraceId:order.traceId,receiptTraceId:receipt.traceId});
   evidence.worldAfter=await simulatorRead('/sim/v1/equipment');
+  assert.deepEqual(tracingProfile(),evidence.tracingProfile,'The tracing profile and owner pods must remain unchanged during verification.');
   assert.equal(evidence.worldAfter.worldId,evidence.worldBefore.worldId);assert.equal(evidence.worldAfter.journalGeneration,evidence.worldBefore.journalGeneration);
   evidence.endedAt=new Date().toISOString();console.log(`Passed ${cases.length} causal trace checks. ${saveEvidence(runId,evidence)}`);
 } catch(error){saveEvidence(runId,{...evidence,failure:error.message});throw error;}

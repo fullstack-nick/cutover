@@ -3,6 +3,7 @@ import { fork } from 'node:child_process';
 import { resolve } from 'node:path';
 import { readFileSync, writeFileSync, openSync, closeSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
+import {tracingProfile} from './tracing-profile.mjs';
 process.env.CUTOVER_PROFILE='demo';
 const { api, token, query, provisionObservers, saveEvidence }=await import('./client.mjs');
 const { root, target, until, simulatorRead, privateDirectory, writeJson, maintenanceLock, call }=await import('../../scripts/lib/local-platform.mjs');
@@ -79,6 +80,7 @@ try {
   await new Promise((done,failed)=>{const timer=setTimeout(()=>failed(new Error('Sampler startup timed out.')),30000);sampler.once('message',message=>{clearTimeout(timer);assert.equal(message.type,'ready');done();});sampler.once('exit',()=>{clearTimeout(timer);failed(new Error('Sampler exited before readiness.'));});});
   bearer=await token();refreshAt=Date.now()+60000;
   evidence.wal={before:walSnapshot()};
+  evidence.tracing={before:tracingProfile()};
   const active=new Set(),started=Date.now();evidence.offeringStartedAt=new Date(started).toISOString();evidence.measurementStartedAt=new Date(started+warmupSeconds*1000).toISOString();
   const launch=promise=>{active.add(promise);allOffers.push(promise);promise.finally(()=>active.delete(promise));};
   for(let tick=0;tick<orderCount;tick++) {
@@ -96,6 +98,7 @@ try {
   await delay(Math.max(0,started+totalSeconds*1000-Date.now()));await Promise.all(active);
   evidence.offeringEndedAt=new Date().toISOString();writeJson(resolve(directory,'requests.json'),requests);
   evidence.wal.afterOffering=walSnapshot();
+  evidence.tracing.afterOffering=tracingProfile();assert.deepEqual(evidence.tracing.afterOffering,evidence.tracing.before,'Owner pods and declared tracing settings must remain unchanged throughout offering.');
   const walFirst=evidence.wal.before,walLast=evidence.wal.afterOffering;
   assert.ok([walFirst,walLast].every(s=>s.timingEnabled==='on'&&s.fsyncEnabled==='on'&&s.synchronousCommit==='on'));
   for(const setting of ['walSyncMethod','commitDelayMicros','commitSiblings'])assert.equal(walFirst[setting],walLast[setting],`Database ${setting} must remain unchanged throughout the measured offering.`);
