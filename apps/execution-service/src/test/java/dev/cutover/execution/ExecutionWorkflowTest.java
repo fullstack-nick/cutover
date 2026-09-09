@@ -86,6 +86,53 @@ class ExecutionWorkflowTest {
         assertThat(execution.sql().fetchOne("SELECT count(*) FROM execution_tasks WHERE last_error='OBSERVATION_STALE'").get(0,Integer.class)).isEqualTo(refreshEquipment?0:1);
         assertThat(count(physical,"execution_ledger")).isZero();
     }
+    @Test void slowRecordedObservationsFollowNewDispatch() {
+        UUID earlier=accept("recorded-observation-before-new-work",new OrderService.Line("SKU-003",1));messages();
+        UUID recorded=movement(earlier);assertThat(scheduler.poll()).isEqualTo(1);
+        assertThat(execution.sql().fetchOne("SELECT dispatch_accepted_at FROM execution_tasks WHERE movement_id=?",recorded).get(0)).isNotNull();
+        UUID fresh=accept("new-work-before-recorded-observation",new OrderService.Line("SKU-003",1));messages();
+        UUID newMovement=movement(fresh);clock.advance(Duration.ofMillis(500));observations.refresh();
+        Instant ready=clock.instant();var dispatched=new AtomicReference<Instant>();var observedRecorded=new AtomicBoolean();
+        var slowObservation=new DispatchPort(){
+            @Override public JsonNode context(String site,String zone,List<UUID> ids){
+                if(ids.contains(recorded)){observedRecorded.set(true);clock.advance(Duration.ofSeconds(6));observations.refresh();}
+                return port.context(site,zone,ids);
+            }
+            @Override public JsonNode dispatch(String site,UUID id,UUID allocation,long epoch,String lane,JsonNode movement){
+                if(id.equals(newMovement))dispatched.set(clock.instant());return port.dispatch(site,id,allocation,epoch,lane,movement);
+            }
+        };
+        assertThat(new ExecutionScheduler(execution.sql(),slowObservation,clock).poll()).isEqualTo(2);
+        assertThat(dispatched.get()).as("A slow recorded-command observation must follow the newly eligible dispatch").isBefore(ready.plusSeconds(2));
+        assertThat(observedRecorded).isTrue();assertThat(dispatchCalls).hasValue(2);
+        assertThat(count(adapter,"command_journal")).isEqualTo(2);assertThat(count(physical,"execution_ledger")).isZero();
+        finish(earlier);finish(fresh);
+        assertThat(count(physical,"execution_ledger")).isEqualTo(2);assertThat(count(core,"inventory_ledger")).isEqualTo(2);
+    }
+    @Test void newArrivalWaitsForOnlyABoundedObservationTurn() {
+        clock.advance(Duration.ofSeconds(30));observations.refresh();
+        for(int n=0;n<16;n++)accept("existing-before-arrival-"+n,new OrderService.Line("SKU-001",1));messages();
+        for(int n=0;n<4&&count(adapter,"command_journal")<16;n++){clock.advance(Duration.ofMillis(500));observations.refresh();scheduler.poll();}
+        assertThat(count(adapter,"command_journal")).isEqualTo(16);
+        var recorded=new HashSet<>(execution.sql().fetch("SELECT movement_id FROM execution_tasks").getValues(0,UUID.class));
+        clock.advance(Duration.ofMillis(500));observations.refresh();
+        var freshMovement=new AtomicReference<UUID>();var arrived=new AtomicReference<Instant>();var dispatched=new AtomicReference<Instant>();
+        var slowObservation=new DispatchPort(){
+            @Override public JsonNode context(String site,String zone,List<UUID> ids){
+                if(freshMovement.get()==null){UUID fresh=accept("arrival-during-observation",new OrderService.Line("SKU-003",1));messages();freshMovement.set(movement(fresh));arrived.set(clock.instant());}
+                clock.advance(Duration.ofMillis(350*ids.stream().filter(recorded::contains).count()));observations.refresh();
+                return port.context(site,zone,ids);
+            }
+            @Override public JsonNode dispatch(String site,UUID id,UUID allocation,long epoch,String lane,JsonNode movement){
+                if(id.equals(freshMovement.get()))dispatched.set(clock.instant());return port.dispatch(site,id,allocation,epoch,lane,movement);
+            }
+        };
+        var bounded=new ExecutionScheduler(execution.sql(),slowObservation,clock);
+        assertThat(bounded.poll()).isPositive();clock.advance(Duration.ofMillis(150));bounded.poll();
+        assertThat(dispatched.get()).as("A new arrival must not wait behind an entire sixteen-command observation backlog").isBefore(arrived.get().plusSeconds(2));
+        assertThat(dispatchCalls).hasValue(17);assertThat(count(adapter,"command_journal")).isEqualTo(17);
+        assertThat(count(physical,"execution_ledger")).isZero();assertThat(count(core,"inventory_ledger")).isZero();
+    }
     @Test void recordedCommandsCannotStarveANewEligibleMovement() {
         clock.advance(Duration.ofSeconds(30));observations.refresh();
         for(int n=0;n<16;n++)accept("pending-command-"+n,new OrderService.Line("SKU-001",1));
