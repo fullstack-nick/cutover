@@ -211,4 +211,59 @@ class MigrationWorkflowTest {
         assertThat(ExecutionWorkflowTest.adapter.sql().fetchOne("SELECT count(*) FROM migration_sessions WHERE phase='REVERSING'").get(0,Integer.class)).isZero();
         assertThat(ExecutionWorkflowTest.adapter.sql().fetchOne("SELECT count(*) FROM audit WHERE action='migration-lineage-settled'").get(0,Integer.class)).isEqualTo(2);
     }
+
+    @Test void aJournalTransactionThatCommitsLateCannotPassTheMigrationTimingGate() {
+        UUID session = start("execution-service"); reach(session, "OBSERVING");
+        sample("late-journal-commit"); fixture.messages();
+        ExecutionWorkflowTest.adapter.sql().transaction(configuration -> {
+            var sql = org.jooq.impl.DSL.using(configuration);
+            var journal = new dev.cutover.adapter.CommandJournal(sql, null, fixture.observations, fixture.clock);
+            for (var row : sql.fetch("SELECT movement_id,allocation_id,epoch,movement FROM movement_allocations WHERE site_id='site-a' AND zone_id='ambient' AND owner='execution-service'")) {
+                journal.record("site-a", "execution-service", row.get("movement_id", UUID.class),
+                    row.get("allocation_id", UUID.class), row.get("epoch", Long.class), "ambient-a",
+                    JsonSupport.read(row.get("movement").toString()));
+            }
+            assertThat(fixture.count(ExecutionWorkflowTest.adapter, "command_journal"))
+                .as("A separate connection cannot see these uncommitted journal rows").isZero();
+            assertThat(fixture.count(ExecutionWorkflowTest.physical, "simulator_commands")).isZero();
+            fixture.clock.advance(Duration.ofSeconds(3));
+        });
+        for (int n = 0; n < 12; n++) tick();
+        assertThat(fixture.count(ExecutionWorkflowTest.physical, "execution_ledger")).isEqualTo(10);
+        assertThat(fixture.count(ExecutionWorkflowTest.core, "inventory_ledger")).isEqualTo(10);
+        assertThat(migrations.get("site-a", session).path("lastError").asString())
+            .as("Early row creation must not qualify a journal commit that happened after the deadline")
+            .isEqualTo("OBSERVATION_LATENCY_TARGET_MISSED");
+        assertThat(phase(session)).isEqualTo("OBSERVING");
+        assertThat(migrations.get("site-a", session).path("observation").path("dispatchP99Millis").asDouble())
+            .isGreaterThanOrEqualTo(3000);
+    }
+
+    @Test void missingOrContradictoryPhysicalTimingCannotQualifyTheRetainedSample() {
+        UUID session = start("execution-service"); reach(session, "OBSERVING");
+        sample("physical-timing-proof");
+        for (int n = 0; n < 12; n++) fixture.tick();
+        var row = ExecutionWorkflowTest.adapter.sql().fetchOne("SELECT command_id,evidence FROM command_journal ORDER BY command_id LIMIT 1");
+        var original = JsonSupport.read(row.get("evidence").toString());
+        var invalidTimes = Arrays.asList(null, "not-a-time", fixture.clock.instant().minusSeconds(86400).toString(),
+            fixture.clock.instant().plusSeconds(86400).toString());
+        for (String invalidTime : invalidTimes) {
+            var evidence = (tools.jackson.databind.node.ObjectNode) original.deepCopy();
+            if (invalidTime == null) evidence.remove("acceptedAt"); else evidence.put("acceptedAt", invalidTime);
+            ExecutionWorkflowTest.adapter.sql().execute("UPDATE command_journal SET evidence=?::jsonb WHERE command_id=?",
+                JsonSupport.write(evidence), row.get("command_id"));
+            fixture.clock.advance(Duration.ofSeconds(2)); fixture.observations.refresh(); migrations.poll();
+            assertThat(phase(session)).isEqualTo("OBSERVING");
+            assertThat(migrations.get("site-a", session).path("lastError").asString())
+                .isIn("OBSERVATION_TIMING_PROOF_MISSING", "OBSERVATION_CLOCK_ORDER");
+        }
+        ExecutionWorkflowTest.adapter.sql().execute("UPDATE command_journal SET evidence=?::jsonb WHERE command_id=?",
+            JsonSupport.write(original), row.get("command_id"));
+        fixture.clock.advance(Duration.ofSeconds(2)); fixture.observations.refresh(); migrations.poll();
+        assertThat(phase(session)).isEqualTo("COMPLETED");
+        assertThat(migrations.get("site-a", session).path("observation").path("timingBasis").asString())
+            .isEqualTo("SIMULATOR_ACCEPTANCE_UPPER_BOUND");
+        assertThat(fixture.count(ExecutionWorkflowTest.physical, "execution_ledger")).isEqualTo(10);
+        assertThat(fixture.count(ExecutionWorkflowTest.core, "inventory_ledger")).isEqualTo(10);
+    }
 }

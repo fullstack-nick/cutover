@@ -1,0 +1,1008 @@
+{
+  "runId": "load-1788930132552",
+  "source": "da6027a7afe28e306a4f8885d7a2655ce8885f9e",
+  "images": "dd130962537e2a02f32a9164d3f4e31f1a0950af",
+  "result": "failed",
+  "measured": 3000,
+  "slow": 181,
+  "withinTwoSecondsPercent": 93.96666666666667,
+  "p99Millis": 6936,
+  "hostSamples": 750,
+  "databaseSamples": 743,
+  "processSamples": 150,
+  "minimumAvailableMiB": 1854,
+  "maximumDiskWriteSampleMillis": 157.15772376237624,
+  "maximumDiskReadSampleMillis": 271.671575,
+  "windows": [
+    {
+      "at": "2026-09-09T05:03:20.000Z",
+      "count": 25,
+      "slow": 0,
+      "maxDispatchMillis": 536,
+      "minAvailableMiB": 2324,
+      "maxDiskWriteMillis": 0.5855504716981131,
+      "maxDiskReadMillis": 20.673750000000002,
+      "maxPagesInputPerSecond": 10871.805517456129,
+      "waitSamples": {
+        "WalInitSync": 1,
+        "WALWrite": 1,
+        "ClientRead": 1,
+        "WalSync": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:03:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 564,
+      "minAvailableMiB": 2358,
+      "maxDiskWriteMillis": 0.4679854922279793,
+      "maxDiskReadMillis": 0.8015837037037037,
+      "maxPagesInputPerSecond": 4823.1877113531,
+      "waitSamples": {
+        "WALWrite": 1,
+        "ClientRead": 2,
+        "WalSync": 2,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:03:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 493,
+      "minAvailableMiB": 2339,
+      "maxDiskWriteMillis": 0.43186449468085103,
+      "maxDiskReadMillis": 1.6810222222222222,
+      "maxPagesInputPerSecond": 443.9633012951457,
+      "waitSamples": {
+        "ClientRead": 4,
+        "WalSync": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:03:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 592,
+      "minAvailableMiB": 2335,
+      "maxDiskWriteMillis": 0.42534178905206943,
+      "maxDiskReadMillis": 1.6949666666666665,
+      "maxPagesInputPerSecond": 64.3158657049103,
+      "waitSamples": {
+        "ClientRead": 5,
+        "running": 7,
+        "WalSync": 4,
+        "WALWrite": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:04:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 523,
+      "minAvailableMiB": 2322,
+      "maxDiskWriteMillis": 0.33047422680412375,
+      "maxDiskReadMillis": 1.2385638766519824,
+      "maxPagesInputPerSecond": 1576.0696535885804,
+      "waitSamples": {
+        "transactionid": 1,
+        "ClientRead": 3,
+        "running": 6,
+        "WalSync": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:04:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 505,
+      "minAvailableMiB": 2329,
+      "maxDiskWriteMillis": 0.42329894291754755,
+      "maxDiskReadMillis": 1.4096586206896553,
+      "maxPagesInputPerSecond": 2740.8886405980584,
+      "waitSamples": {
+        "WalSync": 4,
+        "transactionid": 1,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:04:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 568,
+      "minAvailableMiB": 2310,
+      "maxDiskWriteMillis": 0.23720081168831167,
+      "maxDiskReadMillis": 1.02578,
+      "maxPagesInputPerSecond": 1655.8052772993894,
+      "waitSamples": {
+        "WalSync": 5,
+        "ClientRead": 4,
+        "WALWrite": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:04:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 491,
+      "minAvailableMiB": 2273,
+      "maxDiskWriteMillis": 0.3092623488773748,
+      "maxDiskReadMillis": 3.201099243856333,
+      "maxPagesInputPerSecond": 3081.9307373276188,
+      "waitSamples": {
+        "WalSync": 4,
+        "running": 2,
+        "WALWrite": 1,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:04:40.000Z",
+      "count": 50,
+      "slow": 20,
+      "maxDispatchMillis": 8258,
+      "minAvailableMiB": 2284,
+      "maxDiskWriteMillis": 13.385846391752578,
+      "maxDiskReadMillis": 60.92935555555555,
+      "maxPagesInputPerSecond": 1256.0588103272446,
+      "waitSamples": {
+        "WalSync": 6,
+        "ClientRead": 4,
+        "running": 2,
+        "WALWrite": 9,
+        "transactionid": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:04:50.000Z",
+      "count": 50,
+      "slow": 28,
+      "maxDispatchMillis": 6267,
+      "minAvailableMiB": 2205,
+      "maxDiskWriteMillis": 32.957453030303036,
+      "maxDiskReadMillis": 271.671575,
+      "maxPagesInputPerSecond": 785.7119660872501,
+      "waitSamples": {
+        "WalSync": 8,
+        "WALWrite": 23,
+        "transactionid": 6,
+        "BufferContent": 1,
+        "running": 5,
+        "ClientRead": 3,
+        "WalWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:05:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 557,
+      "minAvailableMiB": 2214,
+      "maxDiskWriteMillis": 0.3503228304405875,
+      "maxDiskReadMillis": 2.414828,
+      "maxPagesInputPerSecond": 1482.3499962192084,
+      "waitSamples": {
+        "ClientRead": 1,
+        "WalSync": 4,
+        "running": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:05:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 603,
+      "minAvailableMiB": 2199,
+      "maxDiskWriteMillis": 0.36061205007824726,
+      "maxDiskReadMillis": 2.3826624505928855,
+      "maxPagesInputPerSecond": 1662.6192208231982,
+      "waitSamples": {
+        "WALWrite": 1,
+        "WalSync": 3,
+        "running": 2,
+        "ClientRead": 4
+      }
+    },
+    {
+      "at": "2026-09-09T05:05:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 502,
+      "minAvailableMiB": 2207,
+      "maxDiskWriteMillis": 0.34975734513274337,
+      "maxDiskReadMillis": 0.8296418269230769,
+      "maxPagesInputPerSecond": 1615.0230115947925,
+      "waitSamples": {
+        "ClientRead": 4,
+        "WALWrite": 3,
+        "WalSync": 6,
+        "running": 2,
+        "transactionid": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:05:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 514,
+      "minAvailableMiB": 2060,
+      "maxDiskWriteMillis": 0.4507795096322242,
+      "maxDiskReadMillis": 4.1601967032967035,
+      "maxPagesInputPerSecond": 23742.46011152602,
+      "waitSamples": {
+        "WalSync": 2,
+        "running": 2,
+        "ClientRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:05:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 482,
+      "minAvailableMiB": 1985,
+      "maxDiskWriteMillis": 0.4713601834862385,
+      "maxDiskReadMillis": 3.2362166666666665,
+      "maxPagesInputPerSecond": 6790.264533404216,
+      "waitSamples": {
+        "WalSync": 2,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:05:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 527,
+      "minAvailableMiB": 2021,
+      "maxDiskWriteMillis": 0.5467941628264208,
+      "maxDiskReadMillis": 0.8825701554404145,
+      "maxPagesInputPerSecond": 2469.1426553859924,
+      "waitSamples": {
+        "running": 2,
+        "ClientRead": 3,
+        "VacuumDelay": 1,
+        "WalSync": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:06:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 509,
+      "minAvailableMiB": 2051,
+      "maxDiskWriteMillis": 0.3770333931777379,
+      "maxDiskReadMillis": 0.8624229378531073,
+      "maxPagesInputPerSecond": 1535.5521034878684,
+      "waitSamples": {
+        "ClientRead": 5,
+        "running": 3,
+        "transactionid": 1,
+        "WalSync": 4,
+        "WALWrite": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:06:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 501,
+      "minAvailableMiB": 2254,
+      "maxDiskWriteMillis": 1.284371593090211,
+      "maxDiskReadMillis": 13.241602941176472,
+      "maxPagesInputPerSecond": 4837.111534679598,
+      "waitSamples": {
+        "transactionid": 1,
+        "tuple": 1,
+        "ClientRead": 1,
+        "WalSync": 2,
+        "WALWrite": 1,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:06:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 538,
+      "minAvailableMiB": 2298,
+      "maxDiskWriteMillis": 0.4728997894736842,
+      "maxDiskReadMillis": 2.2528775280898876,
+      "maxPagesInputPerSecond": 1280.590335411315,
+      "waitSamples": {
+        "WalSync": 4,
+        "ClientRead": 5,
+        "running": 3,
+        "transactionid": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:06:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 562,
+      "minAvailableMiB": 2287,
+      "maxDiskWriteMillis": 0.46028035398230094,
+      "maxDiskReadMillis": 1.322675,
+      "maxPagesInputPerSecond": 478.9036063609435,
+      "waitSamples": {
+        "ClientRead": 7,
+        "WalSync": 5,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:06:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 512,
+      "minAvailableMiB": 2300,
+      "maxDiskWriteMillis": 0.35779846743295013,
+      "maxDiskReadMillis": 1.0669666666666666,
+      "maxPagesInputPerSecond": 108.23144848431289,
+      "waitSamples": {
+        "WalSync": 2,
+        "running": 4,
+        "ClientRead": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:06:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 483,
+      "minAvailableMiB": 2287,
+      "maxDiskWriteMillis": 0.2575539741219963,
+      "maxDiskReadMillis": 0.8747999999999999,
+      "maxPagesInputPerSecond": 72.88386379818104,
+      "waitSamples": {
+        "WalSync": 4,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:07:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 516,
+      "minAvailableMiB": 2245,
+      "maxDiskWriteMillis": 0.3939963636363636,
+      "maxDiskReadMillis": 0.9074642857142857,
+      "maxPagesInputPerSecond": 664.4680268976657,
+      "waitSamples": {
+        "WalSync": 6,
+        "transactionid": 1,
+        "WALWrite": 2,
+        "running": 4,
+        "ClientRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:07:10.000Z",
+      "count": 50,
+      "slow": 26,
+      "maxDispatchMillis": 8632,
+      "minAvailableMiB": 2261,
+      "maxDiskWriteMillis": 19.48502619047619,
+      "maxDiskReadMillis": 24.94791923076923,
+      "maxPagesInputPerSecond": 353.209587977572,
+      "waitSamples": {
+        "ClientRead": 5,
+        "WalSync": 6,
+        "running": 2,
+        "transactionid": 4,
+        "WALWrite": 21,
+        "tuple": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:07:20.000Z",
+      "count": 50,
+      "slow": 20,
+      "maxDispatchMillis": 5222,
+      "minAvailableMiB": 2248,
+      "maxDiskWriteMillis": 31.338105434782612,
+      "maxDiskReadMillis": 25.554433333333336,
+      "maxPagesInputPerSecond": 463.40702001104637,
+      "waitSamples": {
+        "WalSync": 8,
+        "WALWrite": 20,
+        "transactionid": 7,
+        "tuple": 1,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:07:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 565,
+      "minAvailableMiB": 2267,
+      "maxDiskWriteMillis": 0.3476994584837545,
+      "maxDiskReadMillis": 0.91198,
+      "maxPagesInputPerSecond": 1370.434978623776,
+      "waitSamples": {
+        "WalSync": 4,
+        "running": 2,
+        "ClientRead": 3,
+        "VacuumDelay": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:07:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 494,
+      "minAvailableMiB": 2293,
+      "maxDiskWriteMillis": 0.36726524390243903,
+      "maxDiskReadMillis": 1.3113375,
+      "maxPagesInputPerSecond": 2521.2610756980075,
+      "waitSamples": {
+        "WalSync": 4,
+        "WALWrite": 4,
+        "running": 2,
+        "ClientRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:07:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 502,
+      "minAvailableMiB": 2282,
+      "maxDiskWriteMillis": 0.3115004909983633,
+      "maxDiskReadMillis": 2.4935500000000004,
+      "maxPagesInputPerSecond": 226.37136671463347,
+      "waitSamples": {
+        "WalSync": 5,
+        "WALWrite": 2,
+        "ClientRead": 3,
+        "VacuumDelay": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:08:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 506,
+      "minAvailableMiB": 2301,
+      "maxDiskWriteMillis": 0.386555838641189,
+      "maxDiskReadMillis": 1.1757,
+      "maxPagesInputPerSecond": 65.87092592065848,
+      "waitSamples": {
+        "WalSync": 4,
+        "ClientRead": 5,
+        "WALWrite": 1,
+        "running": 2,
+        "transactionid": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:08:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 468,
+      "minAvailableMiB": 2290,
+      "maxDiskWriteMillis": 0.2630437894736842,
+      "maxDiskReadMillis": 1.43085,
+      "maxPagesInputPerSecond": 872.6172605268188,
+      "waitSamples": {
+        "running": 2,
+        "WalSync": 6,
+        "ClientRead": 2,
+        "WALWrite": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:08:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 499,
+      "minAvailableMiB": 2298,
+      "maxDiskWriteMillis": 0.40590013037809647,
+      "maxDiskReadMillis": 1.6644999999999999,
+      "maxPagesInputPerSecond": 625.3396283532729,
+      "waitSamples": {
+        "running": 3,
+        "WalSync": 1,
+        "WalWrite": 1,
+        "ClientRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:08:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 515,
+      "minAvailableMiB": 2167,
+      "maxDiskWriteMillis": 0.5656492682926829,
+      "maxDiskReadMillis": 2.960829218106996,
+      "maxPagesInputPerSecond": 22489.878320675456,
+      "waitSamples": {
+        "ClientRead": 6,
+        "WalSync": 2,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:08:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 569,
+      "minAvailableMiB": 2137,
+      "maxDiskWriteMillis": 0.41354510278113665,
+      "maxDiskReadMillis": 2.116954882154882,
+      "maxPagesInputPerSecond": 5672.346787836811,
+      "waitSamples": {
+        "WalSync": 2,
+        "ClientRead": 4,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:08:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 519,
+      "minAvailableMiB": 2158,
+      "maxDiskWriteMillis": 0.4564936329588015,
+      "maxDiskReadMillis": 1.2769666666666666,
+      "maxPagesInputPerSecond": 2750.5622428773413,
+      "waitSamples": {
+        "WalSync": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:09:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 535,
+      "minAvailableMiB": 2115,
+      "maxDiskWriteMillis": 0.309878955453149,
+      "maxDiskReadMillis": 0.8176270009643203,
+      "maxPagesInputPerSecond": 1942.7633260426628,
+      "waitSamples": {
+        "WalSync": 6,
+        "running": 3,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:09:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 492,
+      "minAvailableMiB": 2122,
+      "maxDiskWriteMillis": 0.8421325699745547,
+      "maxDiskReadMillis": 34.18000909090909,
+      "maxPagesInputPerSecond": 11467.444683052903,
+      "waitSamples": {
+        "WalSync": 7,
+        "ClientRead": 3,
+        "running": 3,
+        "WALWrite": 4
+      }
+    },
+    {
+      "at": "2026-09-09T05:09:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 516,
+      "minAvailableMiB": 2172,
+      "maxDiskWriteMillis": 0.3316297142857143,
+      "maxDiskReadMillis": 1.9582824999999997,
+      "maxPagesInputPerSecond": 549.9196457019492,
+      "waitSamples": {
+        "running": 4,
+        "transactionid": 1,
+        "WalSync": 2,
+        "ClientRead": 4
+      }
+    },
+    {
+      "at": "2026-09-09T05:09:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 481,
+      "minAvailableMiB": 2098,
+      "maxDiskWriteMillis": 0.38076204724409446,
+      "maxDiskReadMillis": 1.1804948717948718,
+      "maxPagesInputPerSecond": 517.3079922705318,
+      "waitSamples": {
+        "running": 2,
+        "WalSync": 3,
+        "ClientRead": 1,
+        "VacuumDelay": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:09:40.000Z",
+      "count": 50,
+      "slow": 28,
+      "maxDispatchMillis": 8982,
+      "minAvailableMiB": 2089,
+      "maxDiskWriteMillis": 18.07011195652174,
+      "maxDiskReadMillis": 23.758950000000002,
+      "maxPagesInputPerSecond": 1254.5874240471985,
+      "waitSamples": {
+        "running": 3,
+        "ClientRead": 1,
+        "WalSync": 6,
+        "WALWrite": 19,
+        "transactionid": 6
+      }
+    },
+    {
+      "at": "2026-09-09T05:09:50.000Z",
+      "count": 50,
+      "slow": 14,
+      "maxDispatchMillis": 5025,
+      "minAvailableMiB": 2116,
+      "maxDiskWriteMillis": 38.00627474747475,
+      "maxDiskReadMillis": 84.04254999999999,
+      "maxPagesInputPerSecond": 1638.3409014975764,
+      "waitSamples": {
+        "WALWrite": 26,
+        "WalSync": 5,
+        "tuple": 4,
+        "transactionid": 2,
+        "running": 6,
+        "ClientRead": 3,
+        "WalWrite": 1,
+        "VacuumDelay": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:10:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 508,
+      "minAvailableMiB": 2102,
+      "maxDiskWriteMillis": 0.3900695852534562,
+      "maxDiskReadMillis": 1.0813772727272728,
+      "maxPagesInputPerSecond": 702.9820142100962,
+      "waitSamples": {
+        "ClientRead": 4,
+        "WALWrite": 1,
+        "WalSync": 3,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:10:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 543,
+      "minAvailableMiB": 2131,
+      "maxDiskWriteMillis": 0.40008947368421055,
+      "maxDiskReadMillis": 0.8241613793103447,
+      "maxPagesInputPerSecond": 1162.6385078320052,
+      "waitSamples": {
+        "ClientRead": 4,
+        "WalSync": 4,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:10:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 527,
+      "minAvailableMiB": 2138,
+      "maxDiskWriteMillis": 0.5291709016393443,
+      "maxDiskReadMillis": 1.5009000000000001,
+      "maxPagesInputPerSecond": 384.11077518380444,
+      "waitSamples": {
+        "WalSync": 3,
+        "ClientRead": 5,
+        "running": 2,
+        "transactionid": 1,
+        "WALWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:10:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 583,
+      "minAvailableMiB": 2122,
+      "maxDiskWriteMillis": 0.3592913513513514,
+      "maxDiskReadMillis": 1.5752,
+      "maxPagesInputPerSecond": 2773.0130846431757,
+      "waitSamples": {
+        "WalSync": 4,
+        "running": 7,
+        "ClientRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:10:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 563,
+      "minAvailableMiB": 2095,
+      "maxDiskWriteMillis": 0.4788369706840391,
+      "maxDiskReadMillis": 1.894325,
+      "maxPagesInputPerSecond": 376.3955387370257,
+      "waitSamples": {
+        "ClientRead": 4,
+        "WalSync": 3,
+        "WALWrite": 1,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:10:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 468,
+      "minAvailableMiB": 2168,
+      "maxDiskWriteMillis": 0.38883181818181817,
+      "maxDiskReadMillis": 1.5283499999999999,
+      "maxPagesInputPerSecond": 650.8388341762703,
+      "waitSamples": {
+        "WALWrite": 2,
+        "WalSync": 7,
+        "ClientRead": 2,
+        "running": 2,
+        "VacuumDelay": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:11:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 507,
+      "minAvailableMiB": 2066,
+      "maxDiskWriteMillis": 0.2910271914132379,
+      "maxDiskReadMillis": 2.5884583969465647,
+      "maxPagesInputPerSecond": 5374.847566444865,
+      "waitSamples": {
+        "WALWrite": 1,
+        "WalSync": 4,
+        "ClientRead": 3,
+        "running": 4,
+        "WalWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:11:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 457,
+      "minAvailableMiB": 2017,
+      "maxDiskWriteMillis": 0.32319162087912084,
+      "maxDiskReadMillis": 1.5726000000000002,
+      "maxPagesInputPerSecond": 200.5608319462872,
+      "waitSamples": {
+        "WalSync": 4,
+        "running": 1,
+        "ClientRead": 3,
+        "WALWrite": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:11:20.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 484,
+      "minAvailableMiB": 2029,
+      "maxDiskWriteMillis": 0.3708340425531915,
+      "maxDiskReadMillis": 2.3325,
+      "maxPagesInputPerSecond": 48.48005144821786,
+      "waitSamples": {
+        "WalSync": 5,
+        "ClientRead": 4,
+        "WALWrite": 1,
+        "running": 1,
+        "transactionid": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:11:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 580,
+      "minAvailableMiB": 2077,
+      "maxDiskWriteMillis": 0.32221574239713774,
+      "maxDiskReadMillis": 0.8392999999999999,
+      "maxPagesInputPerSecond": 698.2941727203552,
+      "waitSamples": {
+        "WalSync": 4,
+        "WALWrite": 1,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:11:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 541,
+      "minAvailableMiB": 2045,
+      "maxDiskWriteMillis": 0.5896546632124352,
+      "maxDiskReadMillis": 1.77685,
+      "maxPagesInputPerSecond": 4085.594503446933,
+      "waitSamples": {
+        "WalSync": 6,
+        "WALWrite": 3,
+        "ClientRead": 2,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:11:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 539,
+      "minAvailableMiB": 2066,
+      "maxDiskWriteMillis": 0.4687598265895954,
+      "maxDiskReadMillis": 3.6231,
+      "maxPagesInputPerSecond": 76.2795095207725,
+      "waitSamples": {
+        "ClientRead": 5,
+        "WalSync": 4,
+        "running": 1,
+        "VacuumDelay": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:12:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 550,
+      "minAvailableMiB": 2041,
+      "maxDiskWriteMillis": 0.32789159663865547,
+      "maxDiskReadMillis": 1.04915,
+      "maxPagesInputPerSecond": 988.6334722146729,
+      "waitSamples": {
+        "ClientRead": 1,
+        "WalSync": 2,
+        "WalWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:12:10.000Z",
+      "count": 50,
+      "slow": 39,
+      "maxDispatchMillis": 8381,
+      "minAvailableMiB": 1985,
+      "maxDiskWriteMillis": 32.24288414634147,
+      "maxDiskReadMillis": 25.9688,
+      "maxPagesInputPerSecond": 129.06969147776655,
+      "waitSamples": {
+        "WalSync": 8,
+        "ClientRead": 1,
+        "WALWrite": 29,
+        "transactionid": 8,
+        "tuple": 1,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:12:20.000Z",
+      "count": 50,
+      "slow": 6,
+      "maxDispatchMillis": 3217,
+      "minAvailableMiB": 2019,
+      "maxDiskWriteMillis": 31.28804590163934,
+      "maxDiskReadMillis": 30.64696,
+      "maxPagesInputPerSecond": 45.463152905233834,
+      "waitSamples": {
+        "WALWrite": 20,
+        "WalSync": 6,
+        "transactionid": 2,
+        "running": 5,
+        "ClientRead": 4
+      }
+    },
+    {
+      "at": "2026-09-09T05:12:30.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 475,
+      "minAvailableMiB": 2027,
+      "maxDiskWriteMillis": 0.3553936860068259,
+      "maxDiskReadMillis": 1.7771,
+      "maxPagesInputPerSecond": 32.97919342686699,
+      "waitSamples": {
+        "WalSync": 4,
+        "WALWrite": 2,
+        "running": 5,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:12:40.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 538,
+      "minAvailableMiB": 2016,
+      "maxDiskWriteMillis": 0.3371022222222222,
+      "maxDiskReadMillis": 1.17245,
+      "maxPagesInputPerSecond": 32.92765464996855,
+      "waitSamples": {
+        "running": 3,
+        "ClientRead": 3,
+        "WALWrite": 1,
+        "WalSync": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:12:50.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 496,
+      "minAvailableMiB": 2045,
+      "maxDiskWriteMillis": 0.5729429882044561,
+      "maxDiskReadMillis": 1.86205,
+      "maxPagesInputPerSecond": 27.66640403344552,
+      "waitSamples": {
+        "ClientRead": 6,
+        "WalSync": 1,
+        "running": 2
+      }
+    },
+    {
+      "at": "2026-09-09T05:13:00.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 471,
+      "minAvailableMiB": 2044,
+      "maxDiskWriteMillis": 0.31837315789473686,
+      "maxDiskReadMillis": 2.8057,
+      "maxPagesInputPerSecond": 323.1228507094641,
+      "waitSamples": {
+        "ClientRead": 3,
+        "WalSync": 2,
+        "WALWrite": 2,
+        "running": 1
+      }
+    },
+    {
+      "at": "2026-09-09T05:13:10.000Z",
+      "count": 50,
+      "slow": 0,
+      "maxDispatchMillis": 491,
+      "minAvailableMiB": 2073,
+      "maxDiskWriteMillis": 0.34147039390088946,
+      "maxDiskReadMillis": 1.1256,
+      "maxPagesInputPerSecond": 94.4961876694287,
+      "waitSamples": {
+        "ClientRead": 5,
+        "running": 2,
+        "transactionid": 2,
+        "WalSync": 3
+      }
+    },
+    {
+      "at": "2026-09-09T05:13:20.000Z",
+      "count": 25,
+      "slow": 0,
+      "maxDispatchMillis": 557,
+      "minAvailableMiB": 2055,
+      "maxDiskWriteMillis": 0.4889612244897959,
+      "maxDiskReadMillis": 23.27819660657476,
+      "maxPagesInputPerSecond": 78841.30432158985,
+      "waitSamples": {
+        "WalSync": 4,
+        "running": 1
+      }
+    }
+  ],
+  "originalHashes": {
+    "results.json": "7eed590e399d20e0dcbf7940d08b0d7c67628a2868ed4dfefdf08bb27be0d874",
+    "durable-dispatch-timing.json": "2e81782e2ff35fbc626ec92e37304e7905487298d8d556002e8ff99c02c0838a",
+    "trace-readback.json": "349aff6cfa003518a2d351956319dcafcd571c933ef9d7a09b4eef9dddbf0887",
+    "host-io-1788930120578.jsonl": "f89c3ddf72537da7efad2e9ef68b77acf2e6ab3e474c88e9192ae15f312daa29",
+    "database-waits-1788930120993.json": "adca6a51bb31ea249e461212a0b607f0f45af55e9f5805c3fc8f94adc7c2b6b1",
+    "process-io-1788930121501.jsonl": "cbdf9cde5e4a4ebb47eb5ed80be137e467e2656acbf296463266de5921dc7a55"
+  },
+  "limitations": [
+    "Host disk counters are one-second interval averages across all disks, not individual request maxima.",
+    "PostgreSQL wait snapshots are sampled states, not wait durations. WAL counters can be published in batches.",
+    "Process file/device I/O counters include non-disk I/O and cannot attribute a VM delay to a container.",
+    "These observations support correlation, not identification of the underlying storage producer."
+  ]
+}

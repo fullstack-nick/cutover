@@ -76,6 +76,7 @@ try {
   for (let index = 0; index < 9; index++) await completed(await order('reverse-sample-' + index));
   await until(async () => { const session = await migration(); if (session.lastError === 'OBSERVATION_LATENCY_TARGET_MISSED') throw Error('Reverse observation missed two seconds: ' + session.observation.dispatchP99Millis + ' ms; retain the failed sample.'); return session.phase === 'COMPLETED'; }, 'the reverse-owner observation sample satisfies its bound');
   const final = await migration(); evidence.completed = final; assert.equal(final.targetEpoch, route.epoch + 1); assert.equal(final.inventoryCount, final.verifiedCount);
+  assert.equal(final.observation.timingBasis, 'SIMULATOR_ACCEPTANCE_UPPER_BOUND');
   assert.equal(query('execution', `SELECT count(*) FROM execution_tasks WHERE movement_id='${allocated.movementId}' AND state='COMPLETED' AND epoch=${route.epoch};`), '1');
   assert.equal(query('core', `SELECT count(*) FROM legacy_tasks WHERE movement_id='${pending.movementId}' AND state='COMPLETED' AND epoch=${final.targetEpoch};`), '1');
   assert.equal(query('execution', `SELECT count(*) FROM execution_tasks WHERE movement_id='${pending.movementId}';`), '0');

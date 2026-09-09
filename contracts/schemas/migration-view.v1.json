@@ -215,6 +215,14 @@
               "dispatchMillis": {
                 "type": "number",
                 "minimum": 0
+              },
+              "eligibleAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "dispatchConfirmedBy": {
+                "type": "string",
+                "format": "date-time"
               }
             },
             "required": [
@@ -232,6 +240,10 @@
             "additionalProperties": true
           },
           "maxItems": 10
+        },
+        "timingBasis": {
+          "type": "string",
+          "description": "SIMULATOR_ACCEPTANCE_UPPER_BOUND confirms the preceding adapter commit. Missing or unknown values do not establish durable dispatch timing."
         }
       },
       "required": [

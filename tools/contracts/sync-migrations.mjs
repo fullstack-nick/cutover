@@ -13,6 +13,10 @@ const phase = { ...text, enum: ['DRAINING', 'RECONCILING', 'READY_TO_SWITCH', 'O
 const route = object({ siteId: text, zoneId: text, owner: text, epoch: integer, state: text, version: integer });
 const checkpoint = object({ inventoryHash: hash, count: integer, worldId: id, journalGeneration: id, journalHighWater: integer, proofChunkHashes: array(hash, 313) });
 const observation = object({ sampleCount: integer, dispatchP99Millis: duration, withinTwoSeconds: bool, proofHash: hash, movements: array(object({ movementId: id, dispatchMillis: duration }), 10), proof: array({ type: 'object', additionalProperties: true }, 10) });
+// Additive evidence fields: retained N-1 observations do not establish post-commit timing.
+observation.properties.timingBasis = { ...text, description: 'SIMULATOR_ACCEPTANCE_UPPER_BOUND confirms the preceding adapter commit. Missing or unknown values do not establish durable dispatch timing.' };
+observation.properties.movements.items.properties.eligibleAt = time;
+observation.properties.movements.items.properties.dispatchConfirmedBy = time;
 const migration = object({
   sessionId: id, siteId: text, zoneId: text, sourceOwner: owner, targetOwner: owner, sourceEpoch: integer, targetEpoch: nullable(integer), phase, version: integer,
   actor: text, reason: text, reversesSessionId: nullable(id), inventoryCount: integer, verifiedCount: integer, inventoryHash: nullable(hash), checkpointHash: nullable(hash), checkpoint: nullable(checkpoint),

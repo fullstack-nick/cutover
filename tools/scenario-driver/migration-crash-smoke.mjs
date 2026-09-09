@@ -140,6 +140,7 @@ try {
   }, 'the fifth terminal phase halts once and restarts');
   const final = await currentSession();
   assert.equal(final.phase, 'COMPLETED'); assert.equal(final.targetEpoch, route.epoch + 1); assert.equal(final.inventoryCount, final.verifiedCount); assert.ok(final.observation.withinTwoSeconds);
+  assert.equal(final.observation.timingBasis, 'SIMULATOR_ACCEPTANCE_UPPER_BOUND');
   const after = inspect(); evidence.restartsAfter = after.restartCount;
   assert.equal(after.restartCount - evidence.restartsBefore, 5); assert.equal(evidence.processExits.length, 5);
   assert.deepEqual(evidence.faultResults.map(item => item.phase), phases); assert.ok(evidence.faultResults.every(item => item.sessionId === sessionId));

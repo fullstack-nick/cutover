@@ -1,10 +1,8 @@
 # Sustained healthy-load evidence
 
-**A50 failed** in `load-1788921802696`, ending 2026-09-09T02:55:00.857Z. All 3,000 measured movements were included: **89.600% reached the adapter journal's creation timestamp within two seconds of original eligibility**, with **p99 11,364.910 ms**. All 3,300 total physical and business effects, including warm-up, completed once. The required 99% threshold remains unmet; this report does not close A50.
+**A50 failed** in `load-1788930132552`, ending 2026-09-09T05:16:00.906Z. All 3,000 measured movements were included: **93.967% reached post-transaction adapter acceptance within two seconds of original eligibility**, with **p99 6,936.000 ms**. All 3,300 total physical and business effects, including warm-up, completed once. The required 99% threshold remains unmet; this report does not close A50.
 
-Measurement correction recorded later on 9 September: this run's journal timestamp precedes transaction commit, so its latency is a lower observation bound on durable acceptance. Its failed outcome remains valid. [ADR 0030](../adr/0030-prove-dispatch-timing-after-commit.md) requires complete post-transaction timing proof for future qualification and retains the original earlier measurements. The subsequent [shared-authority diagnostic](shared-authority-diagnostic.md) also failed under both timing endpoints.
-
-The runtime images were built from `beeabc15732375017512831a230c408eccecedcf`; the driver source was `f06043a2c6baf2953a75ea1a705a8cd047029782`. [Structured measurements and raw-evidence hashes](healthy-load.json) retain this distinction. [The runtime inventory](runtime-runs.json) identifies the application images and running containers. Raw requests, movement identities, effects and resource samples remain private.
+The runtime images were built from `dd130962537e2a02f32a9164d3f4e31f1a0950af`; the driver source was `da6027a7afe28e306a4f8885d7a2655ce8885f9e`. [Structured measurements and raw-evidence hashes](healthy-load.json) retain this distinction. [The runtime inventory](runtime-runs.json) identifies the application images and running containers. Raw requests, movement identities, effects and resource samples remain private.
 
 The [declared tracing profile](../adr/0027-domain-and-transport-tracing-profile.md) retains business and transport spans and suppresses automatic JDBC spans. The structured evidence records all five actual owner/shadow pod identities and an explicit non-secret setting allowlist, unchanged before and after offering. No sampling or latency-denominator change was made.
 
@@ -14,18 +12,18 @@ The [declared tracing profile](../adr/0027-domain-and-transport-tracing-profile.
 
 The manually invoked command is `node tools/scenario-driver/healthy-load.mjs`. It offers two orders per second, each with two reserved lines, plus one two-crate receipt per second with one nonzero sorting classification rotating through reusable, needs-cleaning and damaged. The seed is 20260908. A 60-second warm-up precedes the entire 600-second measurement, producing 1,980 HTTP requests and 3,300 movements overall. All HTTP requests returned 202. The driver limits in-flight offers to 32 and retains actual offer lateness.
 
-Original movement eligibility is the start timestamp; the adapter's persisted command creation is the endpoint. The task-created stage is reported separately and is not substituted for that original timestamp. There were **zero blocked, draining or unknown exclusions**. Completed work, failed attempts and eventual effects are checked against the separate owners and the simulator's retained journal.
+Original movement eligibility is the start timestamp; the endpoint is post-transaction adapter acceptance. Every movement has its own successful original-trace adapter command-journal span ending after the HTTP journal transaction returns. The [post-commit verifier](../adr/0030-prove-dispatch-timing-after-commit.md) rounds span ends up and original eligibility down to milliseconds. Missing coverage fails qualification. Earlier row-timestamp diagnostics remain separate. The task-created stage is reported separately and is not substituted for that original timestamp. There were **zero blocked, draining or unknown exclusions**. Completed work, failed attempts and eventual effects are checked against the separate owners and the simulator's retained journal. Retained historical failures used earlier pre-commit timestamps unless explicitly labelled otherwise.
 
 | Measurement | Result |
 | --- | ---: |
-| Original eligibility → recorded dispatch, p99 | 11,364.910 ms |
-| Percentage within two seconds | 89.600% |
-| Task creation → recorded dispatch, p99 | 9,320.000 ms |
-| HTTP acceptance, p99 | 509.00 ms |
-| Offer lateness, p99 | 21.00 ms |
-| Original eligibility → physical completion, p99 | 18,496.00 ms |
+| Original eligibility → recorded dispatch, p99 | 6,936.000 ms |
+| Percentage within two seconds | 93.967% |
+| Task creation → recorded dispatch, p99 | 3,834.000 ms |
+| HTTP acceptance, p99 | 589.00 ms |
+| Offer lateness, p99 | 19.00 ms |
+| Original eligibility → physical completion, p99 | 9,281.00 ms |
 | Measured movements eventually completed once | 3000 / 3,000 |
-| Measured movements completed before the offering window ended | 2998 / 3,000 |
+| Measured movements completed before the offering window ended | 2997 / 3,000 |
 | Eventual completions per offered measurement second | 5.00 |
 
 ## Measured resources
@@ -34,24 +32,24 @@ The Windows host is 13th Gen Intel(R) Core(TM) i9-13900H, 20 logical CPUs, with 
 
 | Environment | Maximum sampled CPU | Minimum available memory |
 | --- | ---: | ---: |
-| Windows host | 43.66% | 0.55 GiB |
-| Docker Linux VM | 18.04% | 7.65 GiB |
+| Windows host | 36.75% | 1.98 GiB |
+| Docker Linux VM | 16.69% | 7.69 GiB |
 
 | Owned container | Maximum sampled memory | Maximum sampled CPU |
 | --- | ---: | ---: |
-| cutover-control-plane | 5.52 GiB | 321.78% |
-| cutover-dev-equipment-simulator-1 | 0.29 GiB | 42.20% |
-| cutover-dev-simulator-db-1 | 0.06 GiB | 23.68% |
-| cutover-dev-equipment-volume-probe-1 | 0.00 GiB | 1.31% |
+| cutover-control-plane | 5.58 GiB | 255.75% |
+| cutover-dev-equipment-simulator-1 | 0.31 GiB | 48.09% |
+| cutover-dev-simulator-db-1 | 0.07 GiB | 11.75% |
+| cutover-dev-equipment-volume-probe-1 | 0.00 GiB | 2.38% |
 
 Docker CPU percentages use 100% per CPU, while host and VM percentages describe their whole sampled environment. Container memory values are approximate because Docker rounds its displayed strings. Samples can miss shorter peaks.
 
 | Owner | Peak unpublished events | Oldest sampled outbox event | Peak pending inbox | Oldest sampled inbox event |
 | --- | ---: | ---: | ---: | ---: |
-| core | 31 | 5.100 s | 0 | 0.000 s |
-| adapter | 7 | 1.820 s | 0 | 0.000 s |
+| core | 29 | 4.238 s | 0 | 0.000 s |
+| adapter | 13 | 3.378 s | 0 | 0.000 s |
 | execution | 0 | 0.000 s | 0 | 0.000 s |
-| returns | 2 | 0.782 s | 0 | 0.000 s |
+| returns | 2 | 1.050 s | 0 | 0.000 s |
 | shadow | 0 | 0.000 s | 0 | 0.000 s |
 
 Database `fsync` and `synchronous_commit` were both `on` / `on`; no durability setting was relaxed for the run. The structured report includes WAL counters and database CPU/throttling deltas.
@@ -72,5 +70,10 @@ Selected earlier failed full qualifications remain part of the evidence; the imp
 | load-1788914705350 | c56cff9 | 92.933% | 9,291.489 ms | Failed |
 | load-1788916732445 | c56cff9 | 93.400% | 6,988.642 ms | Failed |
 | load-1788918305739 | c56cff9 | 88.300% | 9,611.997 ms | Failed |
+| load-1788921802696 | beeabc1 | 89.600% | 11,364.910 ms | Failed |
 
 The corrections address [bounded inbox lock order](../adr/0021-bounded-inbox-transactions.md), [broker subscriptions](../adr/0022-bounded-broker-subscriptions.md), [fair work selection](../adr/0023-fair-scheduler-work-selection.md), [independent adapter periodic work](../adr/0024-independent-adapter-periodic-work.md), [expired batch evidence](../adr/0025-refresh-expired-batch-evidence.md), and [independent command observations](../adr/0026-isolate-recorded-command-observations.md). Short diagnostics and component regressions are recorded separately and are not counted as ten-minute qualifications. The requirement remains at least 99% within two seconds at the declared workload.
+
+## Additional host and database observations
+
+The same run retained 750 one-second host samples, 743 PostgreSQL wait/counter snapshots and 150 five-second process samples. [The complete correlation table and original hashes](healthy-load-io.json) use the post-transaction timing of all 3,000 measured movements: 181 exceeded two seconds. Slow cohorts clustered around 05:04:40–05:05:00, 05:07:10–05:07:30, 05:09:40–05:10:00 and 05:12:10–05:12:30 UTC, alongside elevated disk latency and WAL waits. Across the complete capture, the highest sampled interval-average disk write latency was 157.158 ms and read latency 271.672 ms; available Windows memory stayed at or above 1,854 MiB. These observations support a storage-delay contribution without identifying the producer. PostgreSQL wait counts are sampled states, and process file/device counters include non-disk I/O. No unrelated workload or shared-cache operation was changed.

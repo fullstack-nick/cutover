@@ -182,16 +182,27 @@ final class MigrationSteps {
             var current = MigrationInventory.capture(sql, site(session), zone(session), identities(sample));
             if (!JsonSupport.hash(current).equals(JsonSupport.hash(sample))) throw new MigrationProofs.Pending("OBSERVATION_CHANGED", "");
             var latencies = JsonSupport.MAPPER.createArrayNode(); double maximum = 0;
-            for (UUID movement : identities(sample)) {
+            for (var item : proof) {
+                UUID movement = UUID.fromString(item.path("movementId").asString());
                 var row = sql.fetchOne("""
-                    SELECT c.created_at AS dispatch_at,GREATEST(a.assigned_at,(a.movement->>'eligibleAt')::timestamptz) AS eligible_at
+                    SELECT c.created_at AS journal_created_at,GREATEST(a.assigned_at,(a.movement->>'eligibleAt')::timestamptz) AS eligible_at
                     FROM movement_allocations a JOIN command_journal c ON c.allocation_id=a.allocation_id WHERE a.site_id=? AND a.movement_id=?
                     """, site(session), movement);
-                double millis = Duration.between(row.get("eligible_at", OffsetDateTime.class), row.get("dispatch_at", OffsetDateTime.class)).toNanos() / 1_000_000.0;
-                if (millis < 0) throw new MigrationProofs.Pending("OBSERVATION_CLOCK_ORDER", movement.toString());
-                maximum = Math.max(maximum, millis); latencies.addObject().put("movementId", movement.toString()).put("dispatchMillis", millis);
+                // The simulator can receive this command only after the journal commit. Its retained
+                // acceptance timestamp bounds that earlier commit without making telemetry an authority.
+                var acceptedAt = physicalTime(item.path("physical"), "acceptedAt", movement);
+                var completedAt = physicalTime(item.path("physical"), "completedAt", movement);
+                var eligibleAt = row.get("eligible_at", OffsetDateTime.class);
+                if (acceptedAt.isBefore(eligibleAt) || acceptedAt.isBefore(row.get("journal_created_at", OffsetDateTime.class))
+                    || completedAt.isBefore(acceptedAt) || completedAt.isAfter(now()))
+                    throw new MigrationProofs.Pending("OBSERVATION_CLOCK_ORDER", movement.toString());
+                double millis = Duration.between(eligibleAt, acceptedAt).toNanos() / 1_000_000.0;
+                maximum = Math.max(maximum, millis);
+                latencies.addObject().put("movementId", movement.toString()).put("dispatchMillis", millis)
+                    .put("eligibleAt", eligibleAt.toString()).put("dispatchConfirmedBy", acceptedAt.toString());
             }
             var observation = JsonSupport.MAPPER.createObjectNode().put("sampleCount", 10).put("dispatchP99Millis", maximum)
+                .put("timingBasis", "SIMULATOR_ACCEPTANCE_UPPER_BOUND")
                 .put("withinTwoSeconds", maximum <= 2000).put("proofHash", JsonSupport.hash(proof));
             observation.set("movements", latencies); observation.set("proof", proof);
             if (session.get("observation") == null || !JsonSupport.hash(json(session, "observation")).equals(JsonSupport.hash(observation)))
@@ -212,6 +223,15 @@ final class MigrationSteps {
                 JsonSupport.MAPPER.createObjectNode().put("sampleCount", 10).put("dispatchP99Millis", maximum).put("proofHash", JsonSupport.hash(proof)));
         });
         if (database.fetchOne("SELECT phase FROM migration_sessions WHERE session_id=?", id(leased)).get(0, String.class).equals("COMPLETED")) hooks.reached("COMPLETED", id(leased));
+    }
+
+    private static OffsetDateTime physicalTime(JsonNode physical, String field, UUID movement) {
+        try {
+            if (!physical.path(field).isString()) throw new IllegalArgumentException();
+            return OffsetDateTime.parse(physical.path(field).asString());
+        } catch (IllegalArgumentException | java.time.format.DateTimeParseException invalid) {
+            throw new MigrationProofs.Pending("OBSERVATION_TIMING_PROOF_MISSING", movement.toString());
+        }
     }
 
     private void settleLineage(DSLContext sql, Record completed, UUID parent) {

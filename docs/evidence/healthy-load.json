@@ -1,12 +1,12 @@
 {
-  "run": "load-1788921802696",
+  "run": "load-1788930132552",
   "result": "failed",
   "qualification": "Full A50 candidate",
-  "driverSource": "f06043a2c6baf2953a75ea1a705a8cd047029782",
-  "imageSource": "beeabc15732375017512831a230c408eccecedcf",
-  "startedAt": "2026-09-09T02:43:22.774Z",
-  "endedAt": "2026-09-09T02:55:00.857Z",
-  "originalResultsSha256": "69cd520c2547d105548292161d32510f15b63e49d88e069a1706bc0119823cd3",
+  "driverSource": "da6027a7afe28e306a4f8885d7a2655ce8885f9e",
+  "imageSource": "dd130962537e2a02f32a9164d3f4e31f1a0950af",
+  "startedAt": "2026-09-09T05:02:12.635Z",
+  "endedAt": "2026-09-09T05:16:00.906Z",
+  "originalResultsSha256": "7eed590e399d20e0dcbf7940d08b0d7c67628a2868ed4dfefdf08bb27be0d874",
   "workload": {
     "warmupSeconds": 60,
     "measurementSeconds": 600,
@@ -25,13 +25,15 @@
     "excludedBlocked": 0,
     "excludedDraining": 0,
     "excludedUnknown": 0,
-    "taskEligibilityToDispatchP99Millis": 9320,
-    "intentEligibilityToDispatchP99Millis": 11364.91,
-    "taskWithinTwoSecondsPercent": 92.83333333333333,
-    "withinTwoSecondsPercent": 89.6,
-    "acceptanceP99Millis": 509,
-    "driverLatenessP99Millis": 21,
-    "movementCompletionP99Millis": 18496
+    "taskEligibilityToDispatchP99Millis": 3834,
+    "intentEligibilityToDispatchP99Millis": 6936,
+    "taskWithinTwoSecondsPercent": 98,
+    "withinTwoSecondsPercent": 93.96666666666667,
+    "acceptanceP99Millis": 589,
+    "driverLatenessP99Millis": 19,
+    "movementCompletionP99Millis": 9281,
+    "intentEligibilityToJournalTimestampP99Millis": 6886.989,
+    "journalTimestampWithinTwoSecondsPercent": 94.03333333333333
   },
   "throughput": {
     "measurementSeconds": 600,
@@ -41,20 +43,20 @@
     "acceptedReceipts": 600,
     "completedMeasuredMovements": 3000,
     "eventualCompletedMovementsPerOfferedSecond": 5,
-    "completedWithinWindow": 2998
+    "completedWithinWindow": 2997
   },
   "durability": {
     "fsync": "on",
     "synchronousCommit": "on",
     "walDelta": {
-      "seconds": 660.373,
-      "writes": 69850,
-      "writeMillis": 4014.1890000000003,
-      "writesPerSecond": 105.77355524832177,
-      "fsyncs": 69808,
-      "fsyncMillis": 283929.845,
-      "walBytes": 740130082,
-      "fsyncsPerSecond": 105.709954828559
+      "seconds": 660.35,
+      "writes": 70422,
+      "writeMillis": 3022.28,
+      "writesPerSecond": 106.64344665707578,
+      "fsyncs": 70397,
+      "fsyncMillis": 259346.44999999998,
+      "walBytes": 438896769,
+      "fsyncsPerSecond": 106.60558794578633
     }
   },
   "samples": 67,
@@ -63,54 +65,54 @@
     "model": "13th Gen Intel(R) Core(TM) i9-13900H",
     "logicalCpus": 20,
     "totalBytes": 33960161280,
-    "minimumAvailableBytes": 591298560,
-    "maximumObservedCpuPercent": 43.66492818901994
+    "minimumAvailableBytes": 2126061568,
+    "maximumObservedCpuPercent": 36.74619789269471
   },
   "vm": {
     "totalBytes": 16568713216,
-    "minimumAvailableBytes": 8216944640,
-    "maximumObservedCpuPercent": 18.040717597258617
+    "minimumAvailableBytes": 8252870656,
+    "maximumObservedCpuPercent": 16.693410891585604
   },
   "containers": [
     {
       "name": "cutover-control-plane",
-      "maximumMemoryBytes": 5930276093.952,
-      "maximumCpuPercent": 321.78
+      "maximumMemoryBytes": 5991479377.92,
+      "maximumCpuPercent": 255.75
     },
     {
       "name": "cutover-dev-equipment-simulator-1",
-      "maximumMemoryBytes": 306079334.4,
-      "maximumCpuPercent": 42.2
+      "maximumMemoryBytes": 328728576,
+      "maximumCpuPercent": 48.09
     },
     {
       "name": "cutover-dev-simulator-db-1",
-      "maximumMemoryBytes": 62767759.36,
-      "maximumCpuPercent": 23.68
+      "maximumMemoryBytes": 73085747.2,
+      "maximumCpuPercent": 11.75
     },
     {
       "name": "cutover-dev-equipment-volume-probe-1",
-      "maximumMemoryBytes": 2032140.288,
-      "maximumCpuPercent": 1.31
+      "maximumMemoryBytes": 3055550.464,
+      "maximumCpuPercent": 2.38
     }
   ],
   "databaseCpu": {
-    "elapsedSeconds": 660.453,
-    "usageSeconds": 287.682141,
-    "throttledSeconds": 0.302786
+    "elapsedSeconds": 660.572,
+    "usageSeconds": 287.512521,
+    "throttledSeconds": 0.034243
   },
   "ownerPeaks": {
     "core": {
-      "unpublishedEvents": 31,
+      "unpublishedEvents": 29,
       "pendingInbox": 0,
-      "outboxOldestSeconds": 5.100286,
+      "outboxOldestSeconds": 4.237736,
       "inboxOldestSeconds": 0,
-      "activeRequests": 41,
+      "activeRequests": 20,
       "unknownCommands": 0
     },
     "adapter": {
-      "unpublishedEvents": 7,
+      "unpublishedEvents": 13,
       "pendingInbox": 0,
-      "outboxOldestSeconds": 1.819923,
+      "outboxOldestSeconds": 3.377948,
       "inboxOldestSeconds": 0,
       "activeRequests": 0,
       "unknownCommands": 0
@@ -126,9 +128,9 @@
     "returns": {
       "unpublishedEvents": 2,
       "pendingInbox": 0,
-      "outboxOldestSeconds": 0.781691,
+      "outboxOldestSeconds": 1.050262,
       "inboxOldestSeconds": 0,
-      "activeRequests": 17,
+      "activeRequests": 9,
       "unknownCommands": 0
     },
     "shadow": {
@@ -140,19 +142,30 @@
       "unknownCommands": 0
     }
   },
-  "rawEvidenceSha256": {
-    "results.json": "69cd520c2547d105548292161d32510f15b63e49d88e069a1706bc0119823cd3",
-    "movements.json": "f39e78f5557d1d13178bddfa583ca62e943d8fc84cc3a646cc9c3ae626f78857",
-    "requests.json": "366a9e315c78956edf5a3cc362b3dd28c4d2337c0ac8e52fbd4060aa1fb5f781",
-    "resources.json": "21e8420b8ab1bab47894742fe46d01feb8be2506877e36699e282eeafdc32eb3",
-    "core-effects.json": "bbad784ce0b1b202dab14950b0d834e82da6f5a9bf115e4ac9894f7f2d2c8f97",
-    "returns-effects.json": "fe1d0683e459f693c007dd7b374df2e455ef74e11a8c1c42d491d76c30add86c",
-    "simulator-effects.json": "0fb5f0c41bcb2049e422c93b2e98d5e99e5d26a39b19c2d77631642ba48e8095"
+  "durableDispatchTiming": {
+    "basis": "Successful adapter HTTP command-journal domain span ending after transaction return; end rounded up and original eligibility rounded down to milliseconds.",
+    "movements": 3300,
+    "measuredMovements": 3000,
+    "traces": 1980,
+    "withinTwoSecondsPercent": 93.96666666666667,
+    "p99Millis": 6936,
+    "journalTimestampToReturnP99Millis": 123
   },
-  "latencyDenominator": "All 3000 measured movements, from original immutable movement eligibleAt to adapter command journal row creation before commit. Assignment/publication delay is included. This earlier endpoint understates durable acceptance latency. The later task-created stage is reported separately. No healthy work is excluded for transient waiting.",
+  "rawEvidenceSha256": {
+    "results.json": "7eed590e399d20e0dcbf7940d08b0d7c67628a2868ed4dfefdf08bb27be0d874",
+    "movements.json": "d55c58fa5e89e78ad6e7312a85bc10c30dedd03b64b7bb03c09ea26ee7e284ce",
+    "requests.json": "94f7b3ca9e6f7a798afff9ca5658cb6b6ccfa64880738675528b4d69e2c849f4",
+    "resources.json": "3ce7822895fa6e76cd8be14d32597cd8a6b0eba83d38d765786b8ef5091efec5",
+    "core-effects.json": "4162c5839f18dc3f7f75123303461c2493a60cf6d11794e0d95aa3dd2faef93d",
+    "returns-effects.json": "3cc396fa972610c73cb310219d85520558f3637cf2b8333f7981097bf71d3048",
+    "simulator-effects.json": "5c81e05e32e31db9f92fdbd59d6a4ff1c3b0d9a65cef655ff583751a41d8891d",
+    "durable-dispatch-timing.json": "2e81782e2ff35fbc626ec92e37304e7905487298d8d556002e8ff99c02c0838a",
+    "trace-readback.json": "349aff6cfa003518a2d351956319dcafcd571c933ef9d7a09b4eef9dddbf0887"
+  },
+  "latencyDenominator": "All 3000 measured movements, from original immutable movement eligibleAt to a successful adapter command-journal span ending after transaction return. End times round up and eligibility rounds down to milliseconds. Assignment/publication delay and durable commit are included. Journal-row timestamps and the later task-created stage remain separate diagnostic metrics. Missing timing proof cannot qualify a pass; no healthy work is excluded for transient waiting.",
   "databaseLockCheck": {
     "before": {
-      "at": "2026-09-09T02:43:22.51197+00:00",
+      "at": "2026-09-09T05:02:12.38243+00:00",
       "databases": [
         {
           "database": "cutover_adapter",
@@ -187,7 +200,7 @@
       ]
     },
     "after": {
-      "at": "2026-09-09T02:55:02.526384+00:00",
+      "at": "2026-09-09T05:16:02.453721+00:00",
       "databases": [
         {
           "database": "cutover_adapter",
@@ -221,7 +234,7 @@
         }
       ]
     },
-    "podUid": "639d04eb-1ec1-4580-94a6-a1acbb515273",
+    "podUid": "41bf920d-f209-472a-a673-3b1bfb06c129",
     "args": [],
     "exitCode": 1,
     "delta": [
@@ -250,40 +263,40 @@
         "deadlocks": 0
       }
     ],
-    "logSha256": "8b8fb4fdca33e6caecf255ff255741013f9bf0999e946154623af14bf769ce17",
+    "logSha256": "70b623d1f7aacc248a6eb5df119d28dbbd47ccf51cf9741cabe69be743c3764d",
     "logDeadlocks": 0,
-    "originalSha256": "7a29efab35c888a7a746d56daf66af4dbfb6b25ffab0c05803437809b59d5f57"
+    "originalSha256": "24c043f45a039e79fcff01e8929ae04d93bf6e963ee198698a948190bd28acf9"
   },
   "databaseSettings": {
     "before": {
-      "at": "2026-09-09T02:43:35.812065+00:00",
+      "at": "2026-09-09T05:02:24.900194+00:00",
       "io": {
         "hits": null,
         "reads": 0,
-        "fsyncs": 163517,
+        "fsyncs": 5970,
         "object": "wal",
         "reuses": null,
-        "writes": 163591,
+        "writes": 5973,
         "context": "normal",
         "extends": null,
         "evictions": null,
         "read_time": 0,
-        "fsync_time": 682214.635,
+        "fsync_time": 19865.486,
         "read_bytes": 0,
-        "write_time": 8874.543,
+        "write_time": 248.529,
         "writebacks": null,
         "extend_time": null,
-        "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "write_bytes": 2577489920,
+        "stats_reset": "2026-09-09T04:54:11.614828+00:00",
+        "write_bytes": 98443264,
         "backend_type": "client backend",
         "extend_bytes": null,
         "writeback_time": null
       },
       "wal": {
-        "wal_fpi": 90097,
-        "wal_bytes": 1353172181,
-        "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "wal_records": 4274805,
+        "wal_fpi": 8445,
+        "wal_bytes": 70148087,
+        "stats_reset": "2026-09-09T04:54:11.614828+00:00",
+        "wal_records": 188740,
         "wal_buffers_full": 0
       },
       "fsyncEnabled": "on",
@@ -294,34 +307,34 @@
       "synchronousCommit": "on"
     },
     "afterOffering": {
-      "at": "2026-09-09T02:54:36.185267+00:00",
+      "at": "2026-09-09T05:13:25.250483+00:00",
       "io": {
         "hits": null,
         "reads": 0,
-        "fsyncs": 233325,
+        "fsyncs": 76367,
         "object": "wal",
         "reuses": null,
-        "writes": 233441,
+        "writes": 76395,
         "context": "normal",
         "extends": null,
         "evictions": null,
         "read_time": 0,
-        "fsync_time": 966144.48,
+        "fsync_time": 279211.936,
         "read_bytes": 0,
-        "write_time": 12888.732,
+        "write_time": 3270.809,
         "writebacks": null,
         "extend_time": null,
-        "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "write_bytes": 3847995392,
+        "stats_reset": "2026-09-09T04:54:11.614828+00:00",
+        "write_bytes": 1082146816,
         "backend_type": "client backend",
         "extend_bytes": null,
         "writeback_time": null
       },
       "wal": {
-        "wal_fpi": 155740,
-        "wal_bytes": 2093302263,
-        "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "wal_records": 6109403,
+        "wal_fpi": 21141,
+        "wal_bytes": 509044856,
+        "stats_reset": "2026-09-09T04:54:11.614828+00:00",
+        "wal_records": 2007211,
         "wal_buffers_full": 0
       },
       "fsyncEnabled": "on",
@@ -336,8 +349,8 @@
     "before": [
       {
         "service": "equipment-adapter",
-        "podUid": "417e363a-daeb-4c25-9f0f-1ef364e6094a",
-        "image": "docker.io/cutover/equipment-adapter@sha256:ea425aa8cfcc38f8598f15bbd8a9cea18798f58c05b1304172c20b6ba78f694a",
+        "podUid": "d126f536-86c3-4059-a525-50660a8c6fdc",
+        "image": "docker.io/cutover/equipment-adapter@sha256:287e38bfbccab7095ec7fafb796788fd0fc6870741364b2fd24153cd5258f173",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -348,8 +361,8 @@
       },
       {
         "service": "execution-service",
-        "podUid": "b15b9ac7-479a-49e4-bfa1-e21d3bbf15b9",
-        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
+        "podUid": "15478a5f-d8fd-45ac-b4e7-adeb96870a89",
+        "image": "docker.io/cutover/execution-service@sha256:4bf1f2703541a0eb83a451503d4013c087df036849a2444f414c5b15d0d5dad2",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -360,8 +373,8 @@
       },
       {
         "service": "legacy-core",
-        "podUid": "1d3bef28-7e3e-4103-9307-e2a92cb63fdd",
-        "image": "docker.io/cutover/legacy-core@sha256:ede80703f7b17857853496ec4a5356a23c1ad4bc18a3f287340a4ed3f1b5fb60",
+        "podUid": "71c24f57-6ab4-4aa6-8b9b-cffb252c45c7",
+        "image": "docker.io/cutover/legacy-core@sha256:457a8bc62474fe65e31276b91bf26199b0543adc94b0b46ed27f98d9a760e7f0",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -372,8 +385,8 @@
       },
       {
         "service": "returns-service",
-        "podUid": "d42b093f-e733-442c-a64a-7ace8df619a3",
-        "image": "docker.io/cutover/returns-service@sha256:4b27d59cbc8208416a9d9e1b30ed78d124c7361de0cecdc4622601b81aa110b3",
+        "podUid": "13be4f96-61e5-4389-b3d4-2a8472595f72",
+        "image": "docker.io/cutover/returns-service@sha256:e311d157603ddd0067315ca96c42bec61658482919e43641fdd538c76f1f844c",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -384,8 +397,8 @@
       },
       {
         "service": "shadow-scheduler",
-        "podUid": "0595a302-0ad7-4653-9d6d-973147ff2fed",
-        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
+        "podUid": "c814b448-e6e1-43fb-95ed-3fdd0dece1d0",
+        "image": "docker.io/cutover/execution-service@sha256:4bf1f2703541a0eb83a451503d4013c087df036849a2444f414c5b15d0d5dad2",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -398,8 +411,8 @@
     "afterOffering": [
       {
         "service": "equipment-adapter",
-        "podUid": "417e363a-daeb-4c25-9f0f-1ef364e6094a",
-        "image": "docker.io/cutover/equipment-adapter@sha256:ea425aa8cfcc38f8598f15bbd8a9cea18798f58c05b1304172c20b6ba78f694a",
+        "podUid": "d126f536-86c3-4059-a525-50660a8c6fdc",
+        "image": "docker.io/cutover/equipment-adapter@sha256:287e38bfbccab7095ec7fafb796788fd0fc6870741364b2fd24153cd5258f173",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -410,8 +423,8 @@
       },
       {
         "service": "execution-service",
-        "podUid": "b15b9ac7-479a-49e4-bfa1-e21d3bbf15b9",
-        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
+        "podUid": "15478a5f-d8fd-45ac-b4e7-adeb96870a89",
+        "image": "docker.io/cutover/execution-service@sha256:4bf1f2703541a0eb83a451503d4013c087df036849a2444f414c5b15d0d5dad2",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -422,8 +435,8 @@
       },
       {
         "service": "legacy-core",
-        "podUid": "1d3bef28-7e3e-4103-9307-e2a92cb63fdd",
-        "image": "docker.io/cutover/legacy-core@sha256:ede80703f7b17857853496ec4a5356a23c1ad4bc18a3f287340a4ed3f1b5fb60",
+        "podUid": "71c24f57-6ab4-4aa6-8b9b-cffb252c45c7",
+        "image": "docker.io/cutover/legacy-core@sha256:457a8bc62474fe65e31276b91bf26199b0543adc94b0b46ed27f98d9a760e7f0",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -434,8 +447,8 @@
       },
       {
         "service": "returns-service",
-        "podUid": "d42b093f-e733-442c-a64a-7ace8df619a3",
-        "image": "docker.io/cutover/returns-service@sha256:4b27d59cbc8208416a9d9e1b30ed78d124c7361de0cecdc4622601b81aa110b3",
+        "podUid": "13be4f96-61e5-4389-b3d4-2a8472595f72",
+        "image": "docker.io/cutover/returns-service@sha256:e311d157603ddd0067315ca96c42bec61658482919e43641fdd538c76f1f844c",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -446,8 +459,8 @@
       },
       {
         "service": "shadow-scheduler",
-        "podUid": "0595a302-0ad7-4653-9d6d-973147ff2fed",
-        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
+        "podUid": "c814b448-e6e1-43fb-95ed-3fdd0dece1d0",
+        "image": "docker.io/cutover/execution-service@sha256:4bf1f2703541a0eb83a451503d4013c087df036849a2444f414c5b15d0d5dad2",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -476,6 +489,7 @@
         "driverLatenessP99Millis": 17,
         "movementCompletionP99Millis": 9631
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "248d0d28947869f22e211c91f5e8a2ccea0a1f78438d9794a8b27a7ef46b9429"
     },
     {
@@ -495,6 +509,7 @@
         "driverLatenessP99Millis": 18,
         "movementCompletionP99Millis": 165436
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "816bc6746c6fa460859307c47dff4bad5678e51110c89858a7789e824e5e0ff0"
     },
     {
@@ -514,6 +529,7 @@
         "driverLatenessP99Millis": 17,
         "movementCompletionP99Millis": 17539
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "ba605ecb6719169f4ffc134ef9847ea3b3502978133caa0525d6bcf919a12c02"
     },
     {
@@ -533,6 +549,7 @@
         "driverLatenessP99Millis": 24,
         "movementCompletionP99Millis": 16877
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "20da43400e199fd5573805bcda7e6ff3492efd9f2a20985172a516ae63466f2d"
     },
     {
@@ -552,6 +569,7 @@
         "driverLatenessP99Millis": 17,
         "movementCompletionP99Millis": 19119
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "c10f0b756a828bbfb9b21a82ad33ab66e4812372fad21050014d2b4d6d3c4747"
     },
     {
@@ -571,6 +589,7 @@
         "driverLatenessP99Millis": 17,
         "movementCompletionP99Millis": 16720
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "3dec275a8bc5f257e9d1f317191fb6689effe9988ef03b1609f707cb1814acf2"
     },
     {
@@ -590,6 +609,7 @@
         "driverLatenessP99Millis": 17,
         "movementCompletionP99Millis": 14262
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "9be45ba815d4ceeeb4a2c9ca09dcf54150852ab807cdbc5656bc36a6a6d0385f"
     },
     {
@@ -609,14 +629,29 @@
         "driverLatenessP99Millis": 20,
         "movementCompletionP99Millis": 17220
       },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
       "originalResultsSha256": "7864103d10c3548471df36b8eadf36538c16101ad935b0fae446e807f32b9293"
+    },
+    {
+      "run": "load-1788921802696",
+      "result": "failed",
+      "imageSource": "beeabc15732375017512831a230c408eccecedcf",
+      "latency": {
+        "eligibleMovements": 3000,
+        "excludedBlocked": 0,
+        "excludedDraining": 0,
+        "excludedUnknown": 0,
+        "taskEligibilityToDispatchP99Millis": 9320,
+        "intentEligibilityToDispatchP99Millis": 11364.91,
+        "taskWithinTwoSecondsPercent": 92.83333333333333,
+        "withinTwoSecondsPercent": 89.6,
+        "acceptanceP99Millis": 509,
+        "driverLatenessP99Millis": 21,
+        "movementCompletionP99Millis": 18496
+      },
+      "measurementEndpoint": "journal row creation before commit; understates durable acceptance latency",
+      "originalResultsSha256": "69cd520c2547d105548292161d32510f15b63e49d88e069a1706bc0119823cd3"
     }
   ],
-  "samplingNote": "CPU and backlog values are sampled at a nominal ten-second interval. Peaks between samples may be missed. Docker memory strings are rounded by the CLI; derived bytes are approximate. VM values cover its shared Linux environment, not an isolated project-only machine.",
-  "measurementCorrection": {
-    "originalEndpoint": "command_journal.created_at inside its transaction, before commit",
-    "interpretation": "The retained latency fields understate durable acceptance latency. This already-failed full result remains failed. No original result is recomputed or overwritten.",
-    "currentVerifier": "docs/adr/0030-prove-dispatch-timing-after-commit.md",
-    "postTransactionAuditRun": "load-diagnostic-1788925571030"
-  }
+  "samplingNote": "CPU and backlog values are sampled at a nominal ten-second interval. Peaks between samples may be missed. Docker memory strings are rounded by the CLI; derived bytes are approximate. VM values cover its shared Linux environment, not an isolated project-only machine."
 }

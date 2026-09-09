@@ -1495,12 +1495,18 @@ export interface components {
                         /** Format: uuid */
                         movementId: string;
                         dispatchMillis: number;
+                        /** Format: date-time */
+                        eligibleAt?: string;
+                        /** Format: date-time */
+                        dispatchConfirmedBy?: string;
                     } & {
                         [key: string]: unknown;
                     })[];
                     proof: {
                         [key: string]: unknown;
                     }[];
+                    /** @description SIMULATOR_ACCEPTANCE_UPPER_BOUND confirms the preceding adapter commit. Missing or unknown values do not establish durable dispatch timing. */
+                    timingBasis?: string;
                 } & {
                     [key: string]: unknown;
                 }) | null;
@@ -1583,12 +1589,18 @@ export interface components {
                     /** Format: uuid */
                     movementId: string;
                     dispatchMillis: number;
+                    /** Format: date-time */
+                    eligibleAt?: string;
+                    /** Format: date-time */
+                    dispatchConfirmedBy?: string;
                 } & {
                     [key: string]: unknown;
                 })[];
                 proof: {
                     [key: string]: unknown;
                 }[];
+                /** @description SIMULATOR_ACCEPTANCE_UPPER_BOUND confirms the preceding adapter commit. Missing or unknown values do not establish durable dispatch timing. */
+                timingBasis?: string;
             } & {
                 [key: string]: unknown;
             }) | null;

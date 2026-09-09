@@ -88,6 +88,7 @@ try {
   await until(async () => { const observed = await migration(); if (observed.lastError === 'OBSERVATION_LATENCY_TARGET_MISSED') throw Error('The live migration sample missed its measured two-second dispatch target: ' + observed.observation.dispatchP99Millis + ' ms.'); return observed.phase === 'COMPLETED'; }, 'ten real new-owner movements satisfy the observation gate');
   const final = await migration(); evidence.completed = final;
   assert.equal(final.targetEpoch, ambient.epoch + 1); assert.equal(final.inventoryCount, final.verifiedCount); assert.equal(final.blockers.count, 0); assert.equal(final.observation.sampleCount, 10); assert.ok(final.observation.dispatchP99Millis <= 2000);
+  assert.equal(final.observation.timingBasis, 'SIMULATOR_ACCEPTANCE_UPPER_BOUND');
   const afterRoutes = (await api(prefix + '/zones', { bearer: supervisor.bearer() })).body; evidence.routesAfter = afterRoutes;
   assert.deepEqual(afterRoutes.find(route => route.zoneId === 'chilled'), chilled);
   assert.equal(query('adapter', `SELECT count(*) FROM outbox WHERE event_type='ZoneOwnershipChanged.v1' AND envelope->'payload'->>'sessionId'='${sessionId}';`), '1');
