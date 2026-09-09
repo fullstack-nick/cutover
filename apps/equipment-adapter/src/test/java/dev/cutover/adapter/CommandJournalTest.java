@@ -53,6 +53,59 @@ class CommandJournalTest {
     }
     void tick() { clock.advance(Duration.ofSeconds(2));simulator.advance();observations.refresh();journal.work(); }
 
+    @Test void independentCommandsShareAuthorityWhileOwnerChangesWaitForCommit() throws Exception {
+        UUID firstId=UUID.randomUUID(),secondId=UUID.randomUUID(),laterId=UUID.randomUUID();
+        var firstMovement=movement(firstId);var secondMovement=movement(secondId);var laterMovement=movement(laterId);
+        var firstAllocation=allocations.register("site-a","legacy-core",firstMovement);
+        var secondAllocation=allocations.register("site-a","legacy-core",secondMovement);
+        var laterAllocation=allocations.register("site-a","legacy-core",laterMovement);
+        var recorded=new java.util.concurrent.CountDownLatch(1);var commitFirst=new java.util.concurrent.CountDownLatch(1);
+        var firstPid=new java.util.concurrent.atomic.AtomicInteger();var secondPid=new java.util.concurrent.atomic.AtomicInteger();
+        var writerPid=new java.util.concurrent.atomic.AtomicInteger();
+        try(var threads=java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+            var first=threads.submit(()->adapterDb.sql().transaction(configuration->{
+                var sql=org.jooq.impl.DSL.using(configuration);firstPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                new CommandJournal(sql,port,observations,clock).record("site-a","legacy-core",firstId,Database.uuid(firstAllocation,"allocationId"),0,"ambient-a",firstMovement);
+                recorded.countDown();
+                try {if(!commitFirst.await(30,java.util.concurrent.TimeUnit.SECONDS))throw new AssertionError("The first command transaction was not released.");}
+                catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new AssertionError(interrupted);}
+            }));
+            try {
+                assertThat(recorded.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                var second=threads.submit(()->adapterDb.sql().transactionResult(configuration->{
+                    var sql=org.jooq.impl.DSL.using(configuration);secondPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                    return new CommandJournal(sql,port,observations,clock).record("site-a","legacy-core",secondId,Database.uuid(secondAllocation,"allocationId"),0,"ambient-a",secondMovement);
+                }));
+                long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5);boolean peerBlocked=false;
+                while(!second.isDone()&&System.nanoTime()<deadline){
+                    if(secondPid.get()!=0&&adapterDb.sql().fetchOne("SELECT ?=ANY(pg_blocking_pids(?))",firstPid.get(),secondPid.get()).get(0,Boolean.class)){peerBlocked=true;break;}
+                    Thread.sleep(10);
+                }
+                assertThat(peerBlocked).as("Independent commands must not wait for each other's route authority read").isFalse();
+                assertThat(second.get(5,java.util.concurrent.TimeUnit.SECONDS).path("commandId").asString()).isEqualTo(secondId.toString());
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isEqualTo(1);
+                // Owner/epoch updates use a conflicting lock even when they do not change the route key.
+                var writer=threads.submit(()->adapterDb.sql().transaction(configuration->{
+                    var sql=org.jooq.impl.DSL.using(configuration);writerPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                    sql.execute("UPDATE zone_routes SET owner='execution-service',epoch=1,version=version+1 WHERE site_id='site-a' AND zone_id='ambient'");
+                }));
+                deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5);boolean writerBlocked=false;
+                while(System.nanoTime()<deadline){
+                    if(writerPid.get()!=0&&adapterDb.sql().fetchOne("SELECT ?=ANY(pg_blocking_pids(?))",firstPid.get(),writerPid.get()).get(0,Boolean.class)){writerBlocked=true;break;}
+                    Thread.sleep(10);
+                }
+                assertThat(writerBlocked).as("Owner/epoch changes remain fenced until the command transaction commits").isTrue();
+                assertThat(writer.isDone()).isFalse();commitFirst.countDown();
+                first.get(10,java.util.concurrent.TimeUnit.SECONDS);writer.get(10,java.util.concurrent.TimeUnit.SECONDS);
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isEqualTo(2);
+                assertThatThrownBy(()->journal.record("site-a","legacy-core",laterId,Database.uuid(laterAllocation,"allocationId"),0,"ambient-a",laterMovement))
+                        .isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).code()).isEqualTo("STALE_OWNER"));
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal WHERE command_id=?",laterId).get(0,Integer.class)).isZero();
+                assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isZero();
+            } finally {commitFirst.countDown();}
+        }
+    }
+
     @Test void mixedZoneInboxBatchDoesNotInvertRouteAndOutboxBudgetLocks() throws Exception {
         var otherRouteHeld=new java.util.concurrent.CountDownLatch(1);
         var publishOther=new java.util.concurrent.CountDownLatch(1);

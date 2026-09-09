@@ -88,7 +88,9 @@ public final class Allocations {
     static Record lockRoute(DSLContext sql,String site,UUID movement) {
         var allocation=sql.fetchOne("SELECT zone_id FROM movement_allocations WHERE site_id= ? AND movement_id= ?",site,movement);
         if (allocation==null) throw Problem.missing();
-        return sql.fetchOne("SELECT * FROM zone_routes WHERE site_id= ? AND zone_id= ? FOR UPDATE",site,allocation.get("zone_id"));
+        // Command transactions read authority; distinct allocations may progress together.
+        // SHARE still fences every owner/epoch/state update until this transaction commits.
+        return sql.fetchOne("SELECT * FROM zone_routes WHERE site_id= ? AND zone_id= ? FOR SHARE",site,allocation.get("zone_id"));
     }
     public JsonNode routes(String site) {
         return Database.json(database,"SELECT COALESCE(jsonb_agg(jsonb_build_object('siteId',site_id,'zoneId',zone_id,'owner',owner,'epoch',epoch,'state',state,'version',version) ORDER BY zone_id),'[]'::jsonb) FROM zone_routes WHERE site_id= ?",site);
