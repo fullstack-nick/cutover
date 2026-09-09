@@ -1,14 +1,12 @@
 # Sustained healthy-load evidence
 
-**A50 failed** in `load-1788918305739`, ending 2026-09-09T01:56:43.611Z. All 3,000 measured movements were included: **88.300% reached a durable adapter command record within two seconds of original eligibility**, with **p99 9,611.997 ms**. All 3,300 total physical and business effects, including warm-up, completed once. The required 99% threshold remains unmet; this report does not close A50.
+**A50 failed** in `load-1788921802696`, ending 2026-09-09T02:55:00.857Z. All 3,000 measured movements were included: **89.600% reached a durable adapter command record within two seconds of original eligibility**, with **p99 11,364.910 ms**. All 3,300 total physical and business effects, including warm-up, completed once. The required 99% threshold remains unmet; this report does not close A50.
 
-The runtime images were built from `c56cff91e4fec53c657cb523939bb2fc9c939e0b`; the driver source was `c90ca017401993ed020bd8713ffb043c14a45151`. [Structured measurements and raw-evidence hashes](healthy-load.json) retain this distinction. [The runtime inventory](runtime-runs.json) identifies the application images and running containers. Raw requests, movement identities, effects and resource samples remain private.
+The runtime images were built from `beeabc15732375017512831a230c408eccecedcf`; the driver source was `f06043a2c6baf2953a75ea1a705a8cd047029782`. [Structured measurements and raw-evidence hashes](healthy-load.json) retain this distinction. [The runtime inventory](runtime-runs.json) identifies the application images and running containers. Raw requests, movement identities, effects and resource samples remain private.
 
 The [declared tracing profile](../adr/0027-domain-and-transport-tracing-profile.md) retains business and transport spans and suppresses automatic JDBC spans. The structured evidence records all five actual owner/shadow pod identities and an explicit non-secret setting allowlist, unchanged before and after offering. No sampling or latency-denominator change was made.
 
-This run followed one explicitly approved reclamation of the shared VM's clean file cache. Before and after that action, all 46 container identities/running/restart states, 19 Cutover pod identities, physical world/journal, routes and durable database settings were preserved. Every container remained unchanged through the full workload. The action is not part of project startup scripts, and was not repeated during the run. The [Linux kernel documents](https://kernel.org/doc/html/latest/admin-guide/sysctl/vm.html#drop-caches) that rebuilding discarded caches can cost CPU and I/O.
 
-Windows available memory was already 4.61 GiB immediately before reclamation, and 4.70 GiB thirty seconds afterward. VM clean-cache preparation therefore does not establish why host headroom had recovered from the previous run, or isolate a performance cause. This measurement qualifies only its recorded shared-host conditions. The structured report retains all five memory snapshots, exact preparation timestamps, invariant counts, full durability settings, and hashes of the private one-use journal and full-run wrapper.
 
 ## Workload and denominator
 
@@ -18,14 +16,14 @@ Original movement eligibility is the start timestamp; the adapter's persisted co
 
 | Measurement | Result |
 | --- | ---: |
-| Original eligibility → recorded dispatch, p99 | 9,611.997 ms |
-| Percentage within two seconds | 88.300% |
-| Task creation → recorded dispatch, p99 | 7,527.000 ms |
-| HTTP acceptance, p99 | 693.00 ms |
-| Offer lateness, p99 | 20.00 ms |
-| Original eligibility → physical completion, p99 | 17,220.00 ms |
+| Original eligibility → recorded dispatch, p99 | 11,364.910 ms |
+| Percentage within two seconds | 89.600% |
+| Task creation → recorded dispatch, p99 | 9,320.000 ms |
+| HTTP acceptance, p99 | 509.00 ms |
+| Offer lateness, p99 | 21.00 ms |
+| Original eligibility → physical completion, p99 | 18,496.00 ms |
 | Measured movements eventually completed once | 3000 / 3,000 |
-| Measured movements completed before the offering window ended | 2996 / 3,000 |
+| Measured movements completed before the offering window ended | 2998 / 3,000 |
 | Eventual completions per offered measurement second | 5.00 |
 
 ## Measured resources
@@ -34,24 +32,24 @@ The Windows host is 13th Gen Intel(R) Core(TM) i9-13900H, 20 logical CPUs, with 
 
 | Environment | Maximum sampled CPU | Minimum available memory |
 | --- | ---: | ---: |
-| Windows host | 45.26% | 3.49 GiB |
-| Docker Linux VM | 22.47% | 7.23 GiB |
+| Windows host | 43.66% | 0.55 GiB |
+| Docker Linux VM | 18.04% | 7.65 GiB |
 
 | Owned container | Maximum sampled memory | Maximum sampled CPU |
 | --- | ---: | ---: |
-| cutover-control-plane | 5.67 GiB | 390.05% |
-| cutover-dev-equipment-simulator-1 | 0.30 GiB | 99.09% |
-| cutover-dev-simulator-db-1 | 0.06 GiB | 12.33% |
-| cutover-dev-equipment-volume-probe-1 | 0.00 GiB | 5.52% |
+| cutover-control-plane | 5.52 GiB | 321.78% |
+| cutover-dev-equipment-simulator-1 | 0.29 GiB | 42.20% |
+| cutover-dev-simulator-db-1 | 0.06 GiB | 23.68% |
+| cutover-dev-equipment-volume-probe-1 | 0.00 GiB | 1.31% |
 
 Docker CPU percentages use 100% per CPU, while host and VM percentages describe their whole sampled environment. Container memory values are approximate because Docker rounds its displayed strings. Samples can miss shorter peaks.
 
 | Owner | Peak unpublished events | Oldest sampled outbox event | Peak pending inbox | Oldest sampled inbox event |
 | --- | ---: | ---: | ---: | ---: |
-| core | 27 | 4.815 s | 0 | 0.000 s |
-| adapter | 9 | 2.610 s | 0 | 0.000 s |
+| core | 31 | 5.100 s | 0 | 0.000 s |
+| adapter | 7 | 1.820 s | 0 | 0.000 s |
 | execution | 0 | 0.000 s | 0 | 0.000 s |
-| returns | 4 | 1.889 s | 0 | 0.000 s |
+| returns | 2 | 0.782 s | 0 | 0.000 s |
 | shadow | 0 | 0.000 s | 0 | 0.000 s |
 
 Database `fsync` and `synchronous_commit` were both `on` / `on`; no durability setting was relaxed for the run. The structured report includes WAL counters and database CPU/throttling deltas.
@@ -71,5 +69,6 @@ Selected earlier failed full qualifications remain part of the evidence; the imp
 | load-1788913804136 | c56cff9 | 88.200% | 11,551.883 ms | Failed |
 | load-1788914705350 | c56cff9 | 92.933% | 9,291.489 ms | Failed |
 | load-1788916732445 | c56cff9 | 93.400% | 6,988.642 ms | Failed |
+| load-1788918305739 | c56cff9 | 88.300% | 9,611.997 ms | Failed |
 
 The corrections address [bounded inbox lock order](../adr/0021-bounded-inbox-transactions.md), [broker subscriptions](../adr/0022-bounded-broker-subscriptions.md), [fair work selection](../adr/0023-fair-scheduler-work-selection.md), [independent adapter periodic work](../adr/0024-independent-adapter-periodic-work.md), [expired batch evidence](../adr/0025-refresh-expired-batch-evidence.md), and [independent command observations](../adr/0026-isolate-recorded-command-observations.md). Short diagnostics and component regressions are recorded separately and are not counted as ten-minute qualifications. The requirement remains at least 99% within two seconds at the declared workload.

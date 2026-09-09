@@ -1,12 +1,12 @@
 {
-  "run": "load-1788918305739",
+  "run": "load-1788921802696",
   "result": "failed",
   "qualification": "Full A50 candidate",
-  "driverSource": "c90ca017401993ed020bd8713ffb043c14a45151",
-  "imageSource": "c56cff91e4fec53c657cb523939bb2fc9c939e0b",
-  "startedAt": "2026-09-09T01:45:05.816Z",
-  "endedAt": "2026-09-09T01:56:43.611Z",
-  "originalResultsSha256": "7864103d10c3548471df36b8eadf36538c16101ad935b0fae446e807f32b9293",
+  "driverSource": "f06043a2c6baf2953a75ea1a705a8cd047029782",
+  "imageSource": "beeabc15732375017512831a230c408eccecedcf",
+  "startedAt": "2026-09-09T02:43:22.774Z",
+  "endedAt": "2026-09-09T02:55:00.857Z",
+  "originalResultsSha256": "69cd520c2547d105548292161d32510f15b63e49d88e069a1706bc0119823cd3",
   "workload": {
     "warmupSeconds": 60,
     "measurementSeconds": 600,
@@ -25,13 +25,13 @@
     "excludedBlocked": 0,
     "excludedDraining": 0,
     "excludedUnknown": 0,
-    "taskEligibilityToDispatchP99Millis": 7527,
-    "intentEligibilityToDispatchP99Millis": 9611.997,
-    "taskWithinTwoSecondsPercent": 94.26666666666667,
-    "withinTwoSecondsPercent": 88.3,
-    "acceptanceP99Millis": 693,
-    "driverLatenessP99Millis": 20,
-    "movementCompletionP99Millis": 17220
+    "taskEligibilityToDispatchP99Millis": 9320,
+    "intentEligibilityToDispatchP99Millis": 11364.91,
+    "taskWithinTwoSecondsPercent": 92.83333333333333,
+    "withinTwoSecondsPercent": 89.6,
+    "acceptanceP99Millis": 509,
+    "driverLatenessP99Millis": 21,
+    "movementCompletionP99Millis": 18496
   },
   "throughput": {
     "measurementSeconds": 600,
@@ -41,20 +41,20 @@
     "acceptedReceipts": 600,
     "completedMeasuredMovements": 3000,
     "eventualCompletedMovementsPerOfferedSecond": 5,
-    "completedWithinWindow": 2996
+    "completedWithinWindow": 2998
   },
   "durability": {
     "fsync": "on",
     "synchronousCommit": "on",
     "walDelta": {
-      "seconds": 660.402,
-      "writes": 68570,
-      "writeMillis": 4418.334,
-      "writesPerSecond": 103.8306970602754,
-      "fsyncs": 68537,
-      "fsyncMillis": 285422.737,
-      "walBytes": 613001472,
-      "fsyncsPerSecond": 103.78072749628257
+      "seconds": 660.373,
+      "writes": 69850,
+      "writeMillis": 4014.1890000000003,
+      "writesPerSecond": 105.77355524832177,
+      "fsyncs": 69808,
+      "fsyncMillis": 283929.845,
+      "walBytes": 740130082,
+      "fsyncsPerSecond": 105.709954828559
     }
   },
   "samples": 67,
@@ -63,54 +63,54 @@
     "model": "13th Gen Intel(R) Core(TM) i9-13900H",
     "logicalCpus": 20,
     "totalBytes": 33960161280,
-    "minimumAvailableBytes": 3747549184,
-    "maximumObservedCpuPercent": 45.25987853931698
+    "minimumAvailableBytes": 591298560,
+    "maximumObservedCpuPercent": 43.66492818901994
   },
   "vm": {
     "totalBytes": 16568713216,
-    "minimumAvailableBytes": 7767511040,
-    "maximumObservedCpuPercent": 22.465502316818576
+    "minimumAvailableBytes": 8216944640,
+    "maximumObservedCpuPercent": 18.040717597258617
   },
   "containers": [
     {
       "name": "cutover-control-plane",
-      "maximumMemoryBytes": 6087042400.256,
-      "maximumCpuPercent": 390.05
+      "maximumMemoryBytes": 5930276093.952,
+      "maximumCpuPercent": 321.78
     },
     {
       "name": "cutover-dev-equipment-simulator-1",
-      "maximumMemoryBytes": 322751692.8,
-      "maximumCpuPercent": 99.09
+      "maximumMemoryBytes": 306079334.4,
+      "maximumCpuPercent": 42.2
     },
     {
       "name": "cutover-dev-simulator-db-1",
-      "maximumMemoryBytes": 68272783.36,
-      "maximumCpuPercent": 12.33
+      "maximumMemoryBytes": 62767759.36,
+      "maximumCpuPercent": 23.68
     },
     {
       "name": "cutover-dev-equipment-volume-probe-1",
-      "maximumMemoryBytes": 2752512,
-      "maximumCpuPercent": 5.52
+      "maximumMemoryBytes": 2032140.288,
+      "maximumCpuPercent": 1.31
     }
   ],
   "databaseCpu": {
-    "elapsedSeconds": 660.479,
-    "usageSeconds": 264.371811,
-    "throttledSeconds": 0.147675
+    "elapsedSeconds": 660.453,
+    "usageSeconds": 287.682141,
+    "throttledSeconds": 0.302786
   },
   "ownerPeaks": {
     "core": {
-      "unpublishedEvents": 27,
+      "unpublishedEvents": 31,
       "pendingInbox": 0,
-      "outboxOldestSeconds": 4.814772,
+      "outboxOldestSeconds": 5.100286,
       "inboxOldestSeconds": 0,
-      "activeRequests": 35,
+      "activeRequests": 41,
       "unknownCommands": 0
     },
     "adapter": {
-      "unpublishedEvents": 9,
+      "unpublishedEvents": 7,
       "pendingInbox": 0,
-      "outboxOldestSeconds": 2.609581,
+      "outboxOldestSeconds": 1.819923,
       "inboxOldestSeconds": 0,
       "activeRequests": 0,
       "unknownCommands": 0
@@ -124,9 +124,9 @@
       "unknownCommands": 0
     },
     "returns": {
-      "unpublishedEvents": 4,
+      "unpublishedEvents": 2,
       "pendingInbox": 0,
-      "outboxOldestSeconds": 1.88876,
+      "outboxOldestSeconds": 0.781691,
       "inboxOldestSeconds": 0,
       "activeRequests": 17,
       "unknownCommands": 0
@@ -141,18 +141,18 @@
     }
   },
   "rawEvidenceSha256": {
-    "results.json": "7864103d10c3548471df36b8eadf36538c16101ad935b0fae446e807f32b9293",
-    "movements.json": "6c8d63e8fc629e8d471af4f19dd968e9484568c197afb0a44356981a553c536d",
-    "requests.json": "9159c3594bcf6fd9f5f85652f761a2eefc05f93f58e55e0b3f8e0395aded45df",
-    "resources.json": "42ff17670a0c8ad8ba6d0be3e01bfbb954279c144d8060468359ebb0bcff0e87",
-    "core-effects.json": "5cbdb14430327807265bd1e04dc5e495ae1c91b1e4e3370494dd0380d2e5c4db",
-    "returns-effects.json": "028de4d4211120e5126e8f8b916d86b1dd572bceefb0fa0f3517480d6bb8de68",
-    "simulator-effects.json": "cac1529e77213ea4fe75deac44ef1d233cafa0adbabbe4632dfd3c684ea8f2e5"
+    "results.json": "69cd520c2547d105548292161d32510f15b63e49d88e069a1706bc0119823cd3",
+    "movements.json": "f39e78f5557d1d13178bddfa583ca62e943d8fc84cc3a646cc9c3ae626f78857",
+    "requests.json": "366a9e315c78956edf5a3cc362b3dd28c4d2337c0ac8e52fbd4060aa1fb5f781",
+    "resources.json": "21e8420b8ab1bab47894742fe46d01feb8be2506877e36699e282eeafdc32eb3",
+    "core-effects.json": "bbad784ce0b1b202dab14950b0d834e82da6f5a9bf115e4ac9894f7f2d2c8f97",
+    "returns-effects.json": "fe1d0683e459f693c007dd7b374df2e455ef74e11a8c1c42d491d76c30add86c",
+    "simulator-effects.json": "0fb5f0c41bcb2049e422c93b2e98d5e99e5d26a39b19c2d77631642ba48e8095"
   },
   "latencyDenominator": "All 3000 measured movements, from original immutable movement eligibleAt to durable adapter command recording. Assignment/publication delay is included. The later task-created stage is reported separately. No healthy work is excluded for transient waiting.",
   "databaseLockCheck": {
     "before": {
-      "at": "2026-09-09T01:45:05.565127+00:00",
+      "at": "2026-09-09T02:43:22.51197+00:00",
       "databases": [
         {
           "database": "cutover_adapter",
@@ -187,7 +187,7 @@
       ]
     },
     "after": {
-      "at": "2026-09-09T01:56:45.222764+00:00",
+      "at": "2026-09-09T02:55:02.526384+00:00",
       "databases": [
         {
           "database": "cutover_adapter",
@@ -250,40 +250,40 @@
         "deadlocks": 0
       }
     ],
-    "logSha256": "cef46da05aa5f52aa08b649d887ae46ed3bdca15486ebdf406af345eeecba76d",
+    "logSha256": "8b8fb4fdca33e6caecf255ff255741013f9bf0999e946154623af14bf769ce17",
     "logDeadlocks": 0,
-    "originalSha256": "01821763a7560bb152b4854113acf890ffa9623763bf87a1cf0f4dfa74062485"
+    "originalSha256": "7a29efab35c888a7a746d56daf66af4dbfb6b25ffab0c05803437809b59d5f57"
   },
   "databaseSettings": {
     "before": {
-      "at": "2026-09-09T01:45:18.944451+00:00",
+      "at": "2026-09-09T02:43:35.812065+00:00",
       "io": {
         "hits": null,
         "reads": 0,
-        "fsyncs": 77480,
+        "fsyncs": 163517,
         "object": "wal",
         "reuses": null,
-        "writes": 77511,
+        "writes": 163591,
         "context": "normal",
         "extends": null,
         "evictions": null,
         "read_time": 0,
-        "fsync_time": 298571.195,
+        "fsync_time": 682214.635,
         "read_bytes": 0,
-        "write_time": 3171.768,
+        "write_time": 8874.543,
         "writebacks": null,
         "extend_time": null,
         "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "write_bytes": 1114497024,
+        "write_bytes": 2577489920,
         "backend_type": "client backend",
         "extend_bytes": null,
         "writeback_time": null
       },
       "wal": {
-        "wal_fpi": 26572,
-        "wal_bytes": 537767847,
+        "wal_fpi": 90097,
+        "wal_bytes": 1353172181,
         "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "wal_records": 2025489,
+        "wal_records": 4274805,
         "wal_buffers_full": 0
       },
       "fsyncEnabled": "on",
@@ -294,34 +294,34 @@
       "synchronousCommit": "on"
     },
     "afterOffering": {
-      "at": "2026-09-09T01:56:19.346983+00:00",
+      "at": "2026-09-09T02:54:36.185267+00:00",
       "io": {
         "hits": null,
         "reads": 0,
-        "fsyncs": 146017,
+        "fsyncs": 233325,
         "object": "wal",
         "reuses": null,
-        "writes": 146081,
+        "writes": 233441,
         "context": "normal",
         "extends": null,
         "evictions": null,
         "read_time": 0,
-        "fsync_time": 583993.932,
+        "fsync_time": 966144.48,
         "read_bytes": 0,
-        "write_time": 7590.102,
+        "write_time": 12888.732,
         "writebacks": null,
         "extend_time": null,
         "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "write_bytes": 2251628544,
+        "write_bytes": 3847995392,
         "backend_type": "client backend",
         "extend_bytes": null,
         "writeback_time": null
       },
       "wal": {
-        "wal_fpi": 68533,
-        "wal_bytes": 1150769319,
+        "wal_fpi": 155740,
+        "wal_bytes": 2093302263,
         "stats_reset": "2026-09-09T01:08:55.176773+00:00",
-        "wal_records": 3865722,
+        "wal_records": 6109403,
         "wal_buffers_full": 0
       },
       "fsyncEnabled": "on",
@@ -336,8 +336,8 @@
     "before": [
       {
         "service": "equipment-adapter",
-        "podUid": "7eaac56f-1e25-424e-98c9-0b8b1302dc06",
-        "image": "docker.io/cutover/equipment-adapter@sha256:6a9ee6b55672ab71e41d4d6b37d5ca29a59e21aec4ff6e502e26b82932ea6c8d",
+        "podUid": "417e363a-daeb-4c25-9f0f-1ef364e6094a",
+        "image": "docker.io/cutover/equipment-adapter@sha256:ea425aa8cfcc38f8598f15bbd8a9cea18798f58c05b1304172c20b6ba78f694a",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -348,8 +348,8 @@
       },
       {
         "service": "execution-service",
-        "podUid": "b40107a3-9f71-4805-95c6-07af1ebbad35",
-        "image": "docker.io/cutover/execution-service@sha256:5a6b1e7dc2061b1eecb7a3a0b4da262f728b72a3bac96f59330d83a16b438b5c",
+        "podUid": "b15b9ac7-479a-49e4-bfa1-e21d3bbf15b9",
+        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -360,8 +360,8 @@
       },
       {
         "service": "legacy-core",
-        "podUid": "3acc23dc-0aca-4737-98e1-f6c607ec1711",
-        "image": "docker.io/cutover/legacy-core@sha256:aa3ff2524f3a4adf72cee29538ece725dd7df72ca0af48afaad116cec5713d90",
+        "podUid": "1d3bef28-7e3e-4103-9307-e2a92cb63fdd",
+        "image": "docker.io/cutover/legacy-core@sha256:ede80703f7b17857853496ec4a5356a23c1ad4bc18a3f287340a4ed3f1b5fb60",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -372,8 +372,8 @@
       },
       {
         "service": "returns-service",
-        "podUid": "b8521386-64ea-43c2-9ad6-ab33584f81fd",
-        "image": "docker.io/cutover/returns-service@sha256:97b710fe7517933adae9e6f59008ddfb7acb12b4e4784cc006b7c3cbd20ccd6c",
+        "podUid": "d42b093f-e733-442c-a64a-7ace8df619a3",
+        "image": "docker.io/cutover/returns-service@sha256:4b27d59cbc8208416a9d9e1b30ed78d124c7361de0cecdc4622601b81aa110b3",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -384,8 +384,8 @@
       },
       {
         "service": "shadow-scheduler",
-        "podUid": "cb619f1b-baa0-46bb-b9c2-284f7f98a95e",
-        "image": "docker.io/cutover/execution-service@sha256:5a6b1e7dc2061b1eecb7a3a0b4da262f728b72a3bac96f59330d83a16b438b5c",
+        "podUid": "0595a302-0ad7-4653-9d6d-973147ff2fed",
+        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -398,8 +398,8 @@
     "afterOffering": [
       {
         "service": "equipment-adapter",
-        "podUid": "7eaac56f-1e25-424e-98c9-0b8b1302dc06",
-        "image": "docker.io/cutover/equipment-adapter@sha256:6a9ee6b55672ab71e41d4d6b37d5ca29a59e21aec4ff6e502e26b82932ea6c8d",
+        "podUid": "417e363a-daeb-4c25-9f0f-1ef364e6094a",
+        "image": "docker.io/cutover/equipment-adapter@sha256:ea425aa8cfcc38f8598f15bbd8a9cea18798f58c05b1304172c20b6ba78f694a",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -410,8 +410,8 @@
       },
       {
         "service": "execution-service",
-        "podUid": "b40107a3-9f71-4805-95c6-07af1ebbad35",
-        "image": "docker.io/cutover/execution-service@sha256:5a6b1e7dc2061b1eecb7a3a0b4da262f728b72a3bac96f59330d83a16b438b5c",
+        "podUid": "b15b9ac7-479a-49e4-bfa1-e21d3bbf15b9",
+        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -422,8 +422,8 @@
       },
       {
         "service": "legacy-core",
-        "podUid": "3acc23dc-0aca-4737-98e1-f6c607ec1711",
-        "image": "docker.io/cutover/legacy-core@sha256:aa3ff2524f3a4adf72cee29538ece725dd7df72ca0af48afaad116cec5713d90",
+        "podUid": "1d3bef28-7e3e-4103-9307-e2a92cb63fdd",
+        "image": "docker.io/cutover/legacy-core@sha256:ede80703f7b17857853496ec4a5356a23c1ad4bc18a3f287340a4ed3f1b5fb60",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -434,8 +434,8 @@
       },
       {
         "service": "returns-service",
-        "podUid": "b8521386-64ea-43c2-9ad6-ab33584f81fd",
-        "image": "docker.io/cutover/returns-service@sha256:97b710fe7517933adae9e6f59008ddfb7acb12b4e4784cc006b7c3cbd20ccd6c",
+        "podUid": "d42b093f-e733-442c-a64a-7ace8df619a3",
+        "image": "docker.io/cutover/returns-service@sha256:4b27d59cbc8208416a9d9e1b30ed78d124c7361de0cecdc4622601b81aa110b3",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -446,8 +446,8 @@
       },
       {
         "service": "shadow-scheduler",
-        "podUid": "cb619f1b-baa0-46bb-b9c2-284f7f98a95e",
-        "image": "docker.io/cutover/execution-service@sha256:5a6b1e7dc2061b1eecb7a3a0b4da262f728b72a3bac96f59330d83a16b438b5c",
+        "podUid": "0595a302-0ad7-4653-9d6d-973147ff2fed",
+        "image": "docker.io/cutover/execution-service@sha256:12f5bd920cc5f608b5e979e263be7d13f5388efc323ad596c28f9ef499636b76",
         "settings": {
           "OTEL_INSTRUMENTATION_JDBC_ENABLED": "false",
           "OTEL_BSP_MAX_QUEUE_SIZE": "512",
@@ -457,149 +457,6 @@
         }
       }
     ]
-  },
-  "hostPreparation": {
-    "kind": "User-approved one-time clean page-cache reclamation",
-    "command": [
-      "docker",
-      "exec",
-      "cutover-control-plane",
-      "sh",
-      "-c",
-      "printf 1 > /proc/sys/vm/drop_caches"
-    ],
-    "startedAt": "2026-09-09T01:43:25.902Z",
-    "executionAttemptedAt": "2026-09-09T01:43:29.874Z",
-    "commandReturnedAt": "2026-09-09T01:43:33.810Z",
-    "endedAt": "2026-09-09T01:44:07.420Z",
-    "invariantsPreserved": true,
-    "containerCount": 46,
-    "podCount": 19,
-    "containerInvariantsBeforeLoad": true,
-    "containerInvariantsAfterLoad": true,
-    "memory": [
-      {
-        "label": "before",
-        "at": "2026-09-09T01:43:29.643Z",
-        "host": {
-          "totalBytes": 33960161280,
-          "availableBytes": 4946657280
-        },
-        "vm": {
-          "MemTotal": 16568713216,
-          "MemFree": 621658112,
-          "MemAvailable": 8528465920,
-          "Buffers": 706211840,
-          "Cached": 7093161984,
-          "SwapTotal": 4294967296,
-          "SwapFree": 3610546176,
-          "Dirty": 1548288,
-          "Writeback": 278528,
-          "SReclaimable": 757944320
-        }
-      },
-      {
-        "label": "after-0s",
-        "at": "2026-09-09T01:43:34.208Z",
-        "host": {
-          "totalBytes": 33960161280,
-          "availableBytes": 3636211712
-        },
-        "vm": {
-          "MemTotal": 16568713216,
-          "MemFree": 6281359360,
-          "MemAvailable": 8534921216,
-          "Buffers": 1896448,
-          "Cached": 2322087936,
-          "SwapTotal": 4294967296,
-          "SwapFree": 3610546176,
-          "Dirty": 876544,
-          "Writeback": 0,
-          "SReclaimable": 578924544
-        }
-      },
-      {
-        "label": "after-5s",
-        "at": "2026-09-09T01:43:39.051Z",
-        "host": {
-          "totalBytes": 33960161280,
-          "availableBytes": 3680206848
-        },
-        "vm": {
-          "MemTotal": 16568713216,
-          "MemFree": 6256402432,
-          "MemAvailable": 8544575488,
-          "Buffers": 5095424,
-          "Cached": 2354040832,
-          "SwapTotal": 4294967296,
-          "SwapFree": 3610546176,
-          "Dirty": 1478656,
-          "Writeback": 0,
-          "SReclaimable": 578891776
-        }
-      },
-      {
-        "label": "after-15s",
-        "at": "2026-09-09T01:43:49.065Z",
-        "host": {
-          "totalBytes": 33960161280,
-          "availableBytes": 4904583168
-        },
-        "vm": {
-          "MemTotal": 16568713216,
-          "MemFree": 6384062464,
-          "MemAvailable": 8692514816,
-          "Buffers": 6610944,
-          "Cached": 2373095424,
-          "SwapTotal": 4294967296,
-          "SwapFree": 3610546176,
-          "Dirty": 1331200,
-          "Writeback": 0,
-          "SReclaimable": 578891776
-        }
-      },
-      {
-        "label": "after-30s",
-        "at": "2026-09-09T01:44:04.028Z",
-        "host": {
-          "totalBytes": 33960161280,
-          "availableBytes": 5041696768
-        },
-        "vm": {
-          "MemTotal": 16568713216,
-          "MemFree": 6373269504,
-          "MemAvailable": 8689074176,
-          "Buffers": 7946240,
-          "Cached": 2380431360,
-          "SwapTotal": 4294967296,
-          "SwapFree": 3610546176,
-          "Dirty": 798720,
-          "Writeback": 0,
-          "SReclaimable": 577933312
-        }
-      }
-    ],
-    "settingsBefore": {
-      "fsync": "on",
-      "commit_delay": "0",
-      "commit_siblings": "5",
-      "wal_compression": "off",
-      "wal_sync_method": "fdatasync",
-      "full_page_writes": "on",
-      "synchronous_commit": "on"
-    },
-    "settingsAfter": {
-      "fsync": "on",
-      "commit_delay": "0",
-      "commit_siblings": "5",
-      "wal_compression": "off",
-      "wal_sync_method": "fdatasync",
-      "full_page_writes": "on",
-      "synchronous_commit": "on"
-    },
-    "condition": "One user-approved clean page-cache reclamation before the unchanged full 60s warm-up and 600s measured workload. Windows available memory had already recovered before reclamation; this is not a controlled attribution of performance to cache.",
-    "preparationSha256": "c5b20497dff2e877e83ed1a9bc99bbfd049faf67a6ddae5feb170bda6e3147d5",
-    "experimentSha256": "c3fb2e39ab9f2cabdb0a1af8e441d41a58cc7c9426fe0dd74c095a839ceabd57"
   },
   "history": [
     {
@@ -734,6 +591,25 @@
         "movementCompletionP99Millis": 14262
       },
       "originalResultsSha256": "9be45ba815d4ceeeb4a2c9ca09dcf54150852ab807cdbc5656bc36a6a6d0385f"
+    },
+    {
+      "run": "load-1788918305739",
+      "result": "failed",
+      "imageSource": "c56cff91e4fec53c657cb523939bb2fc9c939e0b",
+      "latency": {
+        "eligibleMovements": 3000,
+        "excludedBlocked": 0,
+        "excludedDraining": 0,
+        "excludedUnknown": 0,
+        "taskEligibilityToDispatchP99Millis": 7527,
+        "intentEligibilityToDispatchP99Millis": 9611.997,
+        "taskWithinTwoSecondsPercent": 94.26666666666667,
+        "withinTwoSecondsPercent": 88.3,
+        "acceptanceP99Millis": 693,
+        "driverLatenessP99Millis": 20,
+        "movementCompletionP99Millis": 17220
+      },
+      "originalResultsSha256": "7864103d10c3548471df36b8eadf36538c16101ad935b0fae446e807f32b9293"
     }
   ],
   "samplingNote": "CPU and backlog values are sampled at a nominal ten-second interval. Peaks between samples may be missed. Docker memory strings are rounded by the CLI; derived bytes are approximate. VM values cover its shared Linux environment, not an isolated project-only machine."
