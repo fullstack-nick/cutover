@@ -1,6 +1,6 @@
 # 0027 — Trace business work and transport by default
 
-Status: implemented configuration; deployed tracing and load verification pending.
+Status: implemented and verified for causal tracing; sustained latency target remains unmet.
 
 The local Collector accepted 2,594 spans per second over one measured minute while the lab offered five movements per second. One retained median-latency order trace contained 327 spans: 264 automatic JDBC spans, 41 explicit domain spans, 16 RabbitMQ spans and six HTTP client/server spans. That individual trace is evidence of its composition, not an estimate of all ingested traces. Repeated worker polls also use JDBC, and the configured agent's default sampling retains their root spans. This volume justifies measuring a narrower tracing profile; it does not establish telemetry as the cause of every latency outlier.
 
@@ -8,4 +8,8 @@ The five owner/shadow deployments set `OTEL_INSTRUMENTATION_JDBC_ENABLED=false`.
 
 Traces retain admission, allocation, task dispatch, command recording/investigation and business completion across durable events. Automatic per-query timings are absent from the default profile. Detailed SQL diagnosis requires explicitly enabling JDBC instrumentation in the local manifest and measuring that configuration's overhead; database statistics and retained logs remain available independently.
 
-The causal driver verifies both original HTTP trace IDs, every required domain span, the adapter HTTP client boundary, no JDBC instrumentation scope, and five single physical/business effects. It reads the actual ready pods' configuration through an explicit non-secret allowlist. The load driver records the same settings and pod identities before and after offering and refuses a changed profile. Runtime checks and sustained measurements must establish the resulting behavior; a configuration edit alone does not establish A44 or A50.
+The causal driver verifies both original HTTP trace IDs, every required domain span, the adapter HTTP client boundary, no JDBC instrumentation scope, and five single physical/business effects. It reads the actual ready pods' configuration through an explicit non-secret allowlist. The load driver records the same settings and pod identities before and after offering and refuses a changed profile. Runtime checks and sustained measurements must establish the resulting behavior; a configuration edit alone does not establish causal-trace or sustained-load acceptance.
+
+`causal-trace-1788916676407` passed both checks on 9 September 2026 at 03:18:07 Europe/Berlin. All five ready services reported the declared setting. Both traces contained the required domain and adapter HTTP spans and zero JDBC scopes, with five single effects. A one-minute Collector sample during the subsequent full run reported 403 accepted spans per second. This is a separately timed sample on a fresh dataset, not a controlled population-wide overhead comparison.
+
+The full `load-1788916732445` still failed A50: 93.4% of all 3,000 measured movements within two seconds, p99 6,988.642 ms. All 3,300 effects were single, no movements were excluded, all database deadlock deltas were zero, and the five pod identities/settings remained unchanged during offering. [The complete measurements](../evidence/healthy-load.md) include host/VM headroom and retained earlier failures. Narrower instrumentation preserves useful tracing but does not by itself establish the performance target.
