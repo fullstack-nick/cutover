@@ -75,7 +75,7 @@ Stop preserves data. Deliberate reset is a separate [checkpoint-backed operation
 
 Run `./mvnw.cmd -B -ntp verify` for backend, schema, contract and real PostgreSQL/RabbitMQ checks. Disposable labelled containers require the Docker Linux engine. Runtime drivers under `tools/scenario-driver` record assertions, image identities and results in private run directories.
 
-The full offline backend verification passed **199 checks** across 25 test classes, with zero failures, errors or skips, in **9 minutes 13 seconds**. It covers shared messaging/security, every product-owner workflow, fair work selection, independent adapter scheduling, refreshed batch evidence, storage pressure, bounded inbox commits and subscriptions, database/authentication error responses and [N/N−1 contract consumers](contracts/compatibility/README.md). [Per-class results](docs/evidence/backend-checks.json) remain separate from platform acceptance.
+The full offline backend verification passed **200 checks** across 25 test classes, with zero failures, errors or skips, in **9 minutes 12 seconds**. It covers shared messaging/security, every product-owner workflow, fair work selection, independent adapter scheduling, refreshed batch evidence, isolated command observations, storage pressure, bounded inbox commits and subscriptions, database/authentication error responses and [N/N−1 contract consumers](contracts/compatibility/README.md). [Per-class results](docs/evidence/backend-checks.json) remain separate from platform acceptance.
 
 The full run includes the adapter lock-order regression and actual quorum-prefetch/reconnection checks. Earlier [scoped verification](docs/evidence/adapter-lock-regression.json) also records the exact before/after evidence for the deadlock correction.
 
