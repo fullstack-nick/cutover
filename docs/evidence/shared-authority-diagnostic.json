@@ -1,0 +1,326 @@
+{
+  "run": "load-diagnostic-1788925571030",
+  "result": "failed",
+  "qualification": "Two-minute diagnostic and complete retrospective timing audit; not A50 qualification",
+  "driverSource": "0fc72945d8ecdf7c97f593d4a3c10c36171e53dc",
+  "imageSource": "6cbbccc8b18e71f912b541bdbeb19584ca122b87",
+  "startedAt": "2026-09-09T03:46:11.108Z",
+  "endedAt": "2026-09-09T03:48:55.929Z",
+  "journalTimestampLatency": {
+    "eligibleMovements": 600,
+    "excludedBlocked": 0,
+    "excludedDraining": 0,
+    "excludedUnknown": 0,
+    "taskEligibilityToDispatchP99Millis": 4879,
+    "intentEligibilityToDispatchP99Millis": 7101.515,
+    "taskWithinTwoSecondsPercent": 95.66666666666667,
+    "withinTwoSecondsPercent": 93,
+    "acceptanceP99Millis": 380,
+    "driverLatenessP99Millis": 22,
+    "movementCompletionP99Millis": 17841
+  },
+  "durableDispatchTiming": {
+    "basis": "Successful adapter HTTP command-journal domain span ending after transaction return; end rounded up and original eligibility rounded down to milliseconds.",
+    "movements": 650,
+    "measuredMovements": 600,
+    "traces": 390,
+    "withinTwoSecondsPercent": 92.83333333333333,
+    "p99Millis": 7189,
+    "journalTimestampToReturnP99Millis": 207
+  },
+  "walDelta": {
+    "seconds": 130.526,
+    "writes": 13892,
+    "writeMillis": 1193.3009999999995,
+    "writesPerSecond": 106.43090265540964,
+    "fsyncs": 13879,
+    "fsyncMillis": 52018.64299999992,
+    "walBytes": 229086326,
+    "fsyncsPerSecond": 106.33130564025558
+  },
+  "hostSamples": 165,
+  "databaseSamples": 164,
+  "hostCounters": {
+    "physicaldisk(_total)\\disk writes/sec": {
+      "min": 5.953179434384454,
+      "max": 2753.918524773993,
+      "p99": 2277.441399738408
+    },
+    "memory\\pages input/sec": {
+      "min": 0,
+      "max": 80952.60178347977,
+      "p99": 22929.082068867017
+    },
+    "physicaldisk(_total)\\disk reads/sec": {
+      "min": 0,
+      "max": 6073.980471694946,
+      "p99": 3742.170354939915
+    },
+    "physicaldisk(_total)\\avg. disk sec/write": {
+      "min": 0.000019088707799767172,
+      "max": 0.061516974074074075,
+      "p99": 0.02194647142857143
+    },
+    "memory\\pages output/sec": {
+      "min": 0,
+      "max": 13423.299515878733,
+      "p99": 10409.668368119905
+    },
+    "memory\\available mbytes": {
+      "min": 3677,
+      "max": 4105,
+      "p99": 4095
+    },
+    "memory\\page reads/sec": {
+      "min": 0,
+      "max": 5936.13685586786,
+      "p99": 3743.1690660034164
+    },
+    "physicaldisk(_total)\\avg. disk sec/read": {
+      "min": 0,
+      "max": 0.1905788833333333,
+      "p99": 0.18011576666666665
+    },
+    "physicaldisk(_total)\\current disk queue length": {
+      "min": 0,
+      "max": 5,
+      "p99": 5
+    }
+  },
+  "windows": [
+    {
+      "at": "2026-09-09T03:46:30.000Z",
+      "movements": 28,
+      "slow": 0,
+      "p99": 522.522,
+      "minAvailableMiB": 3988,
+      "maxPagesIn": 1268.6815349232747,
+      "maxDiskReadMs": 2.387350200803213,
+      "maxDiskWriteMs": 0.7491374581939799,
+      "waits": {
+        "null": 8,
+        "ClientRead": 6,
+        "WalWrite": 1,
+        "WALWrite": 1,
+        "WalSync": 5
+      }
+    },
+    {
+      "at": "2026-09-09T03:46:40.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 567.971,
+      "minAvailableMiB": 4010,
+      "maxPagesIn": 358.5685466849295,
+      "maxDiskReadMs": 1.9613140794223827,
+      "maxDiskWriteMs": 0.4193948453608247,
+      "waits": {
+        "WalSync": 5,
+        "ClientRead": 7,
+        "null": 4,
+        "transactionid": 1,
+        "WALWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T03:46:50.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 532.716,
+      "minAvailableMiB": 3993,
+      "maxPagesIn": 217.82970645229332,
+      "maxDiskReadMs": 4.768661904761904,
+      "maxDiskWriteMs": 0.6159666169895679,
+      "waits": {
+        "WalSync": 4,
+        "WALWrite": 1,
+        "null": 4,
+        "ClientRead": 2
+      }
+    },
+    {
+      "at": "2026-09-09T03:47:00.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 572.134,
+      "minAvailableMiB": 3884,
+      "maxPagesIn": 1385.9276224261862,
+      "maxDiskReadMs": 1.7134939278937382,
+      "maxDiskWriteMs": 0.4781916006339144,
+      "waits": {
+        "null": 6,
+        "WalSync": 2,
+        "ClientRead": 7,
+        "VacuumDelay": 2
+      }
+    },
+    {
+      "at": "2026-09-09T03:47:10.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 546.514,
+      "minAvailableMiB": 3877,
+      "maxPagesIn": 1669.2989849245678,
+      "maxDiskReadMs": 0.9835841463414635,
+      "maxDiskWriteMs": 0.338993041749503,
+      "waits": {
+        "ClientRead": 6,
+        "null": 5,
+        "VacuumDelay": 2,
+        "WALWrite": 3,
+        "WalSync": 3
+      }
+    },
+    {
+      "at": "2026-09-09T03:47:20.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 553.057,
+      "minAvailableMiB": 3890,
+      "maxPagesIn": 1528.9262797290398,
+      "maxDiskReadMs": 0.8257295358649789,
+      "maxDiskWriteMs": 1.4187208643815201,
+      "waits": {
+        "WalSync": 5,
+        "ClientRead": 3,
+        "WALWrite": 1,
+        "null": 2
+      }
+    },
+    {
+      "at": "2026-09-09T03:47:30.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 514.05,
+      "minAvailableMiB": 3878,
+      "maxPagesIn": 1571.5944399601442,
+      "maxDiskReadMs": 1.9499333333333335,
+      "maxDiskWriteMs": 0.4692751497005988,
+      "waits": {
+        "WalSync": 5,
+        "null": 5,
+        "WALWrite": 2,
+        "ClientRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T03:47:40.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 503.746,
+      "minAvailableMiB": 3855,
+      "maxPagesIn": 1632.0890414101643,
+      "maxDiskReadMs": 2.216423529411765,
+      "maxDiskWriteMs": 0.7511798646362098,
+      "waits": {
+        "null": 7,
+        "ClientRead": 7,
+        "WalSync": 3,
+        "WALWrite": 1,
+        "VacuumDelay": 2
+      }
+    },
+    {
+      "at": "2026-09-09T03:47:50.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 502.778,
+      "minAvailableMiB": 3788,
+      "maxPagesIn": 1486.665694820415,
+      "maxDiskReadMs": 0.9035004273504273,
+      "maxDiskWriteMs": 0.3784510791366906,
+      "waits": {
+        "ClientRead": 6,
+        "null": 10,
+        "VacuumDelay": 4,
+        "WalSync": 4,
+        "WALWrite": 1,
+        "DataFileRead": 1
+      }
+    },
+    {
+      "at": "2026-09-09T03:48:00.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 539.637,
+      "minAvailableMiB": 3677,
+      "maxPagesIn": 6990.410552418386,
+      "maxDiskReadMs": 2.7745237288135596,
+      "maxDiskWriteMs": 2.1307000437636763,
+      "waits": {
+        "WalSync": 5,
+        "DataFileRead": 1,
+        "null": 6,
+        "VacuumDelay": 1,
+        "ClientRead": 1,
+        "WalWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T03:48:10.000Z",
+      "movements": 50,
+      "slow": 0,
+      "p99": 493.863,
+      "minAvailableMiB": 3746,
+      "maxPagesIn": 22929.082068867017,
+      "maxDiskReadMs": 1.70908,
+      "maxDiskWriteMs": 1.022927989821883,
+      "waits": {
+        "WalSync": 8,
+        "ClientRead": 3,
+        "WalWrite": 1,
+        "null": 4,
+        "WALWrite": 1
+      }
+    },
+    {
+      "at": "2026-09-09T03:48:20.000Z",
+      "movements": 50,
+      "slow": 23,
+      "p99": 7066.159,
+      "minAvailableMiB": 3723,
+      "maxPagesIn": 2849.261555710598,
+      "maxDiskReadMs": 80.06925833333334,
+      "maxDiskWriteMs": 17.884003260869566,
+      "waits": {
+        "null": 2,
+        "WalSync": 12,
+        "WALWrite": 27,
+        "transactionid": 8
+      }
+    },
+    {
+      "at": "2026-09-09T03:48:30.000Z",
+      "movements": 22,
+      "slow": 19,
+      "p99": 10907.167,
+      "minAvailableMiB": 3729,
+      "maxPagesIn": 492.45021515830837,
+      "maxDiskReadMs": 190.57888333333332,
+      "maxDiskWriteMs": 61.51697407407408,
+      "waits": {
+        "WALWrite": 34,
+        "transactionid": 7,
+        "WalSync": 15,
+        "ClientRead": 2,
+        "null": 1
+      }
+    }
+  ],
+  "originalSha256": {
+    "results": "1c5da21c391fc4388cbbcd2229069dd753ee9ae9cea683b764aa92fd2247a93f",
+    "movements": "11fbc23af8a92d01af09431e50c6a86f01037a581f4a817651499259a0302968",
+    "host": "0da8067fef7b7952d34fd3700cd7b5891eaed785f506fc01c196c9e53f1c1ffa",
+    "database": "4b28d107e9d1a05d997cb8f6b5af2bf20ab7e6c8d28dfd3e04290ca8deb624b9",
+    "timingReplay": "bc0fa5bd1b0af2e9b91763a9ed7d0a7dcd4edfcc85763c415b214234cdaabd03"
+  },
+  "limitations": [
+    "This two-minute diagnostic cannot qualify the full sustained target.",
+    "Original journal-timestamp measurements precede commit. The complete retrospective span audit separately bounds post-transaction latency.",
+    "One-second host and PostgreSQL samples can miss shorter events and add observer overhead.",
+    "Host disk counters include unrelated workloads and do not identify the producer of storage activity.",
+    "PostgreSQL sampled query age does not measure the completed wait duration.",
+    "Cumulative checkpointer counters do not rule out work whose statistics have not yet been published.",
+    "Changes in storage behavior and startup conditions prevent a controlled estimate of the route-lock change from comparison with the preceding run."
+  ]
+}

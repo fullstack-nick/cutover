@@ -149,7 +149,7 @@
     "returns-effects.json": "fe1d0683e459f693c007dd7b374df2e455ef74e11a8c1c42d491d76c30add86c",
     "simulator-effects.json": "0fb5f0c41bcb2049e422c93b2e98d5e99e5d26a39b19c2d77631642ba48e8095"
   },
-  "latencyDenominator": "All 3000 measured movements, from original immutable movement eligibleAt to durable adapter command recording. Assignment/publication delay is included. The later task-created stage is reported separately. No healthy work is excluded for transient waiting.",
+  "latencyDenominator": "All 3000 measured movements, from original immutable movement eligibleAt to adapter command journal row creation before commit. Assignment/publication delay is included. This earlier endpoint understates durable acceptance latency. The later task-created stage is reported separately. No healthy work is excluded for transient waiting.",
   "databaseLockCheck": {
     "before": {
       "at": "2026-09-09T02:43:22.51197+00:00",
@@ -612,5 +612,11 @@
       "originalResultsSha256": "7864103d10c3548471df36b8eadf36538c16101ad935b0fae446e807f32b9293"
     }
   ],
-  "samplingNote": "CPU and backlog values are sampled at a nominal ten-second interval. Peaks between samples may be missed. Docker memory strings are rounded by the CLI; derived bytes are approximate. VM values cover its shared Linux environment, not an isolated project-only machine."
+  "samplingNote": "CPU and backlog values are sampled at a nominal ten-second interval. Peaks between samples may be missed. Docker memory strings are rounded by the CLI; derived bytes are approximate. VM values cover its shared Linux environment, not an isolated project-only machine.",
+  "measurementCorrection": {
+    "originalEndpoint": "command_journal.created_at inside its transaction, before commit",
+    "interpretation": "The retained latency fields understate durable acceptance latency. This already-failed full result remains failed. No original result is recomputed or overwritten.",
+    "currentVerifier": "docs/adr/0030-prove-dispatch-timing-after-commit.md",
+    "postTransactionAuditRun": "load-diagnostic-1788925571030"
+  }
 }

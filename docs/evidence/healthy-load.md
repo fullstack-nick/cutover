@@ -1,6 +1,8 @@
 # Sustained healthy-load evidence
 
-**A50 failed** in `load-1788921802696`, ending 2026-09-09T02:55:00.857Z. All 3,000 measured movements were included: **89.600% reached a durable adapter command record within two seconds of original eligibility**, with **p99 11,364.910 ms**. All 3,300 total physical and business effects, including warm-up, completed once. The required 99% threshold remains unmet; this report does not close A50.
+**A50 failed** in `load-1788921802696`, ending 2026-09-09T02:55:00.857Z. All 3,000 measured movements were included: **89.600% reached the adapter journal's creation timestamp within two seconds of original eligibility**, with **p99 11,364.910 ms**. All 3,300 total physical and business effects, including warm-up, completed once. The required 99% threshold remains unmet; this report does not close A50.
+
+Measurement correction recorded later on 9 September: this run's journal timestamp precedes transaction commit, so its latency is a lower observation bound on durable acceptance. Its failed outcome remains valid. [ADR 0030](../adr/0030-prove-dispatch-timing-after-commit.md) requires complete post-transaction timing proof for future qualification and retains the original earlier measurements. The subsequent [shared-authority diagnostic](shared-authority-diagnostic.md) also failed under both timing endpoints.
 
 The runtime images were built from `beeabc15732375017512831a230c408eccecedcf`; the driver source was `f06043a2c6baf2953a75ea1a705a8cd047029782`. [Structured measurements and raw-evidence hashes](healthy-load.json) retain this distinction. [The runtime inventory](runtime-runs.json) identifies the application images and running containers. Raw requests, movement identities, effects and resource samples remain private.
 

@@ -1,6 +1,6 @@
 # ADR 0029: share command route authority reads
 
-Date: 9 September 2026. Status: implemented; all 16 command-journal checks passed. Complete repository verification passed 203 checks; deployed qualification remains pending.
+Date: 9 September 2026. Status: implemented; all 16 command-journal checks and complete 203-check repository verification passed. Deployed rollout/causal checks passed; the subsequent bounded diagnostic failed its latency target.
 
 The command journal reads a route to stabilize its owner, epoch and state while recording, sending or investigating a command. These paths update their own allocation or command rows, but do not update the route. The shared `Allocations.lockRoute` helper nevertheless used `FOR UPDATE`. A transaction recording one command therefore prevented another command for a different allocation in the same zone from reading the unchanged authority until the first transaction committed.
 
@@ -13,5 +13,7 @@ Allocation registration, pending release, migration and route mutation keep thei
 `independentCommandsShareAuthorityWhileOwnerChangesWaitForCommit` uses the real journal and two actual owner databases. It holds one command transaction open after its journal insert and observes competing PostgreSQL backend locks. Another allocation's command must commit before that first transaction is released. A concurrent owner/epoch update must remain blocked until release, and the previous owner's later dispatch must fail without inserting a command. The regression failed against the prior lock at **05:28:01 Europe/Berlin**. With `FOR SHARE`, all **16 command-journal checks** passed at **05:29:48**, including the mixed-zone inbox deadlock regression, with zero failures, errors or skips.
 
 Original focused log SHA-256 values: before `5bf0bc0c606d71276a054bd480a21b3079f2a9a766f5d18483bed5ef32e981f7`; after `c3740642e7c488edc508b68d41cc135f4ee63e96d39c048c88ce83e519d278bb`. These are component checks. A50 remains failed until the unchanged complete workload passes on the deployed implementation.
+
+The preserved rollout `runtime-rollout-1788925442976` and causal check `causal-trace-1788925463899` passed on images `6cbbccc`. The [two-minute diagnostic](../evidence/shared-authority-diagnostic.md) completed 650 single effects without deadlocks but missed the target: 93.0% / 7,101.515 ms using the earlier journal timestamp, and 92.833% / 7,189 ms under the subsequent complete post-commit audit. The lock correction does not establish a sustained-performance pass.
 
 Complete offline verification of `6a270d4d028a33c15eaa70f0901551b28ecd4d05` passed at **2026-09-09T05:39:34+02:00**: **203 checks in 25 classes**, zero failures/errors/skips, in **506 seconds**. Original log SHA-256: `6ce8827628347dbd8c9803f44a9619ddcc0b20ea218483d0f0fff1df213d67e2`. [Per-class evidence](../evidence/backend-checks.json) records this run. Fresh-image deployment and sustained qualification remain separate gates.
