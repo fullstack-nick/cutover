@@ -106,6 +106,66 @@ class CommandJournalTest {
         }
     }
 
+    @Test void allocationInboxSharesAuthorityWithCommandsButStillFencesOwnerChanges() throws Exception {
+        var ambient=movement(UUID.randomUUID());
+        var chilled=((tools.jackson.databind.node.ObjectNode)movement(UUID.randomUUID())).put("zoneId","chilled");
+        var incoming=movement(UUID.randomUUID());var incomingId=Database.uuid(incoming,"movementId");
+        var existing=java.util.List.of(ambient,chilled);
+        var assigned=existing.stream().map(body->allocations.register("site-a","legacy-core",body)).toList();
+        var event=new dev.cutover.platform.Events.Envelope(UUID.randomUUID(),"MovementRequested.v1",1,clock.instant(),"site-a","legacy-core","movement",incomingId,1,incomingId,null,null,incoming);
+        var delivery=new dev.cutover.platform.messaging.DurableInbox.Delivery("cutover.legacy-core.v1",event.eventId().toString(),JsonSupport.write(event).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var received=new java.util.concurrent.CountDownLatch(1);var commitBatch=new java.util.concurrent.CountDownLatch(1);
+        var batchPid=new java.util.concurrent.atomic.AtomicInteger();var commandPid=new java.util.concurrent.atomic.AtomicInteger();var writerPid=new java.util.concurrent.atomic.AtomicInteger();
+        try(var threads=java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+            var batch=threads.submit(()->adapterDb.sql().transaction(configuration->{
+                var sql=org.jooq.impl.DSL.using(configuration);batchPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                new dev.cutover.platform.messaging.DurableInbox(sql,new AdapterMessages(clock),clock,java.util.Set.of("legacy-core"),java.util.Set.of("site-a"))
+                        .receiveBatch(java.util.List.of(delivery));
+                assertThat(sql.fetchOne("SELECT count(*) FROM inbox WHERE state='APPLIED'").get(0,Integer.class)).isEqualTo(1);
+                received.countDown();
+                try {if(!commitBatch.await(30,java.util.concurrent.TimeUnit.SECONDS))throw new AssertionError("The inbox transaction was not released.");}
+                catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new AssertionError(interrupted);}
+            }));
+            try {
+                assertThat(received.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+                for(int index=0;index<existing.size();index++) {
+                    var body=existing.get(index);var allocation=assigned.get(index);var id=Database.uuid(body,"movementId");
+                    commandPid.set(0);
+                    var command=threads.submit(()->adapterDb.sql().transactionResult(configuration->{
+                        var sql=org.jooq.impl.DSL.using(configuration);commandPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                        return new CommandJournal(sql,port,observations,clock).record("site-a","legacy-core",id,Database.uuid(allocation,"allocationId"),0,body.path("zoneId").asString()+"-a",body);
+                    }));
+                    long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5);boolean commandBlocked=false;
+                    while(!command.isDone()&&System.nanoTime()<deadline){
+                        if(commandPid.get()!=0&&adapterDb.sql().fetchOne("SELECT ?=ANY(pg_blocking_pids(?))",batchPid.get(),commandPid.get()).get(0,Boolean.class)){commandBlocked=true;break;}
+                        Thread.sleep(10);
+                    }
+                    assertThat(commandBlocked).as("An allocation inbox must not block command authority reads in the same or another zone").isFalse();
+                    assertThat(command.get(5,java.util.concurrent.TimeUnit.SECONDS).path("commandId").asString()).isEqualTo(id.toString());
+                }
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isEqualTo(2);
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM movement_allocations WHERE movement_id=?",incomingId).get(0,Integer.class)).isZero();
+                var writer=threads.submit(()->adapterDb.sql().transaction(configuration->{
+                    var sql=org.jooq.impl.DSL.using(configuration);writerPid.set(sql.fetchOne("SELECT pg_backend_pid()").get(0,Integer.class));
+                    sql.execute("UPDATE zone_routes SET owner='execution-service',epoch=1,version=version+1 WHERE site_id='site-a' AND zone_id='ambient'");
+                }));
+                long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5);boolean writerBlocked=false;
+                while(System.nanoTime()<deadline){
+                    if(writerPid.get()!=0&&adapterDb.sql().fetchOne("SELECT ?=ANY(pg_blocking_pids(?))",batchPid.get(),writerPid.get()).get(0,Boolean.class)){writerBlocked=true;break;}
+                    Thread.sleep(10);
+                }
+                assertThat(writerBlocked).as("The allocation's authority stays fenced through inbox commit").isTrue();
+                assertThat(writer.isDone()).isFalse();commitBatch.countDown();batch.get(10,java.util.concurrent.TimeUnit.SECONDS);writer.get(10,java.util.concurrent.TimeUnit.SECONDS);
+                var allocation=allocations.get("site-a",incomingId);assertThat(allocation.path("owner").asString()).isEqualTo("legacy-core");
+                assertThatThrownBy(()->journal.record("site-a","legacy-core",incomingId,Database.uuid(allocation,"allocationId"),0,"ambient-a",incoming))
+                        .isInstanceOf(Problem.class).satisfies(error->assertThat(((Problem)error).code()).isEqualTo("STALE_OWNER"));
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM command_journal").get(0,Integer.class)).isEqualTo(2);
+                assertThat(adapterDb.sql().fetchOne("SELECT count(*) FROM inbox WHERE state='APPLIED'").get(0,Integer.class)).isEqualTo(1);
+                assertThat(simulatorDb.sql().fetchOne("SELECT count(*) FROM execution_ledger").get(0,Integer.class)).isZero();
+            } finally {commitBatch.countDown();}
+        }
+    }
+
     @Test void mixedZoneInboxBatchDoesNotInvertRouteAndOutboxBudgetLocks() throws Exception {
         var otherRouteHeld=new java.util.concurrent.CountDownLatch(1);
         var publishOther=new java.util.concurrent.CountDownLatch(1);

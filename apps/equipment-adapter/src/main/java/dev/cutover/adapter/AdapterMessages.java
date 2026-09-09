@@ -19,7 +19,9 @@ public final class AdapterMessages implements MessageHandler {
         // set in one order before its first event takes the shared outbox budget.
         // Otherwise a later zone can wait on a command transition that already
         // owns that route and is itself waiting for this batch's budget lock.
-        sql.fetch("SELECT site_id,zone_id FROM zone_routes ORDER BY site_id,zone_id FOR UPDATE");
+        // Allocation reads authority without changing it. Shared locks keep the
+        // ordering barrier while allowing independent command readers to commit.
+        sql.fetch("SELECT site_id,zone_id FROM zone_routes ORDER BY site_id,zone_id FOR SHARE");
         new Allocations(sql,clock).register(event.siteId(), event.source(), event.payload());
     }
 }

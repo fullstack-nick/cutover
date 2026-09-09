@@ -37,7 +37,8 @@ public final class Allocations {
         return database.transactionResult(configuration -> {
             var sql=DSL.using(configuration);
             Database.requireDurability(sql,false);
-            var route=sql.fetchOne("SELECT * FROM zone_routes WHERE site_id= ? AND zone_id= ? FOR UPDATE",site,zone);
+            // Fence route mutations through commit without upgrading the inbox's shared route locks.
+            var route=sql.fetchOne("SELECT * FROM zone_routes WHERE site_id= ? AND zone_id= ? FOR SHARE",site,zone);
             if (route==null) throw Problem.missing();
             Database.lock(sql,"movement",site,id);
             var existing=sql.fetchOne("SELECT * FROM movement_allocations WHERE site_id= ? AND movement_id= ?",site,id);
