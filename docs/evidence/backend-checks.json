@@ -1,13 +1,13 @@
 {
   "command": "./mvnw.cmd -o verify",
-  "productionSource": "fa494a0e147768c50e0311d94de5d030f65a8975",
-  "finishedAt": "2026-09-09T06:24:51+02:00",
-  "durationSeconds": 534,
-  "tests": 204,
+  "productionSource": "38dc3a1e5bd2eefeb7e45c743017835c9d994ec0",
+  "finishedAt": "2026-09-09T07:39:11+02:00",
+  "durationSeconds": 530,
+  "tests": 206,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
-  "originalLogSha256": "7484fc7029df297db8571de84af5cfddaebad7ff7191b1c5a91d312ffcfc8a4b",
+  "originalLogSha256": "c8a99dd407e3b9f4c867ec2f35e6a05937022012c3823d260e6403418369def1",
   "classes": [
     {
       "name": "dev.cutover.adapter.AdapterSchedulingTest",
@@ -15,7 +15,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 3.929
+      "seconds": 3.684
     },
     {
       "name": "dev.cutover.adapter.CommandJournalTest",
@@ -23,7 +23,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 30.38
+      "seconds": 26.939
     },
     {
       "name": "dev.cutover.adapter.MigrationProcessFaultsTest",
@@ -31,7 +31,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 4.723
+      "seconds": 4.975
     },
     {
       "name": "dev.cutover.adapter.RestoreReconciliationTest",
@@ -39,7 +39,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 19.478
+      "seconds": 19.351
     },
     {
       "name": "dev.cutover.compatibility.ContractEvolutionTest",
@@ -47,7 +47,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.644
+      "seconds": 0.5
     },
     {
       "name": "dev.cutover.compatibility.RuntimeCompatibilityTest",
@@ -55,7 +55,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 20.163
+      "seconds": 18.157
     },
     {
       "name": "dev.cutover.core.LegacyBoundaryRegistrationTest",
@@ -63,7 +63,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 33.578
+      "seconds": 33.227
     },
     {
       "name": "dev.cutover.core.LegacyWorkflowTest",
@@ -71,7 +71,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 49.04
+      "seconds": 48.238
     },
     {
       "name": "dev.cutover.execution.ExecutionMessagesTest",
@@ -79,7 +79,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 10.316
+      "seconds": 8.933
     },
     {
       "name": "dev.cutover.execution.ExecutionWorkflowTest",
@@ -87,7 +87,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 50.096
+      "seconds": 43.618
     },
     {
       "name": "dev.cutover.execution.MigrationEvidenceTest",
@@ -95,15 +95,15 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 33.995
+      "seconds": 14.74
     },
     {
       "name": "dev.cutover.execution.MigrationWorkflowTest",
-      "tests": 10,
+      "tests": 12,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 62.545
+      "seconds": 74.743
     },
     {
       "name": "dev.cutover.execution.SchedulingDecisionTest",
@@ -111,7 +111,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.005
+      "seconds": 0.008
     },
     {
       "name": "dev.cutover.platform.JwtSecurityTest",
@@ -119,7 +119,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 1.549
+      "seconds": 1.609
     },
     {
       "name": "dev.cutover.platform.OperationTraceTest",
@@ -127,7 +127,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.091
+      "seconds": 0.099
     },
     {
       "name": "dev.cutover.platform.ProblemHandlerTest",
@@ -135,7 +135,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.729
+      "seconds": 0.722
     },
     {
       "name": "dev.cutover.platform.SecurityProblemResponseTest",
@@ -143,7 +143,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.937
+      "seconds": 0.77
     },
     {
       "name": "dev.cutover.reliability.AuditLogTest",
@@ -151,7 +151,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 7.13
+      "seconds": 6.978
     },
     {
       "name": "dev.cutover.reliability.DurableDeliveryTest",
@@ -159,7 +159,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 35.427
+      "seconds": 35.436
     },
     {
       "name": "dev.cutover.reliability.PhysicalStorageTest",
@@ -167,7 +167,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 24.326
+      "seconds": 23.609
     },
     {
       "name": "dev.cutover.reliability.SchemaReadinessTest",
@@ -175,7 +175,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 5.363
+      "seconds": 5.13
     },
     {
       "name": "dev.cutover.returns.ReturnsWorkflowTest",
@@ -183,7 +183,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 49.934
+      "seconds": 49.991
     },
     {
       "name": "dev.cutover.shadow.IdenticalSnapshotTest",
@@ -191,7 +191,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 12.055
+      "seconds": 11.673
     },
     {
       "name": "dev.cutover.shadow.ShadowDeliveryTest",
@@ -199,7 +199,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 17.069
+      "seconds": 16.502
     },
     {
       "name": "dev.cutover.simulator.SimulatorEngineTest",
@@ -207,7 +207,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 11.654
+      "seconds": 20.093
     }
   ]
 }

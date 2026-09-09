@@ -1,6 +1,6 @@
 # ADR 0032: confirm migration dispatch after commit
 
-Date: 9 September 2026. Status: implemented; focused verification passed, complete and deployed qualification pending.
+Date: 9 September 2026. Status: implemented; all 206 repository checks passed; deployed qualification pending.
 
 The migration observation gate used `command_journal.created_at`. That value is written inside the adapter transaction. A row created promptly can still commit after the two-second deadline. The migration must not qualify such a sample from its early timestamp.
 
@@ -22,3 +22,5 @@ The additional database check passed at **07:26:11 Europe/Berlin**: absent, malf
 - migration-commit-timing-after: `68166d3cfd20373cfe18c1b580ee8b9603f232baa44aaff4e8330073af2dae6f`
 - migration-timing-proof-guards: `1ad17a60c94ef3a4e39fd7f25175d2e41ca4eadbb6322b07e8c3a7390b505cd9`
 - migration-timing-console-build: `6edbef1315a2cfc993c0064bc03847895ede8abc90e73ed4af9608c3e7b1d939`
+
+Complete offline verification of `38dc3a1e5bd2eefeb7e45c743017835c9d994ec0` passed at **2026-09-09T07:39:11+02:00**: **206 checks in 25 classes**, zero failures/errors/skips, in **530 seconds**. Original log SHA-256: `c8a99dd407e3b9f4c867ec2f35e6a05937022012c3823d260e6403418369def1`. [Per-class evidence](../evidence/backend-checks.json) records the run. Deployed qualification remains separate.
