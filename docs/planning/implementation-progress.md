@@ -451,3 +451,10 @@ Stage readback measured p99 of 3,061 ms from eligibility to allocation, 2,168 ms
 ## 9 September — host storage and database wait correlation
 
 The instrumented two-minute `load-diagnostic-1788923477821` failed its diagnostic latency check: **72.667%** of 600 measured movements within two seconds, p99 **20,381.502 ms**. All 650 effects completed once, with zero database deadlocks. The 165 host and 164 PostgreSQL samples locate the delayed cohort around 05:11:50–05:12:30 Europe/Berlin alongside elevated host disk latency and WAL waits. Windows available memory stayed above 3,826 MiB. This supports a storage-stall contribution in that interval without identifying its underlying producer or establishing a general hardware limit. The [diagnostic report](../evidence/storage-latency-diagnostic.md) retains source identities, counter limits and original hashes. No runtime setting, workload target, subscription, durability rule or shared-cache state was changed. A50 remains failed.
+
+
+## 9 September — offline verification of the bounded observation-turn images
+
+`cache-1788923962341` verified all 4,050 assets against images `beeabc1` and passed the isolated empty-cache detection. `offline-1788924041749` passed all six cases at **05:25:52 Europe/Berlin**, from clean driver source `e40905e`: actual PKCE login, both products, five single effects, lost-response recovery, simulator restart, repeated whole-lab stop/start, cached predecessor import/rollback, ten scrape targets, traces and three populated dashboard panels. The new dashboard screenshot was inspected. Original result SHA-256: `80cf66e3f56d1fca5518559d4d90b77fd283d8d9e2523fcb7fdd3e82ef406395`.
+
+`offline-profile-1788924039727` confirms restored original images and five tracing profiles, unchanged unrelated container identities/running/restart states, and exact scoped firewall restoration to `DISABLED`. Child lifecycle `demo-lifecycle-1788924096493` and rollback `adapter-image-rollback-1788924273815` retain their original evidence. The public curated inventory now contains 65 passed runtime runs. These offline checks do not change the failed A50 result.
