@@ -1,0 +1,1230 @@
+{
+  "format": 1,
+  "recordedAt": "2026-09-09T06:25:42.760Z",
+  "scope": "Two three-minute diagnostics using the unchanged mixed-product rate and post-transaction original-eligibility timing. Full A50 is still failed and requires a separate ten-minute measurement.",
+  "counterDocumentation": "https://docs.kernel.org/admin-guide/cgroup-v2.html#io-interface-files",
+  "limits": [
+    "Cgroup counters record completed bytes and operations, not individual request latencies or the producer of host waiting.",
+    "Parent and child groups overlap and are not summed together. Pod rows include only the pod aggregate, not its container children.",
+    "Kernel writeback ownership can imperfectly attribute writes when several cgroups modify the same inode.",
+    "Windows disk samples are interval averages. PostgreSQL snapshots are sampled states, not individual wait durations.",
+    "No shared-cache operation, database durability change or unrelated service mutation occurred."
+  ],
+  "runs": [
+    {
+      "runId": "load-diagnostic-1788933725206",
+      "result": "failed diagnostic; does not qualify A50",
+      "sourceRevision": "f8332e6c9a12051d0e0624bb82288597cc6dc149",
+      "imageRevision": "822d3765c2d7098e01a497acedb9a0b362ac7755",
+      "endedAt": "2026-09-09T06:06:12.934Z",
+      "measurementSeconds": 180,
+      "acceptedRequestsIncludingWarmup": 570,
+      "singleEffectsIncludingWarmup": 950,
+      "measuredMovements": 900,
+      "excludedMovements": 0,
+      "withinTwoSecondsPercent": 88.22222222222223,
+      "p99Millis": 14011,
+      "deadlockDelta": 0,
+      "hostSamples": 225,
+      "cgroupSamples": 225,
+      "databaseSamples": 224,
+      "databaseCaptureComplete": true,
+      "collectorLimitation": "The initial depth covers the owned cluster container but does not reach kind systemd pod groups.",
+      "unrelatedContainerStatesPreserved": true,
+      "windows": [
+        {
+          "at": "2026-09-09T06:02:20.000Z",
+          "count": 13,
+          "slow": 0,
+          "maxDispatchMillis": 664,
+          "minAvailableMiB": 2419,
+          "maxDiskWriteMillis": 0.2900802536231884,
+          "maxDiskReadMillis": 2.2664500000000003,
+          "waitSamples": {
+            "ClientRead": 7,
+            "transactionid": 1,
+            "WalSync": 5
+          },
+          "ownedContainerWriteBytes": 32124928,
+          "otherContainerWriteBytes": 716800
+        },
+        {
+          "at": "2026-09-09T06:02:30.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 521,
+          "minAvailableMiB": 2415,
+          "maxDiskWriteMillis": 0.28748729096989967,
+          "maxDiskReadMillis": 0.7234722696245733,
+          "waitSamples": {
+            "ClientRead": 5,
+            "running": 1,
+            "WalSync": 2,
+            "transactionid": 1
+          },
+          "ownedContainerWriteBytes": 24657920,
+          "otherContainerWriteBytes": 675840
+        },
+        {
+          "at": "2026-09-09T06:02:40.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 502,
+          "minAvailableMiB": 2436,
+          "maxDiskWriteMillis": 0.45931859504132233,
+          "maxDiskReadMillis": 1.71919,
+          "waitSamples": {
+            "WALWrite": 2,
+            "WalSync": 4,
+            "ClientRead": 10,
+            "running": 2
+          },
+          "ownedContainerWriteBytes": 26001408,
+          "otherContainerWriteBytes": 1429504
+        },
+        {
+          "at": "2026-09-09T06:02:50.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 607,
+          "minAvailableMiB": 2676,
+          "maxDiskWriteMillis": 0.4258454385964912,
+          "maxDiskReadMillis": 0.81755,
+          "waitSamples": {
+            "ClientRead": 2,
+            "running": 1,
+            "WALWrite": 1,
+            "WalSync": 1
+          },
+          "ownedContainerWriteBytes": 39665664,
+          "otherContainerWriteBytes": 1069056
+        },
+        {
+          "at": "2026-09-09T06:03:00.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 504,
+          "minAvailableMiB": 2718,
+          "maxDiskWriteMillis": 0.32578979206049147,
+          "maxDiskReadMillis": 2.393722480620155,
+          "waitSamples": {
+            "WalSync": 1,
+            "ClientRead": 3,
+            "running": 1,
+            "VacuumDelay": 1
+          },
+          "ownedContainerWriteBytes": 40816640,
+          "otherContainerWriteBytes": 294912
+        },
+        {
+          "at": "2026-09-09T06:03:10.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 535,
+          "minAvailableMiB": 2758,
+          "maxDiskWriteMillis": 0.33979175704989156,
+          "maxDiskReadMillis": 1.6202123287671233,
+          "waitSamples": {
+            "WALWrite": 1,
+            "WalSync": 4,
+            "ClientRead": 1,
+            "running": 2
+          },
+          "ownedContainerWriteBytes": 26501120,
+          "otherContainerWriteBytes": 1683456
+        },
+        {
+          "at": "2026-09-09T06:03:20.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 448,
+          "minAvailableMiB": 2712,
+          "maxDiskWriteMillis": 0.26485911708253357,
+          "maxDiskReadMillis": 1.9076,
+          "waitSamples": {
+            "WALWrite": 1,
+            "ClientRead": 5,
+            "WalSync": 5,
+            "running": 5,
+            "transactionid": 2
+          },
+          "ownedContainerWriteBytes": 27115520,
+          "otherContainerWriteBytes": 1200128
+        },
+        {
+          "at": "2026-09-09T06:03:30.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 524,
+          "minAvailableMiB": 2621,
+          "maxDiskWriteMillis": 0.3682395730706076,
+          "maxDiskReadMillis": 1.4305833333333333,
+          "waitSamples": {
+            "DataFileExtend": 1,
+            "ClientRead": 3,
+            "WALWrite": 1,
+            "WalSync": 3
+          },
+          "ownedContainerWriteBytes": 21213184,
+          "otherContainerWriteBytes": 528384
+        },
+        {
+          "at": "2026-09-09T06:03:40.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 525,
+          "minAvailableMiB": 2645,
+          "maxDiskWriteMillis": 0.45914921875,
+          "maxDiskReadMillis": 2.2685,
+          "waitSamples": {
+            "running": 2,
+            "WalSync": 4,
+            "ClientRead": 2,
+            "DataFileRead": 1
+          },
+          "ownedContainerWriteBytes": 33574912,
+          "otherContainerWriteBytes": 720896
+        },
+        {
+          "at": "2026-09-09T06:03:50.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 488,
+          "minAvailableMiB": 2655,
+          "maxDiskWriteMillis": 0.3326127970749543,
+          "maxDiskReadMillis": 1.9219,
+          "waitSamples": {
+            "WalSync": 2,
+            "WALWrite": 2,
+            "running": 1,
+            "ClientRead": 1
+          },
+          "ownedContainerWriteBytes": 27901952,
+          "otherContainerWriteBytes": 1667072
+        },
+        {
+          "at": "2026-09-09T06:04:00.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 482,
+          "minAvailableMiB": 2684,
+          "maxDiskWriteMillis": 0.3086895256916996,
+          "maxDiskReadMillis": 1.8205666666666667,
+          "waitSamples": {
+            "WalSync": 4,
+            "VacuumDelay": 1,
+            "ClientRead": 3,
+            "AioIoCompletion": 1,
+            "running": 1
+          },
+          "ownedContainerWriteBytes": 37126144,
+          "otherContainerWriteBytes": 294912
+        },
+        {
+          "at": "2026-09-09T06:04:10.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 520,
+          "minAvailableMiB": 2699,
+          "maxDiskWriteMillis": 0.27419661016949154,
+          "maxDiskReadMillis": 2.8273791666666668,
+          "waitSamples": {
+            "WalSync": 7,
+            "WALWrite": 1,
+            "running": 1,
+            "ClientRead": 5,
+            "transactionid": 1
+          },
+          "ownedContainerWriteBytes": 36753408,
+          "otherContainerWriteBytes": 1925120
+        },
+        {
+          "at": "2026-09-09T06:04:20.000Z",
+          "count": 50,
+          "slow": 4,
+          "maxDispatchMillis": 5438,
+          "minAvailableMiB": 2536,
+          "maxDiskWriteMillis": 0.5688575471698113,
+          "maxDiskReadMillis": 3.804452941176471,
+          "waitSamples": {
+            "ClientRead": 3,
+            "WalSync": 7,
+            "running": 2,
+            "WALWrite": 1
+          },
+          "ownedContainerWriteBytes": 38637568,
+          "otherContainerWriteBytes": 1327104
+        },
+        {
+          "at": "2026-09-09T06:04:30.000Z",
+          "count": 50,
+          "slow": 50,
+          "maxDispatchMillis": 16020,
+          "minAvailableMiB": 2466,
+          "maxDiskWriteMillis": 81.37518533333333,
+          "maxDiskReadMillis": 275.370925,
+          "waitSamples": {
+            "WalSync": 10,
+            "WALWrite": 43,
+            "transactionid": 7,
+            "ClientRead": 1,
+            "running": 1,
+            "DataFileRead": 1,
+            "tuple": 1
+          },
+          "ownedContainerWriteBytes": 17219584,
+          "otherContainerWriteBytes": 602112
+        },
+        {
+          "at": "2026-09-09T06:04:40.000Z",
+          "count": 48,
+          "slow": 46,
+          "maxDispatchMillis": 11063,
+          "minAvailableMiB": 2546,
+          "maxDiskWriteMillis": 32.330352777777776,
+          "maxDiskReadMillis": 525.1732999999999,
+          "waitSamples": {
+            "WALWrite": 42,
+            "WalSync": 10,
+            "DataFileRead": 1,
+            "transactionid": 5,
+            "running": 6,
+            "ClientRead": 1
+          },
+          "ownedContainerWriteBytes": 27467776,
+          "otherContainerWriteBytes": 835584
+        },
+        {
+          "at": "2026-09-09T06:04:50.000Z",
+          "count": 52,
+          "slow": 6,
+          "maxDispatchMillis": 3240,
+          "minAvailableMiB": 2477,
+          "maxDiskWriteMillis": 1.058081335952849,
+          "maxDiskReadMillis": 3.073315254237288,
+          "waitSamples": {
+            "ClientRead": 7,
+            "WALWrite": 8,
+            "WalSync": 7,
+            "running": 7
+          },
+          "ownedContainerWriteBytes": 59367424,
+          "otherContainerWriteBytes": 3522560
+        },
+        {
+          "at": "2026-09-09T06:05:00.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 500,
+          "minAvailableMiB": 2497,
+          "maxDiskWriteMillis": 0.4863342465753425,
+          "maxDiskReadMillis": 1.7278,
+          "waitSamples": {
+            "WalSync": 5,
+            "ClientRead": 7,
+            "running": 3,
+            "WALWrite": 1
+          },
+          "ownedContainerWriteBytes": 48627712,
+          "otherContainerWriteBytes": 581632
+        },
+        {
+          "at": "2026-09-09T06:05:10.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 478,
+          "minAvailableMiB": 2463,
+          "maxDiskWriteMillis": 0.2851375,
+          "maxDiskReadMillis": 0.866778947368421,
+          "waitSamples": {
+            "WalSync": 5,
+            "running": 3,
+            "ClientRead": 2
+          },
+          "ownedContainerWriteBytes": 32526336,
+          "otherContainerWriteBytes": 2224128
+        },
+        {
+          "at": "2026-09-09T06:05:20.000Z",
+          "count": 37,
+          "slow": 0,
+          "maxDispatchMillis": 548,
+          "minAvailableMiB": 2459,
+          "maxDiskWriteMillis": 0.7032122367101303,
+          "maxDiskReadMillis": 7.1365319148936175,
+          "waitSamples": {
+            "WalSync": 4,
+            "WALWrite": 1,
+            "running": 2,
+            "ClientRead": 2,
+            "transactionid": 1
+          },
+          "ownedContainerWriteBytes": 30384128,
+          "otherContainerWriteBytes": 950272
+        }
+      ],
+      "originalHashes": {
+        "results.json": "5c4782acf42a71f73369fa21abfeb78b5b751d0904ef02f1cf07b6072b79a9f2",
+        "durable-dispatch-timing.json": "05fe044561e7fd9a65d921b821f3513a249111a193d1071723e253ee04d7c939",
+        "trace-readback.json": "652cee922682f5f5206d411ec65a8a417955657e9acf2cd12bfc2e512795f558",
+        "host-io-1788933712927.jsonl": "8c19160199ecd18903e76dbed62c013b136a9f84c574a52b6ef4de38ddf59f9e",
+        "database-waits-1788933714159.json": "796c5ce49ecde76c8886c14c55c0b0ca758ccd34948ad1436cc447aeed72ce3f",
+        "cgroup-io-1788933713383.txt": "71292db4208d2cbb3c13987cd71c50c461ee9cdc759063cfcf306664cced7a63",
+        "cgroup-io-1788933713383.json": "0b6cf6a02b9bfb4672163777191d8f371f0d6edae9b9e39a41234e8f6604adce"
+      }
+    },
+    {
+      "runId": "load-diagnostic-1788934202319",
+      "result": "failed diagnostic; does not qualify A50",
+      "sourceRevision": "f8332e6c9a12051d0e0624bb82288597cc6dc149",
+      "imageRevision": "822d3765c2d7098e01a497acedb9a0b362ac7755",
+      "endedAt": "2026-09-09T06:14:02.236Z",
+      "measurementSeconds": 180,
+      "acceptedRequestsIncludingWarmup": 570,
+      "singleEffectsIncludingWarmup": 950,
+      "measuredMovements": 900,
+      "excludedMovements": 0,
+      "withinTwoSecondsPercent": 94.88888888888889,
+      "p99Millis": 6376,
+      "deadlockDelta": 0,
+      "hostSamples": 225,
+      "cgroupSamples": 225,
+      "databaseSamples": 112,
+      "databaseCaptureComplete": false,
+      "collectorLimitation": "The corrected depth and pod mapping cover individual Cutover pods. PostgreSQL sampling stopped after 112 retained snapshots because container exec timed out; its incomplete record is retained.",
+      "unrelatedContainerStatesPreserved": true,
+      "windows": [
+        {
+          "at": "2026-09-09T06:10:20.000Z",
+          "count": 25,
+          "slow": 0,
+          "maxDispatchMillis": 559,
+          "minAvailableMiB": 2246,
+          "maxDiskWriteMillis": 0.47517832167832164,
+          "maxDiskReadMillis": 1.5588,
+          "waitSamples": {
+            "ClientRead": 6,
+            "WalSync": 4,
+            "WALWrite": 1,
+            "running": 3
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 73728,
+              "wbytes": 23928832,
+              "rios": 8,
+              "wios": 2311
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3624960,
+              "rios": 0,
+              "wios": 687
+            },
+            {
+              "name": "cutover-observability/prometheus-0",
+              "rbytes": 0,
+              "wbytes": 61440,
+              "rios": 0,
+              "wios": 2
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 29835264,
+          "otherContainerWriteBytes": 1249280
+        },
+        {
+          "at": "2026-09-09T06:10:30.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 511,
+          "minAvailableMiB": 2178,
+          "maxDiskWriteMillis": 0.364251320754717,
+          "maxDiskReadMillis": 1.71575,
+          "waitSamples": {
+            "WalSync": 2,
+            "ClientRead": 2,
+            "running": 1
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 21331968,
+              "rios": 0,
+              "wios": 2381
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3854336,
+              "rios": 0,
+              "wios": 735
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 2396160,
+              "rios": 0,
+              "wios": 15
+            }
+          ],
+          "ownedContainerWriteBytes": 29736960,
+          "otherContainerWriteBytes": 3620864
+        },
+        {
+          "at": "2026-09-09T06:10:40.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 501,
+          "minAvailableMiB": 2232,
+          "maxDiskWriteMillis": 0.6679412969283276,
+          "maxDiskReadMillis": 0.75924,
+          "waitSamples": {
+            "ClientRead": 2,
+            "running": 5,
+            "WalSync": 4,
+            "VacuumDelay": 1
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 23691264,
+              "rios": 0,
+              "wios": 2443
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3604480,
+              "rios": 0,
+              "wios": 685
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 65536,
+              "wbytes": 49152,
+              "rios": 1,
+              "wios": 12
+            }
+          ],
+          "ownedContainerWriteBytes": 29257728,
+          "otherContainerWriteBytes": 303104
+        },
+        {
+          "at": "2026-09-09T06:10:50.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 503,
+          "minAvailableMiB": 2284,
+          "maxDiskWriteMillis": 0.46058545918367344,
+          "maxDiskReadMillis": 1.6855,
+          "waitSamples": {
+            "WalSync": 2,
+            "WALWrite": 1,
+            "ClientRead": 1
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 40960,
+              "wbytes": 31244288,
+              "rios": 5,
+              "wios": 2441
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 17010688,
+              "rios": 0,
+              "wios": 38
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3706880,
+              "rios": 0,
+              "wios": 709
+            },
+            {
+              "name": "cutover-observability/prometheus-0",
+              "rbytes": 0,
+              "wbytes": 61440,
+              "rios": 0,
+              "wios": 2
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            }
+          ],
+          "ownedContainerWriteBytes": 53522432,
+          "otherContainerWriteBytes": 1966080
+        },
+        {
+          "at": "2026-09-09T06:11:00.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 522,
+          "minAvailableMiB": 2070,
+          "maxDiskWriteMillis": 0.32892652329749106,
+          "maxDiskReadMillis": 1.8832,
+          "waitSamples": {
+            "WALWrite": 1,
+            "WalSync": 3,
+            "VacuumDelay": 1,
+            "ClientRead": 2,
+            "running": 2
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 45752320,
+              "rios": 0,
+              "wios": 2450
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 7880704,
+              "rios": 0,
+              "wios": 19
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 4096,
+              "wbytes": 3698688,
+              "rios": 1,
+              "wios": 716
+            }
+          ],
+          "ownedContainerWriteBytes": 59191296,
+          "otherContainerWriteBytes": 675840
+        },
+        {
+          "at": "2026-09-09T06:11:10.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 1594,
+          "minAvailableMiB": 2128,
+          "maxDiskWriteMillis": 0.728715,
+          "maxDiskReadMillis": 1.2800544444444444,
+          "waitSamples": {
+            "WalSync": 6,
+            "ClientRead": 2,
+            "WALWrite": 1,
+            "running": 3
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 17129472,
+              "rios": 0,
+              "wios": 2312
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3674112,
+              "rios": 0,
+              "wios": 701
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 22589440,
+          "otherContainerWriteBytes": 282624
+        },
+        {
+          "at": "2026-09-09T06:11:20.000Z",
+          "count": 50,
+          "slow": 46,
+          "maxDispatchMillis": 8094,
+          "minAvailableMiB": 2081,
+          "maxDiskWriteMillis": 35.479160176991144,
+          "maxDiskReadMillis": 112.50144615384615,
+          "waitSamples": {
+            "transactionid": 12,
+            "WALWrite": 43,
+            "WalSync": 10,
+            "tuple": 2,
+            "DataFileRead": 1,
+            "running": 3
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 106496,
+              "wbytes": 8962048,
+              "rios": 13,
+              "wios": 331
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 1601536,
+              "rios": 0,
+              "wios": 6
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 913408,
+              "rios": 0,
+              "wios": 89
+            },
+            {
+              "name": "cutover-observability/prometheus-0",
+              "rbytes": 0,
+              "wbytes": 57344,
+              "rios": 0,
+              "wios": 2
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            }
+          ],
+          "ownedContainerWriteBytes": 12099584,
+          "otherContainerWriteBytes": 1794048
+        },
+        {
+          "at": "2026-09-09T06:11:30.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 1340,
+          "minAvailableMiB": 2182,
+          "maxDiskWriteMillis": 0.6580264746227709,
+          "maxDiskReadMillis": 3.1369895953757228,
+          "waitSamples": {
+            "transactionid": 3,
+            "ClientRead": 4,
+            "WalSync": 3,
+            "running": 6,
+            "WALWrite": 1
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 33046528,
+              "rios": 0,
+              "wios": 2890
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 5062656,
+              "rios": 0,
+              "wios": 871
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 40509440,
+          "otherContainerWriteBytes": 798720
+        },
+        {
+          "at": "2026-09-09T06:11:40.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 522,
+          "minAvailableMiB": 2176,
+          "maxDiskWriteMillis": 0.29750960451977404,
+          "maxDiskReadMillis": 2.37878,
+          "waitSamples": {
+            "running": 1,
+            "WalSync": 1,
+            "ClientRead": 1
+          },
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 1269760,
+              "wbytes": 25460736,
+              "rios": 28,
+              "wios": 2300
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 5177344,
+              "rios": 0,
+              "wios": 16
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3665920,
+              "rios": 0,
+              "wios": 689
+            }
+          ],
+          "ownedContainerWriteBytes": 36311040,
+          "otherContainerWriteBytes": 270336
+        },
+        {
+          "at": "2026-09-09T06:11:50.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 479,
+          "minAvailableMiB": 2213,
+          "maxDiskWriteMillis": 0.2954446208112875,
+          "maxDiskReadMillis": 1.3282999999999998,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 2719744,
+              "wbytes": 24035328,
+              "rios": 40,
+              "wios": 2163
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3354624,
+              "rios": 0,
+              "wios": 640
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 28930048,
+          "otherContainerWriteBytes": 1368064
+        },
+        {
+          "at": "2026-09-09T06:12:00.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 498,
+          "minAvailableMiB": 2312,
+          "maxDiskWriteMillis": 0.5830802564102564,
+          "maxDiskReadMillis": 1.212713953488372,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 2924544,
+              "wbytes": 27942912,
+              "rios": 97,
+              "wios": 2466
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3715072,
+              "rios": 0,
+              "wios": 698
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 1724416,
+              "rios": 0,
+              "wios": 7
+            },
+            {
+              "name": "cutover-observability/prometheus-0",
+              "rbytes": 0,
+              "wbytes": 61440,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 35217408,
+          "otherContainerWriteBytes": 905216
+        },
+        {
+          "at": "2026-09-09T06:12:10.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 558,
+          "minAvailableMiB": 2394,
+          "maxDiskWriteMillis": 0.3268,
+          "maxDiskReadMillis": 1.381553846153846,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 98304,
+              "wbytes": 17145856,
+              "rios": 12,
+              "wios": 2322
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3735552,
+              "rios": 0,
+              "wios": 701
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 4096,
+              "rios": 0,
+              "wios": 1
+            }
+          ],
+          "ownedContainerWriteBytes": 22790144,
+          "otherContainerWriteBytes": 679936
+        },
+        {
+          "at": "2026-09-09T06:12:20.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 533,
+          "minAvailableMiB": 2395,
+          "maxDiskWriteMillis": 0.5411260162601627,
+          "maxDiskReadMillis": 1.5863749999999999,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 258048,
+              "wbytes": 20176896,
+              "rios": 27,
+              "wios": 2368
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 6348800,
+              "rios": 0,
+              "wios": 19
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3633152,
+              "rios": 0,
+              "wios": 684
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            }
+          ],
+          "ownedContainerWriteBytes": 31748096,
+          "otherContainerWriteBytes": 1384448
+        },
+        {
+          "at": "2026-09-09T06:12:30.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 564,
+          "minAvailableMiB": 2388,
+          "maxDiskWriteMillis": 0.29305568400770715,
+          "maxDiskReadMillis": 0.70095,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 139264,
+              "wbytes": 21045248,
+              "rios": 14,
+              "wios": 2446
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3719168,
+              "rios": 0,
+              "wios": 720
+            },
+            {
+              "name": "cutover-observability/prometheus-0",
+              "rbytes": 0,
+              "wbytes": 57344,
+              "rios": 0,
+              "wios": 2
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 26603520,
+          "otherContainerWriteBytes": 839680
+        },
+        {
+          "at": "2026-09-09T06:12:40.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 503,
+          "minAvailableMiB": 2342,
+          "maxDiskWriteMillis": 0.37987308160779537,
+          "maxDiskReadMillis": 1.0727875,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 1196032,
+              "wbytes": 17793024,
+              "rios": 112,
+              "wios": 2498
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 5263360,
+              "rios": 0,
+              "wios": 17
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3670016,
+              "rios": 0,
+              "wios": 685
+            }
+          ],
+          "ownedContainerWriteBytes": 28966912,
+          "otherContainerWriteBytes": 684032
+        },
+        {
+          "at": "2026-09-09T06:12:50.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 451,
+          "minAvailableMiB": 2371,
+          "maxDiskWriteMillis": 0.27179641638225255,
+          "maxDiskReadMillis": 1.4720333333333333,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 98304,
+              "wbytes": 19251200,
+              "rios": 10,
+              "wios": 2411
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3670016,
+              "rios": 0,
+              "wios": 699
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 24403968,
+          "otherContainerWriteBytes": 1318912
+        },
+        {
+          "at": "2026-09-09T06:13:00.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 545,
+          "minAvailableMiB": 2346,
+          "maxDiskWriteMillis": 0.359895008605852,
+          "maxDiskReadMillis": 1.0809127272727272,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 2482176,
+              "wbytes": 22847488,
+              "rios": 85,
+              "wios": 2531
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3829760,
+              "rios": 0,
+              "wios": 734
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 1802240,
+              "rios": 0,
+              "wios": 7
+            },
+            {
+              "name": "cutover-observability/prometheus-0",
+              "rbytes": 0,
+              "wbytes": 61440,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 30339072,
+          "otherContainerWriteBytes": 835584
+        },
+        {
+          "at": "2026-09-09T06:13:10.000Z",
+          "count": 50,
+          "slow": 0,
+          "maxDispatchMillis": 501,
+          "minAvailableMiB": 2388,
+          "maxDiskWriteMillis": 0.28703969171483623,
+          "maxDiskReadMillis": 1.7088999999999999,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 16416768,
+              "rios": 0,
+              "wios": 2325
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 3624960,
+              "rios": 0,
+              "wios": 695
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 8192,
+              "rios": 0,
+              "wios": 2
+            }
+          ],
+          "ownedContainerWriteBytes": 21831680,
+          "otherContainerWriteBytes": 741376
+        },
+        {
+          "at": "2026-09-09T06:13:20.000Z",
+          "count": 25,
+          "slow": 0,
+          "maxDispatchMillis": 550,
+          "minAvailableMiB": 2363,
+          "maxDiskWriteMillis": 0.545576862745098,
+          "maxDiskReadMillis": 1.0759785388127854,
+          "waitSamples": {},
+          "databaseSamplerComplete": false,
+          "podIo": [
+            {
+              "name": "cutover-platform/application-db-0",
+              "rbytes": 0,
+              "wbytes": 31744000,
+              "rios": 0,
+              "wios": 1440
+            },
+            {
+              "name": "cutover-observability/tempo-0",
+              "rbytes": 0,
+              "wbytes": 5713920,
+              "rios": 0,
+              "wios": 16
+            },
+            {
+              "name": "cutover-platform/rabbitmq-0",
+              "rbytes": 0,
+              "wbytes": 2150400,
+              "rios": 0,
+              "wios": 409
+            },
+            {
+              "name": "cutover-observability/grafana-0",
+              "rbytes": 0,
+              "wbytes": 24576,
+              "rios": 0,
+              "wios": 4
+            }
+          ],
+          "ownedContainerWriteBytes": 40718336,
+          "otherContainerWriteBytes": 1507328
+        }
+      ],
+      "originalHashes": {
+        "results.json": "6cdc9c2b2f55e025b0fe663cdaf8bc2b1f496f0b1574f4a274408048f043acfc",
+        "durable-dispatch-timing.json": "d9e383ad689afbadbb479bd7b902191314e638f4c7b18286ab120ec0b00a2ec5",
+        "trace-readback.json": "dd4c413a694644b78bd88728c5c6d7125da917c300df8b7f0bb47de2cf189c0c",
+        "host-io-1788934190430.jsonl": "32467b01a7c4b7068776388cc88d3bf5f50782919fca6db8f288b6ff9184aa26",
+        "database-waits-1788934191241.json": "c1698e62c5678bfbc1ad09155dbd5292f1dcd16f7771759d582638efd8033d2d",
+        "cgroup-io-1788934191464.txt": "283010db080b1e007de7f9c2db4375b8409333f47a4c32d114743965e4b3e05b",
+        "cgroup-io-1788934191464.json": "c457f5de743389c4e80a7f55777998215559b0f3aa57d18f4be49634982d024f"
+      }
+    }
+  ]
+}
