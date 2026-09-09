@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "generatedAt": "2026-09-09T03:41:45.7574205Z",
-  "packagedBuildRevision": "6cbbccc8b18e71f912b541bdbeb19584ca122b87",
+  "generatedAt": "2026-09-09T04:26:47.0475107Z",
+  "packagedBuildRevision": "dd130962537e2a02f32a9164d3f4e31f1a0950af",
   "scope": "Every BOOT-INF/lib JAR in the five built Java executables; both complete npm lockfiles, including build, test and optional platform packages; and all pinned infrastructure/base images and tools. Shadow scheduling reuses the execution-service binary. Container operating-system package inventories remain part of the upstream images, not this application dependency list.",
   "licenseMetadata": "Npm license strings are the lockfile declarations. Java coordinates and notice paths come from the exact packaged library bytes; absent embedded metadata is left absent rather than guessed. Dependencies and base images retain their own upstream licenses.",
   "javaApplications": [
@@ -119,7 +119,7 @@
     {
       "module": "apps/equipment-adapter",
       "file": "equipment-adapter-0.1.0-SNAPSHOT-exec.jar",
-      "sha256": "4cf4b13b474e0c126cac92d94b858fd46c738a61c10377457d561769f8d3727a",
+      "sha256": "46888009de1dcb170898d1c3e153382b974e5bde1abc08e6f0a91c03de3f5c07",
       "dependencySha256": [
         "046434c40f43819729b9b1db0e6c659dfa68184c1c2c2efa5f7b3a5b27c4e2e2",
         "0497ebbe23fafe4180b74bd0b96a67eee8556552decc4d3c120c1dc737a2b5fb",
@@ -563,6 +563,117 @@
   ],
   "packagedJavaLibraries": [
     {
+      "file": "micrometer-commons-1.17.1.jar",
+      "sha256": "f2cee6ef046e72eec8128474c7f58c6217173b45ae373c30de0289f2a56ab0fd",
+      "bytes": 51810,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "spring-aop-7.0.9.jar",
+      "sha256": "b8c5d6bfcb1f4993f2cc124f7ab7fac40edf5256b9e43c2f7250a733cb5510e9",
+      "bytes": 426204,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "spring-tx-7.0.9.jar",
+      "sha256": "bfb15da6e096e2c0752e9db9987d2415bf0da1d744efc988535c10c6b6c2eedd",
+      "bytes": 292080,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "spring-web-7.0.9.jar",
+      "sha256": "941ced476427bde2533872f293da535fd0258de3f3a650a7f1bfe01ed2927302",
+      "bytes": 2226342,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "tomcat-embed-el-11.0.24.jar",
+      "sha256": "ad0546f12dace008aacce18ba13222137760b310ca719e173d3e13021b9af6c6",
+      "bytes": 271215,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "jackson-annotations-2.21.jar",
+      "sha256": "53ca085f4a150f703f49e1aabd935bd03b43e1ea3d55d135438292af22cef56b",
+      "bytes": 82104,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "com.fasterxml.jackson.core",
+          "artifactId": "jackson-annotations",
+          "version": "2.21"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "jul-to-slf4j-2.0.18.jar",
+      "sha256": "cbb7d1aaaa9e871eb1a06594abd911bf97027152976edf1edc315be75239204e",
+      "bytes": 6347,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.slf4j",
+          "artifactId": "jul-to-slf4j",
+          "version": "2.0.18"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt"
+      ]
+    },
+    {
+      "file": "opentelemetry-api-1.62.0.jar",
+      "sha256": "d58143928c049233653e6bf1282ff8a767ebdd5e6a82b3f336158c30e40b431d",
+      "bytes": 175114,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-jdbc-7.0.9.jar",
+      "sha256": "ca0d9af1c5721eef8cac1f94c8b9d27a753248bc33c86e3472bd3d1dbd78f450",
+      "bytes": 480730,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "json-schema-validator-3.0.7.jar",
+      "sha256": "27b90bce60845f353b203b735cda2e0cb9a32c4962550e249141a2b065b9be5c",
+      "bytes": 583738,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "com.networknt",
+          "artifactId": "json-schema-validator",
+          "version": "3.0.7"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
       "file": "prometheus-metrics-tracer-common-1.7.0.jar",
       "sha256": "b7e8699032f0f1501556eeafd20fcfdd89b355f5d22b6d8361d723d467d88ed4",
       "bytes": 3440,
@@ -576,17 +687,14 @@
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "itu-1.14.0.jar",
-      "sha256": "5cf40ab0cc77828ab2b875b1f3ecd71c8295d7721933476abc2e08fddcea164a",
-      "bytes": 57633,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "com.ethlo.time",
-          "artifactId": "itu",
-          "version": "1.14.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
+      "file": "spring-rabbit-4.1.1.jar",
+      "sha256": "42787e5db35812183edab018bbc812423700caefcc86113ec92fe1dd487388f5",
+      "bytes": 636832,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/notice.txt"
+      ]
     },
     {
       "file": "netty-handler-4.2.17.Final.jar",
@@ -596,6 +704,34 @@
         {
           "groupId": "io.netty",
           "artifactId": "netty-handler",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "hibernate-validator-9.1.3.Final.jar",
+      "sha256": "0497ebbe23fafe4180b74bd0b96a67eee8556552decc4d3c120c1dc737a2b5fb",
+      "bytes": 1403754,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.hibernate.validator",
+          "artifactId": "hibernate-validator",
+          "version": "9.1.3.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt"
+      ]
+    },
+    {
+      "file": "netty-buffer-4.2.17.Final.jar",
+      "sha256": "0d249178ec0204b35a6ad3e5ac8a6c2ecb3eb496c6cdae40b8eca4fa3cb6a0c7",
+      "bytes": 378264,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-buffer",
           "version": "4.2.17.Final"
         }
       ],
@@ -617,27 +753,44 @@
       ]
     },
     {
-      "file": "postgresql-42.7.13.jar",
-      "sha256": "6e0e4cc2d8cae902084f8a2b18728b073a6fd9d1f87c9d8bff8f298c18185b93",
-      "bytes": 1220948,
+      "file": "spring-boot-web-server-4.1.1.jar",
+      "sha256": "6912fb1fdf7f657a61ac050760fa835fb1e7496399291697e2901f82887a4fee",
+      "bytes": 171647,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/licenses/com.ongres.scram/scram-client-3.2/META-INF/LICENSE",
-        "META-INF/licenses/com.ongres.scram/scram-common-3.2/META-INF/LICENSE",
-        "META-INF/licenses/com.ongres.stringprep/saslprep-2.2/META-INF/LICENSE",
-        "META-INF/licenses/com.ongres.stringprep/stringprep-2.2/META-INF/LICENSE"
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
       ]
     },
     {
-      "file": "r2dbc-spi-1.0.0.RELEASE.jar",
-      "sha256": "a5846c59fea336431a4ae72ca14edbf5299b78486fa308eafb383f4ae0ea74e5",
-      "bytes": 67645,
+      "file": "spring-boot-validation-4.1.1.jar",
+      "sha256": "c2546a81b6b7a39f51d889c99047f24567e4b28d1717fb53a65e9327cfc436f1",
+      "bytes": 15260,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-boot-jarmode-tools-4.1.1.jar",
+      "sha256": "062a9edf01809f4a2b48bfc2fe392fedd27448a3a57113bef510576673d4397f",
+      "bytes": 53968,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "log4j-api-2.25.5.jar",
+      "sha256": "64777f73ea0b3104c04eb82befbdccc30a425a19e83ad06cb2f93aa303511863",
+      "bytes": 351427,
       "embeddedMavenCoordinates": [
         {
-          "groupId": "io.r2dbc",
-          "artifactId": "r2dbc-spi",
-          "version": "1.0.0.RELEASE"
+          "groupId": "org.apache.logging.log4j",
+          "artifactId": "log4j-api",
+          "version": "2.25.5"
         }
       ],
       "embeddedLicenseAndNoticeResources": [
@@ -646,14 +799,70 @@
       ]
     },
     {
-      "file": "tomcat-embed-websocket-11.0.24.jar",
-      "sha256": "825160101f0da4a10e19b5730c2ae2f99f8c2c7a7211ac05562726c5e97ab91e",
-      "bytes": 288141,
+      "file": "itu-1.14.0.jar",
+      "sha256": "5cf40ab0cc77828ab2b875b1f3ecd71c8295d7721933476abc2e08fddcea164a",
+      "bytes": 57633,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "com.ethlo.time",
+          "artifactId": "itu",
+          "version": "1.14.0"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-boot-webmvc-4.1.1.jar",
+      "sha256": "9f08c1fb938c45a8693fec5f3065be3aca203948a7ab4d56b06444986f75a6b2",
+      "bytes": 175435,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "micrometer-core-1.17.1.jar",
+      "sha256": "9ca47dfa831409b40253c8dc98c17b9d3e050ebbde4d1543c5521dca2b95ad56",
+      "bytes": 915235,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE",
         "META-INF/NOTICE"
       ]
+    },
+    {
+      "file": "spring-webmvc-7.0.9.jar",
+      "sha256": "8f114c1461692c5e534e82b27de23b7fb23370db8dee7ce0c92d5106906c9555",
+      "bytes": 1107415,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "spring-messaging-7.0.9.jar",
+      "sha256": "19ea7561e5d61e19bee0c94733d03bbf9384c9356eea2d4e90cce7ba3c0ab01b",
+      "bytes": 613714,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "netty-transport-4.2.17.Final.jar",
+      "sha256": "d2409ce3a735cbab4188d0ea5d82abed823a6a07a8389f49af4a9e1243a562bc",
+      "bytes": 549857,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-transport",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
     },
     {
       "file": "prometheus-metrics-model-1.7.0.jar",
@@ -669,44 +878,112 @@
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "jackson-annotations-2.21.jar",
-      "sha256": "53ca085f4a150f703f49e1aabd935bd03b43e1ea3d55d135438292af22cef56b",
-      "bytes": 82104,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "com.fasterxml.jackson.core",
-          "artifactId": "jackson-annotations",
-          "version": "2.21"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "spring-security-core-7.1.1.jar",
-      "sha256": "98a5011baa78df36fb184e6ce0e8e086ca9a64fcdd8f161c0a96475a3a0907bd",
-      "bytes": 641255,
+      "file": "checker-qual-3.55.1.jar",
+      "sha256": "857658c8bdcbff794949a8d9922f88d63ee3751c203c7cd7d21ea97f9e745288",
+      "bytes": 241885,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt"
       ]
     },
     {
-      "file": "log4j-to-slf4j-2.25.5.jar",
-      "sha256": "b68e8b47342dbc9b35644a14fe2efc0b7bf18da703910cd05ad5501ffe07bba1",
-      "bytes": 24173,
+      "file": "jackson-databind-3.1.5.jar",
+      "sha256": "3a2338d996fd3056791df8d335fa9ba8a62a706ed4245ecf81b3e583df37d08a",
+      "bytes": 1944003,
       "embeddedMavenCoordinates": [
         {
-          "groupId": "org.apache.logging.log4j",
-          "artifactId": "log4j-to-slf4j",
-          "version": "2.25.5"
+          "groupId": "tools.jackson.core",
+          "artifactId": "jackson-databind",
+          "version": "3.1.5"
         }
       ],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE",
         "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "jspecify-1.0.1.jar",
+      "sha256": "070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66",
+      "bytes": 3064,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-amqp-4.1.1.jar",
+      "sha256": "9393b306fc38ce1a2080d6cc686576edde1457d3b0756a03c36ae9c8ab201868",
+      "bytes": 238765,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "HdrHistogram-2.2.2.jar",
+      "sha256": "22d1d4316c4ec13a68b559e98c8256d69071593731da96136640f864fa14fad8",
+      "bytes": 177206,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.hdrhistogram",
+          "artifactId": "HdrHistogram",
+          "version": "2.2.2"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt"
+      ]
+    },
+    {
+      "file": "netty-codec-compression-4.2.17.Final.jar",
+      "sha256": "425b287a1f36986a5c8edd76379a49decdf99d284f3454f3fa607a073bfb2c18",
+      "bytes": 237078,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-codec-compression",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "snakeyaml-2.6.jar",
+      "sha256": "c8f7a98e7394adda02f6317249710e4d1b4c7a25aa8c7eace0c2eea52eb8bf85",
+      "bytes": 340068,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.yaml",
+          "artifactId": "snakeyaml",
+          "version": "2.6"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "jakarta.annotation-api-3.0.0.jar",
+      "sha256": "b01f55552284cfb149411e64eabca75e942d26d2e1786b32914250e4330afaa2",
+      "bytes": 26378,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "jakarta.annotation",
+          "artifactId": "jakarta.annotation-api",
+          "version": "3.0.0"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.md",
+        "META-INF/NOTICE.md"
+      ]
+    },
+    {
+      "file": "spring-boot-jdbc-4.1.1.jar",
+      "sha256": "30de56a06ccedb40245fd3a69a5107c7b3c0500447bb982a54a3b5da2859ae2c",
+      "bytes": 204578,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
       ]
     },
     {
@@ -740,35 +1017,42 @@
       ]
     },
     {
-      "file": "spring-amqp-4.1.1.jar",
-      "sha256": "9393b306fc38ce1a2080d6cc686576edde1457d3b0756a03c36ae9c8ab201868",
-      "bytes": 238765,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "spring-security-oauth2-jose-7.1.1.jar",
-      "sha256": "e07d47cac04de4f01be6a6c3f8be249472444b24fd4fad8ff030b45bfe6c5b9c",
-      "bytes": 152497,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
-    },
-    {
-      "file": "opentelemetry-context-1.62.0.jar",
-      "sha256": "8ec86c3609222b9b6307bf40154c1f1c288d1f18ada0155409e7797adbdbe517",
-      "bytes": 50758,
-      "embeddedMavenCoordinates": [],
+      "file": "prometheus-metrics-exposition-textformats-1.7.0.jar",
+      "sha256": "7e49065895a35181c57f2c3c6d07b7b3f9b5754cd6422e0a7bd793f20a29c28a",
+      "bytes": 42795,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.prometheus",
+          "artifactId": "prometheus-metrics-exposition-textformats",
+          "version": "1.7.0"
+        }
+      ],
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "spring-boot-actuator-autoconfigure-4.1.1.jar",
-      "sha256": "bedbd4282a0f0c6a08bd5342d3940b50d8a013420d8a536695aedb1421b5e0f5",
-      "bytes": 141045,
+      "file": "micrometer-observation-1.17.1.jar",
+      "sha256": "eb34f0cd84a879393ae5c21160fc06385ccdc74f36a4d1e31b199f59acfdaf71",
+      "bytes": 84311,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "micrometer-jakarta9-1.17.1.jar",
+      "sha256": "37fbb0a98ba92e185ae7ebe0804fe6c1394bf7fba7573b204fa6fc3998c2e246",
+      "bytes": 54773,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "spring-boot-jooq-4.1.1.jar",
+      "sha256": "284852ab95614e6eacfc108bdf6e0a46d785f8f3dcb7c84fda08406752fab9d8",
+      "bytes": 23822,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt",
@@ -776,20 +1060,56 @@
       ]
     },
     {
-      "file": "jackson-dataformat-yaml-3.1.5.jar",
-      "sha256": "afef22789b0a0915b544c6749c71770788d20821c30d574c1210e2b6cffc91ae",
-      "bytes": 62584,
+      "file": "commons-logging-1.3.6.jar",
+      "sha256": "f8ead8943401081dea0aa824b5b1ba40a0e4ed297a572a0f02258150a0b62357",
+      "bytes": 74010,
       "embeddedMavenCoordinates": [
         {
-          "groupId": "tools.jackson.dataformat",
-          "artifactId": "jackson-dataformat-yaml",
-          "version": "3.1.5"
+          "groupId": "commons-logging",
+          "artifactId": "commons-logging",
+          "version": "1.3.6"
         }
       ],
       "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
       ]
+    },
+    {
+      "file": "spring-boot-micrometer-observation-4.1.1.jar",
+      "sha256": "09ebd9ff7de21d10b1f11c70ca0ea8766a8a727affd19642584bee5a314ea11a",
+      "bytes": 28846,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "netty-transport-native-unix-common-4.2.17.Final.jar",
+      "sha256": "e01aa467b9104de54a57c08c290f70b22e53ec97cf5583c87c112170ef5832cc",
+      "bytes": 46878,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-transport-native-unix-common",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "netty-resolver-4.2.17.Final.jar",
+      "sha256": "7a4b599b9c0c29a505d3b7311f142df883fb27d0f67495a7cbaf533b0e456623",
+      "bytes": 32977,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-resolver",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
     },
     {
       "file": "spring-boot-http-converter-4.1.1.jar",
@@ -802,22 +1122,168 @@
       ]
     },
     {
-      "file": "netty-buffer-4.2.17.Final.jar",
-      "sha256": "0d249178ec0204b35a6ad3e5ac8a6c2ecb3eb496c6cdae40b8eca4fa3cb6a0c7",
-      "bytes": 378264,
+      "file": "spring-security-oauth2-jose-7.1.1.jar",
+      "sha256": "e07d47cac04de4f01be6a6c3f8be249472444b24fd4fad8ff030b45bfe6c5b9c",
+      "bytes": 152497,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt"
+      ]
+    },
+    {
+      "file": "spring-security-core-7.1.1.jar",
+      "sha256": "98a5011baa78df36fb184e6ce0e8e086ca9a64fcdd8f161c0a96475a3a0907bd",
+      "bytes": 641255,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt"
+      ]
+    },
+    {
+      "file": "spring-boot-health-4.1.1.jar",
+      "sha256": "f60151e1f014b40761d0644be1cb04f82df7fc3e9b7bf6e946848547eec399e7",
+      "bytes": 155266,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-boot-persistence-4.1.1.jar",
+      "sha256": "0f78d2556ac3ed75f9eaf3134a1fba94ad1ec3414b52aa279c1f690217e71e3c",
+      "bytes": 16032,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "postgresql-42.7.13.jar",
+      "sha256": "6e0e4cc2d8cae902084f8a2b18728b073a6fd9d1f87c9d8bff8f298c18185b93",
+      "bytes": 1220948,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/licenses/com.ongres.scram/scram-client-3.2/META-INF/LICENSE",
+        "META-INF/licenses/com.ongres.scram/scram-common-3.2/META-INF/LICENSE",
+        "META-INF/licenses/com.ongres.stringprep/saslprep-2.2/META-INF/LICENSE",
+        "META-INF/licenses/com.ongres.stringprep/stringprep-2.2/META-INF/LICENSE"
+      ]
+    },
+    {
+      "file": "spring-boot-autoconfigure-4.1.1.jar",
+      "sha256": "59228756ddd76cea050f95d86deff334789bc53b6688beaa673b1af2b9794592",
+      "bytes": 372740,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-beans-7.0.9.jar",
+      "sha256": "ff218b827a25c9e8929b0cd56dfb56916cea9d5b669ed97dc7cb262508ff548b",
+      "bytes": 928155,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "flyway-database-postgresql-12.4.0.jar",
+      "sha256": "abc075a5c3cbf37dc64b28fec7e2398fb14f31109f7ab6271854738797407b85",
+      "bytes": 48012,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.flywaydb",
+          "artifactId": "flyway-database-postgresql",
+          "version": "12.4.0"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-boot-security-4.1.1.jar",
+      "sha256": "c940697be9bc67820d5011b86d58105836b7cae7c8fb5d4e61d635b51b392cbe",
+      "bytes": 97816,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-boot-sql-4.1.1.jar",
+      "sha256": "fa4f6ddded1bb3bbc496897686336d8433e34f1f22daa886872be2aa184def23",
+      "bytes": 36059,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-boot-4.1.1.jar",
+      "sha256": "0d92b532b1d4020640e72d78c31af175c23db8e0ddd45b81855b7fdf4c9c70f0",
+      "bytes": 1392217,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "r2dbc-spi-1.0.0.RELEASE.jar",
+      "sha256": "a5846c59fea336431a4ae72ca14edbf5299b78486fa308eafb383f4ae0ea74e5",
+      "bytes": 67645,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.r2dbc",
+          "artifactId": "r2dbc-spi",
+          "version": "1.0.0.RELEASE"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "jackson-core-3.1.5.jar",
+      "sha256": "9431b7fa2673bbb618c11d865fe15e13222fd182a214ff998cb7e56afd8f35d2",
+      "bytes": 598605,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "tools.jackson.core",
+          "artifactId": "jackson-core",
+          "version": "3.1.5"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "netty-codec-protobuf-4.2.17.Final.jar",
+      "sha256": "44b2fcc4bc1d6c01edafe6ae6c8a7de7c3c5bad59697a93b6b879a45a78a5387",
+      "bytes": 15108,
       "embeddedMavenCoordinates": [
         {
           "groupId": "io.netty",
-          "artifactId": "netty-buffer",
+          "artifactId": "netty-codec-protobuf",
           "version": "4.2.17.Final"
         }
       ],
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "spring-boot-micrometer-metrics-4.1.1.jar",
-      "sha256": "70dd91dcc319d00998ce5e410b03b841e682aa2f60e4bab159c78ff0ecdb7d0f",
-      "bytes": 248317,
+      "file": "spring-boot-actuator-4.1.1.jar",
+      "sha256": "2bbb38417af25cfc6f57a9b01a85db9b6ccdcadb9e5d40f6b1b2f54a08f8b798",
+      "bytes": 357191,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt",
@@ -834,38 +1300,29 @@
       ]
     },
     {
-      "file": "spring-security-oauth2-resource-server-7.1.1.jar",
-      "sha256": "d8e2d24d2829ec4e2f8212c2c465c5abb30463f550d650080cc8f1d71d0daa6c",
-      "bytes": 153481,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
+      "file": "logback-classic-1.5.38.jar",
+      "sha256": "afb439c61fa287c9e1925523b13baab03617e724406a389d48b61c2c3e46b700",
+      "bytes": 287122,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "ch.qos.logback",
+          "artifactId": "logback-classic",
+          "version": "1.5.38"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "spring-security-crypto-7.1.1.jar",
-      "sha256": "6e8bb2337faccabd30626f917ed1d2bfa9dde982229b6b373b644d1a01635403",
-      "bytes": 118836,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
-    },
-    {
-      "file": "tomcat-embed-el-11.0.24.jar",
-      "sha256": "ad0546f12dace008aacce18ba13222137760b310ca719e173d3e13021b9af6c6",
-      "bytes": 271215,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "spring-security-web-7.1.1.jar",
-      "sha256": "dece134a2332c976a2c94ecf13f816c64e8ea7f2139795485afe655fba0408f3",
-      "bytes": 932968,
-      "embeddedMavenCoordinates": [],
+      "file": "jooq-3.21.7.jar",
+      "sha256": "4ee61c1e71b16e00363fb60c0cd8c9fb6a1a2e8797df6e09b8e01c1c63db68d0",
+      "bytes": 5442697,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.jooq",
+          "artifactId": "jooq",
+          "version": "3.21.7"
+        }
+      ],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt"
       ]
@@ -884,80 +1341,220 @@
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "spring-boot-sql-4.1.1.jar",
-      "sha256": "fa4f6ddded1bb3bbc496897686336d8433e34f1f22daa886872be2aa184def23",
-      "bytes": 36059,
+      "file": "spring-security-web-7.1.1.jar",
+      "sha256": "dece134a2332c976a2c94ecf13f816c64e8ea7f2139795485afe655fba0408f3",
+      "bytes": 932968,
       "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-web-7.0.9.jar",
-      "sha256": "941ced476427bde2533872f293da535fd0258de3f3a650a7f1bfe01ed2927302",
-      "bytes": 2226342,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "jakarta.annotation-api-3.0.0.jar",
-      "sha256": "b01f55552284cfb149411e64eabca75e942d26d2e1786b32914250e4330afaa2",
-      "bytes": 26378,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "jakarta.annotation",
-          "artifactId": "jakarta.annotation-api",
-          "version": "3.0.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.md",
-        "META-INF/NOTICE.md"
-      ]
-    },
-    {
-      "file": "spring-boot-tomcat-4.1.1.jar",
-      "sha256": "17f65629e4eb3c979c0572b69b57d630bb12e64869e9d7520adddaa6734256b6",
-      "bytes": 125521,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-webmvc-7.0.9.jar",
-      "sha256": "8f114c1461692c5e534e82b27de23b7fb23370db8dee7ce0c92d5106906c9555",
-      "bytes": 1107415,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "jul-to-slf4j-2.0.18.jar",
-      "sha256": "cbb7d1aaaa9e871eb1a06594abd911bf97027152976edf1edc315be75239204e",
-      "bytes": 6347,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.slf4j",
-          "artifactId": "jul-to-slf4j",
-          "version": "2.0.18"
-        }
-      ],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt"
       ]
     },
     {
-      "file": "micrometer-core-1.17.1.jar",
-      "sha256": "9ca47dfa831409b40253c8dc98c17b9d3e050ebbde4d1543c5521dca2b95ad56",
-      "bytes": 915235,
+      "file": "spring-boot-servlet-4.1.1.jar",
+      "sha256": "4dcb156e311a4c1ad5f1ed7eabd94a78ea74510b05c429a4fcfdcf8beb9d5882",
+      "bytes": 47081,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-core-7.0.9.jar",
+      "sha256": "5195f4722699b39878d99a832549fe65df2890b159d063b88fff31b1ca65ae36",
+      "bytes": 2035755,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "spring-boot-security-oauth2-resource-server-4.1.1.jar",
+      "sha256": "8b28c4c3ce43b8fabac0df94f66dd3d1c77b24c7ea7726977c6d6bee2d41fab1",
+      "bytes": 63327,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "HikariCP-7.0.2.jar",
+      "sha256": "f1e612fa27345be3107a85431e8a8aeb205c15364ab2f2d411e40a9d7bb08095",
+      "bytes": 172312,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "com.zaxxer",
+          "artifactId": "HikariCP",
+          "version": "7.0.2"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "log4j-to-slf4j-2.25.5.jar",
+      "sha256": "b68e8b47342dbc9b35644a14fe2efc0b7bf18da703910cd05ad5501ffe07bba1",
+      "bytes": 24173,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "org.apache.logging.log4j",
+          "artifactId": "log4j-to-slf4j",
+          "version": "2.25.5"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE",
+        "META-INF/NOTICE"
+      ]
+    },
+    {
+      "file": "spring-security-oauth2-resource-server-7.1.1.jar",
+      "sha256": "d8e2d24d2829ec4e2f8212c2c465c5abb30463f550d650080cc8f1d71d0daa6c",
+      "bytes": 153481,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt"
+      ]
+    },
+    {
+      "file": "spring-expression-7.0.9.jar",
+      "sha256": "046434c40f43819729b9b1db0e6c659dfa68184c1c2c2efa5f7b3a5b27c4e2e2",
+      "bytes": 327140,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/license.txt",
+        "META-INF/notice.txt"
+      ]
+    },
+    {
+      "file": "opentelemetry-common-1.62.0.jar",
+      "sha256": "d6310bebde67d65c1519696728d8604005315ed08ab14071956fc0826fd71815",
+      "bytes": 4458,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "prometheus-metrics-config-1.7.0.jar",
+      "sha256": "bc9455f938df76ec4add13fe31903a5bb583c605679a16a779d6a6c2b21218f2",
+      "bytes": 49788,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.prometheus",
+          "artifactId": "prometheus-metrics-config",
+          "version": "1.7.0"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "nimbus-jose-jwt-10.9.1.jar",
+      "sha256": "33152ea83ec50d22706fdaf3b07acbcd716f9a68edcabdd7c4d02843cbdcdcf6",
+      "bytes": 813607,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "com.nimbusds",
+          "artifactId": "nimbus-jose-jwt",
+          "version": "10.9.1"
+        },
+        {
+          "groupId": "com.github.stephenc.jcip",
+          "artifactId": "jcip-annotations",
+          "version": "1.0-1"
+        },
+        {
+          "groupId": "com.google.code.gson",
+          "artifactId": "gson",
+          "version": "2.13.1"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "jakarta.validation-api-3.1.1.jar",
+      "sha256": "63ce00156388c365f3ac1be71fcfaf114682fc0c452020b5df6e7ec236e142ab",
+      "bytes": 106136,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "jakarta.validation",
+          "artifactId": "jakarta.validation-api",
+          "version": "3.1.1"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-boot-flyway-4.1.1.jar",
+      "sha256": "61db32d08f2b1b04cf006e916575da22ecee0a2e0bb0604aca26c04f7bd4aa0e",
+      "bytes": 76988,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "prometheus-metrics-exposition-formats-1.7.0.jar",
+      "sha256": "7352ca8b50e861eca3567ceb332e9590a06742a9d177cff54e52c8cff4c4fb90",
+      "bytes": 2070163,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.prometheus",
+          "artifactId": "prometheus-metrics-exposition-formats",
+          "version": "1.7.0"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "netty-codec-base-4.2.17.Final.jar",
+      "sha256": "3b92bc3b7d231fa6f4889b2b9281cae6b634428b8121fb1b9b5fccba1543d352",
+      "bytes": 155357,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-codec-base",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "netty-codec-4.2.17.Final.jar",
+      "sha256": "ac76f972446a2f72818441f746d0e73c58519a4687bf680d2b687d7dc5e28e2e",
+      "bytes": 3953,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.netty",
+          "artifactId": "netty-codec",
+          "version": "4.2.17.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-boot-actuator-autoconfigure-4.1.1.jar",
+      "sha256": "bedbd4282a0f0c6a08bd5342d3940b50d8a013420d8a536695aedb1421b5e0f5",
+      "bytes": 141045,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.txt"
+      ]
+    },
+    {
+      "file": "spring-security-oauth2-core-7.1.1.jar",
+      "sha256": "29140d71b37cf1246bf16e33619e88e7baaa1c66bf5574e3c3e9a9f225f0ef6e",
+      "bytes": 126535,
+      "embeddedMavenCoordinates": [],
+      "embeddedLicenseAndNoticeResources": [
+        "META-INF/LICENSE.txt"
+      ]
+    },
+    {
+      "file": "micrometer-registry-prometheus-1.17.1.jar",
+      "sha256": "ac24d43f123e103828a23a86f092a8709d87d309ad3212e798305654e951a8ce",
+      "bytes": 43620,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE",
@@ -965,14 +1562,27 @@
       ]
     },
     {
-      "file": "json-schema-validator-3.0.7.jar",
-      "sha256": "27b90bce60845f353b203b735cda2e0cb9a32c4962550e249141a2b065b9be5c",
-      "bytes": 583738,
+      "file": "jboss-logging-3.6.3.Final.jar",
+      "sha256": "7c12ee575508f81e22b1db9334b969d0ec54ef0fd1dcba24eeab1a44235fc366",
+      "bytes": 62672,
       "embeddedMavenCoordinates": [
         {
-          "groupId": "com.networknt",
-          "artifactId": "json-schema-validator",
-          "version": "3.0.7"
+          "groupId": "org.jboss.logging",
+          "artifactId": "jboss-logging",
+          "version": "3.6.3.Final"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "amqp-client-5.30.0.jar",
+      "sha256": "277803f85febc790c29a0ec9c203b81adb1e9e68998da3b48384712f4e7aa52d",
+      "bytes": 726053,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "com.rabbitmq",
+          "artifactId": "amqp-client",
+          "version": "5.30.0"
         }
       ],
       "embeddedLicenseAndNoticeResources": []
@@ -994,32 +1604,9 @@
       ]
     },
     {
-      "file": "spring-security-oauth2-core-7.1.1.jar",
-      "sha256": "29140d71b37cf1246bf16e33619e88e7baaa1c66bf5574e3c3e9a9f225f0ef6e",
-      "bytes": 126535,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
-    },
-    {
-      "file": "opentelemetry-common-1.62.0.jar",
-      "sha256": "d6310bebde67d65c1519696728d8604005315ed08ab14071956fc0826fd71815",
-      "bytes": 4458,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "jspecify-1.0.1.jar",
-      "sha256": "070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66",
-      "bytes": 3064,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-boot-health-4.1.1.jar",
-      "sha256": "f60151e1f014b40761d0644be1cb04f82df7fc3e9b7bf6e946848547eec399e7",
-      "bytes": 155266,
+      "file": "spring-boot-transaction-4.1.1.jar",
+      "sha256": "e7f2fad4fe65bf6aaf1b1a538a68a1cf69988adb558f4a0fc0992a8be4fddf64",
+      "bytes": 21031,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt",
@@ -1027,333 +1614,14 @@
       ]
     },
     {
-      "file": "micrometer-observation-1.17.1.jar",
-      "sha256": "eb34f0cd84a879393ae5c21160fc06385ccdc74f36a4d1e31b199f59acfdaf71",
-      "bytes": 84311,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "spring-boot-servlet-4.1.1.jar",
-      "sha256": "4dcb156e311a4c1ad5f1ed7eabd94a78ea74510b05c429a4fcfdcf8beb9d5882",
-      "bytes": 47081,
+      "file": "spring-boot-tomcat-4.1.1.jar",
+      "sha256": "17f65629e4eb3c979c0572b69b57d630bb12e64869e9d7520adddaa6734256b6",
+      "bytes": 125521,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt",
         "META-INF/NOTICE.txt"
       ]
-    },
-    {
-      "file": "prometheus-metrics-core-1.7.0.jar",
-      "sha256": "f9e5f1c8a20073347c88941d43e8c64ae6810afe0a61cbfe9c2f4efffe72808b",
-      "bytes": 100282,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.prometheus",
-          "artifactId": "prometheus-metrics-core",
-          "version": "1.7.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "HikariCP-7.0.2.jar",
-      "sha256": "f1e612fa27345be3107a85431e8a8aeb205c15364ab2f2d411e40a9d7bb08095",
-      "bytes": 172312,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "com.zaxxer",
-          "artifactId": "HikariCP",
-          "version": "7.0.2"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-boot-jarmode-tools-4.1.1.jar",
-      "sha256": "062a9edf01809f4a2b48bfc2fe392fedd27448a3a57113bef510576673d4397f",
-      "bytes": 53968,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "prometheus-metrics-config-1.7.0.jar",
-      "sha256": "bc9455f938df76ec4add13fe31903a5bb583c605679a16a779d6a6c2b21218f2",
-      "bytes": 49788,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.prometheus",
-          "artifactId": "prometheus-metrics-config",
-          "version": "1.7.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "netty-codec-4.2.17.Final.jar",
-      "sha256": "ac76f972446a2f72818441f746d0e73c58519a4687bf680d2b687d7dc5e28e2e",
-      "bytes": 3953,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.netty",
-          "artifactId": "netty-codec",
-          "version": "4.2.17.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-boot-webmvc-4.1.1.jar",
-      "sha256": "9f08c1fb938c45a8693fec5f3065be3aca203948a7ab4d56b06444986f75a6b2",
-      "bytes": 175435,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-rabbit-4.1.1.jar",
-      "sha256": "42787e5db35812183edab018bbc812423700caefcc86113ec92fe1dd487388f5",
-      "bytes": 636832,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "micrometer-registry-prometheus-1.17.1.jar",
-      "sha256": "ac24d43f123e103828a23a86f092a8709d87d309ad3212e798305654e951a8ce",
-      "bytes": 43620,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "log4j-api-2.25.5.jar",
-      "sha256": "64777f73ea0b3104c04eb82befbdccc30a425a19e83ad06cb2f93aa303511863",
-      "bytes": 351427,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.apache.logging.log4j",
-          "artifactId": "log4j-api",
-          "version": "2.25.5"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "spring-boot-jooq-4.1.1.jar",
-      "sha256": "284852ab95614e6eacfc108bdf6e0a46d785f8f3dcb7c84fda08406752fab9d8",
-      "bytes": 23822,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-expression-7.0.9.jar",
-      "sha256": "046434c40f43819729b9b1db0e6c659dfa68184c1c2c2efa5f7b3a5b27c4e2e2",
-      "bytes": 327140,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-validation-4.1.1.jar",
-      "sha256": "c2546a81b6b7a39f51d889c99047f24567e4b28d1717fb53a65e9327cfc436f1",
-      "bytes": 15260,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-flyway-4.1.1.jar",
-      "sha256": "61db32d08f2b1b04cf006e916575da22ecee0a2e0bb0604aca26c04f7bd4aa0e",
-      "bytes": 76988,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-autoconfigure-4.1.1.jar",
-      "sha256": "59228756ddd76cea050f95d86deff334789bc53b6688beaa673b1af2b9794592",
-      "bytes": 372740,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-jdbc-4.1.1.jar",
-      "sha256": "30de56a06ccedb40245fd3a69a5107c7b3c0500447bb982a54a3b5da2859ae2c",
-      "bytes": 204578,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-beans-7.0.9.jar",
-      "sha256": "ff218b827a25c9e8929b0cd56dfb56916cea9d5b669ed97dc7cb262508ff548b",
-      "bytes": 928155,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "spring-jdbc-7.0.9.jar",
-      "sha256": "ca0d9af1c5721eef8cac1f94c8b9d27a753248bc33c86e3472bd3d1dbd78f450",
-      "bytes": 480730,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "jboss-logging-3.6.3.Final.jar",
-      "sha256": "7c12ee575508f81e22b1db9334b969d0ec54ef0fd1dcba24eeab1a44235fc366",
-      "bytes": 62672,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.jboss.logging",
-          "artifactId": "jboss-logging",
-          "version": "3.6.3.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "flyway-database-postgresql-12.4.0.jar",
-      "sha256": "abc075a5c3cbf37dc64b28fec7e2398fb14f31109f7ab6271854738797407b85",
-      "bytes": 48012,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.flywaydb",
-          "artifactId": "flyway-database-postgresql",
-          "version": "12.4.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "prometheus-metrics-exposition-formats-1.7.0.jar",
-      "sha256": "7352ca8b50e861eca3567ceb332e9590a06742a9d177cff54e52c8cff4c4fb90",
-      "bytes": 2070163,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.prometheus",
-          "artifactId": "prometheus-metrics-exposition-formats",
-          "version": "1.7.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "micrometer-commons-1.17.1.jar",
-      "sha256": "f2cee6ef046e72eec8128474c7f58c6217173b45ae373c30de0289f2a56ab0fd",
-      "bytes": 51810,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "hibernate-validator-9.1.3.Final.jar",
-      "sha256": "0497ebbe23fafe4180b74bd0b96a67eee8556552decc4d3c120c1dc737a2b5fb",
-      "bytes": 1403754,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.hibernate.validator",
-          "artifactId": "hibernate-validator",
-          "version": "9.1.3.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt"
-      ]
-    },
-    {
-      "file": "commons-logging-1.3.6.jar",
-      "sha256": "f8ead8943401081dea0aa824b5b1ba40a0e4ed297a572a0f02258150a0b62357",
-      "bytes": 74010,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "commons-logging",
-          "artifactId": "commons-logging",
-          "version": "1.3.6"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-security-4.1.1.jar",
-      "sha256": "c940697be9bc67820d5011b86d58105836b7cae7c8fb5d4e61d635b51b392cbe",
-      "bytes": 97816,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "netty-codec-base-4.2.17.Final.jar",
-      "sha256": "3b92bc3b7d231fa6f4889b2b9281cae6b634428b8121fb1b9b5fccba1543d352",
-      "bytes": 155357,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.netty",
-          "artifactId": "netty-codec-base",
-          "version": "4.2.17.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "netty-common-4.2.17.Final.jar",
-      "sha256": "502aae2a6680e9bca3558a3fa098f06dc4d87340b8b714e925a6d690871c092a",
-      "bytes": 820948,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.netty",
-          "artifactId": "netty-common",
-          "version": "4.2.17.Final"
-        },
-        {
-          "groupId": "org.jctools",
-          "artifactId": "jctools-core",
-          "version": "4.0.6"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
     },
     {
       "file": "flyway-core-12.4.0.jar",
@@ -1385,118 +1653,13 @@
       ]
     },
     {
-      "file": "netty-transport-native-unix-common-4.2.17.Final.jar",
-      "sha256": "e01aa467b9104de54a57c08c290f70b22e53ec97cf5583c87c112170ef5832cc",
-      "bytes": 46878,
+      "file": "jackson-dataformat-yaml-3.1.5.jar",
+      "sha256": "afef22789b0a0915b544c6749c71770788d20821c30d574c1210e2b6cffc91ae",
+      "bytes": 62584,
       "embeddedMavenCoordinates": [
         {
-          "groupId": "io.netty",
-          "artifactId": "netty-transport-native-unix-common",
-          "version": "4.2.17.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-aop-7.0.9.jar",
-      "sha256": "b8c5d6bfcb1f4993f2cc124f7ab7fac40edf5256b9e43c2f7250a733cb5510e9",
-      "bytes": 426204,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "micrometer-jakarta9-1.17.1.jar",
-      "sha256": "37fbb0a98ba92e185ae7ebe0804fe6c1394bf7fba7573b204fa6fc3998c2e246",
-      "bytes": 54773,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE",
-        "META-INF/NOTICE"
-      ]
-    },
-    {
-      "file": "HdrHistogram-2.2.2.jar",
-      "sha256": "22d1d4316c4ec13a68b559e98c8256d69071593731da96136640f864fa14fad8",
-      "bytes": 177206,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.hdrhistogram",
-          "artifactId": "HdrHistogram",
-          "version": "2.2.2"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
-    },
-    {
-      "file": "checker-qual-3.55.1.jar",
-      "sha256": "857658c8bdcbff794949a8d9922f88d63ee3751c203c7cd7d21ea97f9e745288",
-      "bytes": 241885,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
-    },
-    {
-      "file": "service-starter-0.1.0-SNAPSHOT.jar",
-      "sha256": "b9e4135563b0801128ce0e06921ef89a95c5ab03530051a4d5b0d8748dbcde91",
-      "bytes": 159688,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "dev.cutover",
-          "artifactId": "service-starter",
-          "version": "0.1.0-SNAPSHOT"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-tx-7.0.9.jar",
-      "sha256": "bfb15da6e096e2c0752e9db9987d2415bf0da1d744efc988535c10c6b6c2eedd",
-      "bytes": 292080,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-transaction-4.1.1.jar",
-      "sha256": "e7f2fad4fe65bf6aaf1b1a538a68a1cf69988adb558f4a0fc0992a8be4fddf64",
-      "bytes": 21031,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "jooq-3.21.7.jar",
-      "sha256": "4ee61c1e71b16e00363fb60c0cd8c9fb6a1a2e8797df6e09b8e01c1c63db68d0",
-      "bytes": 5442697,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.jooq",
-          "artifactId": "jooq",
-          "version": "3.21.7"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt"
-      ]
-    },
-    {
-      "file": "jackson-core-3.1.5.jar",
-      "sha256": "9431b7fa2673bbb618c11d865fe15e13222fd182a214ff998cb7e56afd8f35d2",
-      "bytes": 598605,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "tools.jackson.core",
-          "artifactId": "jackson-core",
+          "groupId": "tools.jackson.dataformat",
+          "artifactId": "jackson-dataformat-yaml",
           "version": "3.1.5"
         }
       ],
@@ -1504,32 +1667,6 @@
         "META-INF/LICENSE",
         "META-INF/NOTICE"
       ]
-    },
-    {
-      "file": "amqp-client-5.30.0.jar",
-      "sha256": "277803f85febc790c29a0ec9c203b81adb1e9e68998da3b48384712f4e7aa52d",
-      "bytes": 726053,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "com.rabbitmq",
-          "artifactId": "amqp-client",
-          "version": "5.30.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "netty-codec-marshalling-4.2.17.Final.jar",
-      "sha256": "ee5ffed638da6b7e2b4567559bd5f78b18f635cdaa4f3b6d23aa27ccf6cb57c2",
-      "bytes": 20378,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.netty",
-          "artifactId": "netty-codec-marshalling",
-          "version": "4.2.17.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
     },
     {
       "file": "spring-context-7.0.9.jar",
@@ -1542,91 +1679,20 @@
       ]
     },
     {
-      "file": "logback-classic-1.5.38.jar",
-      "sha256": "afb439c61fa287c9e1925523b13baab03617e724406a389d48b61c2c3e46b700",
-      "bytes": 287122,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "ch.qos.logback",
-          "artifactId": "logback-classic",
-          "version": "1.5.38"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "prometheus-metrics-exposition-textformats-1.7.0.jar",
-      "sha256": "7e49065895a35181c57f2c3c6d07b7b3f9b5754cd6422e0a7bd793f20a29c28a",
-      "bytes": 42795,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.prometheus",
-          "artifactId": "prometheus-metrics-exposition-textformats",
-          "version": "1.7.0"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "jackson-databind-3.1.5.jar",
-      "sha256": "3a2338d996fd3056791df8d335fa9ba8a62a706ed4245ecf81b3e583df37d08a",
-      "bytes": 1944003,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "tools.jackson.core",
-          "artifactId": "jackson-databind",
-          "version": "3.1.5"
-        }
-      ],
+      "file": "tomcat-embed-websocket-11.0.24.jar",
+      "sha256": "825160101f0da4a10e19b5730c2ae2f99f8c2c7a7211ac05562726c5e97ab91e",
+      "bytes": 288141,
+      "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE",
         "META-INF/NOTICE"
       ]
     },
     {
-      "file": "netty-transport-4.2.17.Final.jar",
-      "sha256": "d2409ce3a735cbab4188d0ea5d82abed823a6a07a8389f49af4a9e1243a562bc",
-      "bytes": 549857,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.netty",
-          "artifactId": "netty-transport",
-          "version": "4.2.17.Final"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-core-7.0.9.jar",
-      "sha256": "5195f4722699b39878d99a832549fe65df2890b159d063b88fff31b1ca65ae36",
-      "bytes": 2035755,
+      "file": "reactive-streams-1.0.4.jar",
+      "sha256": "f75ca597789b3dac58f61857b9ac2e1034a68fa672db35055a8fb4509e325f28",
+      "bytes": 11640,
       "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "spring-boot-4.1.1.jar",
-      "sha256": "0d92b532b1d4020640e72d78c31af175c23db8e0ddd45b81855b7fdf4c9c70f0",
-      "bytes": 1392217,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "netty-codec-protobuf-4.2.17.Final.jar",
-      "sha256": "44b2fcc4bc1d6c01edafe6ae6c8a7de7c3c5bad59697a93b6b879a45a78a5387",
-      "bytes": 15108,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "io.netty",
-          "artifactId": "netty-codec-protobuf",
-          "version": "4.2.17.Final"
-        }
-      ],
       "embeddedLicenseAndNoticeResources": []
     },
     {
@@ -1643,131 +1709,73 @@
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "snakeyaml-2.6.jar",
-      "sha256": "c8f7a98e7394adda02f6317249710e4d1b4c7a25aa8c7eace0c2eea52eb8bf85",
-      "bytes": 340068,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "org.yaml",
-          "artifactId": "snakeyaml",
-          "version": "2.6"
-        }
-      ],
+      "file": "opentelemetry-context-1.62.0.jar",
+      "sha256": "8ec86c3609222b9b6307bf40154c1f1c288d1f18ada0155409e7797adbdbe517",
+      "bytes": 50758,
+      "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "nimbus-jose-jwt-10.9.1.jar",
-      "sha256": "33152ea83ec50d22706fdaf3b07acbcd716f9a68edcabdd7c4d02843cbdcdcf6",
-      "bytes": 813607,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "com.nimbusds",
-          "artifactId": "nimbus-jose-jwt",
-          "version": "10.9.1"
-        },
-        {
-          "groupId": "com.github.stephenc.jcip",
-          "artifactId": "jcip-annotations",
-          "version": "1.0-1"
-        },
-        {
-          "groupId": "com.google.code.gson",
-          "artifactId": "gson",
-          "version": "2.13.1"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-boot-web-server-4.1.1.jar",
-      "sha256": "6912fb1fdf7f657a61ac050760fa835fb1e7496399291697e2901f82887a4fee",
-      "bytes": 171647,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "spring-messaging-7.0.9.jar",
-      "sha256": "19ea7561e5d61e19bee0c94733d03bbf9384c9356eea2d4e90cce7ba3c0ab01b",
-      "bytes": 613714,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/license.txt",
-        "META-INF/notice.txt"
-      ]
-    },
-    {
-      "file": "jakarta.validation-api-3.1.1.jar",
-      "sha256": "63ce00156388c365f3ac1be71fcfaf114682fc0c452020b5df6e7ec236e142ab",
-      "bytes": 106136,
-      "embeddedMavenCoordinates": [
-        {
-          "groupId": "jakarta.validation",
-          "artifactId": "jakarta.validation-api",
-          "version": "3.1.1"
-        }
-      ],
-      "embeddedLicenseAndNoticeResources": []
-    },
-    {
-      "file": "spring-boot-micrometer-observation-4.1.1.jar",
-      "sha256": "09ebd9ff7de21d10b1f11c70ca0ea8766a8a727affd19642584bee5a314ea11a",
-      "bytes": 28846,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "netty-codec-compression-4.2.17.Final.jar",
-      "sha256": "425b287a1f36986a5c8edd76379a49decdf99d284f3454f3fa607a073bfb2c18",
-      "bytes": 237078,
+      "file": "netty-codec-marshalling-4.2.17.Final.jar",
+      "sha256": "ee5ffed638da6b7e2b4567559bd5f78b18f635cdaa4f3b6d23aa27ccf6cb57c2",
+      "bytes": 20378,
       "embeddedMavenCoordinates": [
         {
           "groupId": "io.netty",
-          "artifactId": "netty-codec-compression",
+          "artifactId": "netty-codec-marshalling",
           "version": "4.2.17.Final"
         }
       ],
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "spring-boot-persistence-4.1.1.jar",
-      "sha256": "0f78d2556ac3ed75f9eaf3134a1fba94ad1ec3414b52aa279c1f690217e71e3c",
-      "bytes": 16032,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
-      ]
-    },
-    {
-      "file": "netty-resolver-4.2.17.Final.jar",
-      "sha256": "7a4b599b9c0c29a505d3b7311f142df883fb27d0f67495a7cbaf533b0e456623",
-      "bytes": 32977,
+      "file": "netty-common-4.2.17.Final.jar",
+      "sha256": "502aae2a6680e9bca3558a3fa098f06dc4d87340b8b714e925a6d690871c092a",
+      "bytes": 820948,
       "embeddedMavenCoordinates": [
         {
           "groupId": "io.netty",
-          "artifactId": "netty-resolver",
+          "artifactId": "netty-common",
           "version": "4.2.17.Final"
+        },
+        {
+          "groupId": "org.jctools",
+          "artifactId": "jctools-core",
+          "version": "4.0.6"
         }
       ],
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "opentelemetry-api-1.62.0.jar",
-      "sha256": "d58143928c049233653e6bf1282ff8a767ebdd5e6a82b3f336158c30e40b431d",
-      "bytes": 175114,
-      "embeddedMavenCoordinates": [],
+      "file": "prometheus-metrics-core-1.7.0.jar",
+      "sha256": "f9e5f1c8a20073347c88941d43e8c64ae6810afe0a61cbfe9c2f4efffe72808b",
+      "bytes": 100282,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "io.prometheus",
+          "artifactId": "prometheus-metrics-core",
+          "version": "1.7.0"
+        }
+      ],
       "embeddedLicenseAndNoticeResources": []
     },
     {
-      "file": "spring-boot-security-oauth2-resource-server-4.1.1.jar",
-      "sha256": "8b28c4c3ce43b8fabac0df94f66dd3d1c77b24c7ea7726977c6d6bee2d41fab1",
-      "bytes": 63327,
+      "file": "service-starter-0.1.0-SNAPSHOT.jar",
+      "sha256": "b9e4135563b0801128ce0e06921ef89a95c5ab03530051a4d5b0d8748dbcde91",
+      "bytes": 159688,
+      "embeddedMavenCoordinates": [
+        {
+          "groupId": "dev.cutover",
+          "artifactId": "service-starter",
+          "version": "0.1.0-SNAPSHOT"
+        }
+      ],
+      "embeddedLicenseAndNoticeResources": []
+    },
+    {
+      "file": "spring-boot-micrometer-metrics-4.1.1.jar",
+      "sha256": "70dd91dcc319d00998ce5e410b03b841e682aa2f60e4bab159c78ff0ecdb7d0f",
+      "bytes": 248317,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
         "META-INF/LICENSE.txt",
@@ -1775,21 +1783,13 @@
       ]
     },
     {
-      "file": "spring-boot-actuator-4.1.1.jar",
-      "sha256": "2bbb38417af25cfc6f57a9b01a85db9b6ccdcadb9e5d40f6b1b2f54a08f8b798",
-      "bytes": 357191,
+      "file": "spring-security-crypto-7.1.1.jar",
+      "sha256": "6e8bb2337faccabd30626f917ed1d2bfa9dde982229b6b373b644d1a01635403",
+      "bytes": 118836,
       "embeddedMavenCoordinates": [],
       "embeddedLicenseAndNoticeResources": [
-        "META-INF/LICENSE.txt",
-        "META-INF/NOTICE.txt"
+        "META-INF/LICENSE.txt"
       ]
-    },
-    {
-      "file": "reactive-streams-1.0.4.jar",
-      "sha256": "f75ca597789b3dac58f61857b9ac2e1034a68fa672db35055a8fb4509e325f28",
-      "bytes": 11640,
-      "embeddedMavenCoordinates": [],
-      "embeddedLicenseAndNoticeResources": []
     }
   ],
   "npmLockfiles": [

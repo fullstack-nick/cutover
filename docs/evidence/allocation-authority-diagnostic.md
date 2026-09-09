@@ -1,0 +1,11 @@
+# Allocation authority — short runtime diagnostic
+
+`load-diagnostic-1788928452324` completed its workload on images `dd130962537e2a02f32a9164d3f4e31f1a0950af`, with clean driver source `6bb3b2c0131b601c6d5916df399c8c2a2702f66e`. Its original verifier **failed** on a trace HTTP 404. That original failure remains unchanged; this thirty-second diagnostic does not qualify A50.
+
+All 120 requests returned 202, all 200 warm-up/measured effects completed once, all 150 measured movements were included and all six database deadlock deltas were zero. The original journal-timestamp measurement was 100% within two seconds, p99 552.313 ms. Later complete readback found all 120 original traces and measured **100% within two seconds after transaction return, p99 559 ms**; the journal-timestamp-to-return p99 was 11 ms. The same exported bounded readback and timing functions reproduced every movement without reoffering work. [Structured evidence](allocation-authority-diagnostic.json).
+
+The 95 host and 95 PostgreSQL samples did not reproduce the earlier storage stall. Sampled one-second average disk write latency peaked at 1.646 ms and read latency at 3.956 ms. Windows available memory ranged from 2,282 to 3,529 MiB. Nineteen bounded process samples retain diagnostic I/O counters, which include non-disk I/O and cannot attribute VM activity to a container. These shared-host observations do not establish a controlled performance effect for the lock correction or predict ten-minute behavior.
+
+The [verifier now waits for trace visibility](../adr/0030-prove-dispatch-timing-after-commit.md) within explicit time bounds while preserving original eligibility and span times. Missing proof still fails. [Allocation reader concurrency and owner fencing](../adr/0031-share-allocation-route-authority-reads.md) have separate actual-database regression evidence and complete 204-check Java verification. The full [A50 result](healthy-load.md) remains failed until a complete new sustained workload passes.
+
+Original failed-result SHA-256: `87894f7707ada0366abb6d1960e6a4845b483477d9756ce3730c2e21b5210fb2`. Complete bounded-readback replay SHA-256: `f47088619b221d65ef414b5346177f7a5f6fff9d45038c1a532a4daf637ddc6f`.

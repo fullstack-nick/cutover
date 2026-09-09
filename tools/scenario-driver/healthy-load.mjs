@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync, openSync, closeSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import {tracingProfile} from './tracing-profile.mjs';
 import {durableDispatchTiming} from './durable-dispatch-timing.mjs';
+import {traceReadback} from './trace-readback.mjs';
 process.env.CUTOVER_PROFILE='demo';
 const { api, token, query, provisionObservers, saveEvidence }=await import('./client.mjs');
 const { root, target, until, simulatorRead, privateDirectory, writeJson, maintenanceLock, call }=await import('../../scripts/lib/local-platform.mjs');
@@ -141,10 +142,9 @@ try {
   evidence.resources=JSON.parse(readFileSync(resolve(directory,'resources.json'),'utf8'));assert.equal(evidence.resources.errors.length,0);assert.ok(evidence.resources.records.length>=Math.floor(measurementSeconds/10));
   writeJson(resolve(directory,'movements.json'),adapter);
   const contexts=batchQuery('adapter',movements,ids=>`SELECT coalesce(jsonb_agg(jsonb_build_object('movementId',aggregate_id,'traceparent',envelope->>'traceparent')),'[]') FROM outbox WHERE event_type='MovementAssigned.v1' AND aggregate_id IN (${ids});`);
-  const timing=await durableDispatchTiming(adapter,contexts,async traceId=>{
-    const response=await fetch(`http://127.0.0.1:8782/api/traces/${traceId}`,{signal:AbortSignal.timeout(10000)});
-    assert.equal(response.status,200,'Complete post-commit timing evidence must be retrievable before qualification.');return response.json();
-  });
+  const readback=traceReadback();let timing;
+  try{timing=await durableDispatchTiming(adapter,contexts,readback.read);}
+  finally{writeJson(resolve(directory,'trace-readback.json'),{scope:'Post-offering retrieval only: at most 60 seconds per trace and five minutes overall, with ten-second HTTP limits. Original span times remain the measurement endpoints.',observations:readback.observations});}
   writeJson(resolve(directory,'durable-dispatch-timing.json'),timing);
   evidence.durableDispatchTiming={...timing,rows:undefined};
   evidence.latency.intentEligibilityToJournalTimestampP99Millis=evidence.latency.intentEligibilityToDispatchP99Millis;
@@ -155,7 +155,7 @@ try {
   cases.push({...(diagnostic?{}:{id:'A50'}),status:evidence.latency.withinTwoSecondsPercent>=99?'passed':'failed',name:diagnostic?'Bounded mixed-product diagnostic; not an A50 qualification':'Ten-minute mixed-product healthy workload after sixty-second warmup',latency:evidence.latency,throughput:evidence.throughput});
   evidence.endedAt=new Date().toISOString();saveEvidence(id,evidence);
   const saved=JSON.parse(readFileSync(resolve(directory,'results.json'),'utf8'));
-  writeJson(resolve(directory,'manifest.json'),{runId:id,scenarioIds:diagnostic?[]:['A50'],revision:saved.revision,dirty:saved.dirty,profile:saved.profile,images:saved.images,nodeImages:saved.nodeImages,runtime:saved.runtime,allocation:evidence.allocation,seed,worldId:evidence.worldBefore.worldId,journalGeneration:evidence.worldBefore.journalGeneration,startedAt:evidence.startedAt,endedAt:evidence.endedAt,workload:evidence.workload,reproduce:`node tools/scenario-driver/healthy-load.mjs${diagnostic?' --diagnostic='+measurementSeconds:''}`,artifacts:['requests.json','movements.json','durable-dispatch-timing.json','resources.json','core-effects.json','returns-effects.json','simulator-effects.json','results.json','report.md']});
+  writeJson(resolve(directory,'manifest.json'),{runId:id,scenarioIds:diagnostic?[]:['A50'],revision:saved.revision,dirty:saved.dirty,profile:saved.profile,images:saved.images,nodeImages:saved.nodeImages,runtime:saved.runtime,allocation:evidence.allocation,seed,worldId:evidence.worldBefore.worldId,journalGeneration:evidence.worldBefore.journalGeneration,startedAt:evidence.startedAt,endedAt:evidence.endedAt,workload:evidence.workload,reproduce:`node tools/scenario-driver/healthy-load.mjs${diagnostic?' --diagnostic='+measurementSeconds:''}`,artifacts:['requests.json','movements.json','durable-dispatch-timing.json','trace-readback.json','resources.json','core-effects.json','returns-effects.json','simulator-effects.json','results.json','report.md']});
   writeFileSync(resolve(directory,'report.md'),`# ${id}\n\n${diagnostic?'Diagnostic (not A50)':'A50'}: ${cases[0].status}. ${evidence.latency.withinTwoSecondsPercent.toFixed(3)}% within 2 s; original eligibility dispatch p99 ${evidence.latency.intentEligibilityToDispatchP99Millis} ms. All ${movementCount} warmup/measured movements have single physical and business effects with matched quantities. See manifest/results and the declared denominator.\n`);
   console.log(`${diagnostic?'Diagnostic':'A50'} ${cases[0].status}: ${evidence.latency.withinTwoSecondsPercent.toFixed(3)}% / p99 ${evidence.latency.intentEligibilityToDispatchP99Millis} ms. WAL ${evidence.wal.delta.fsyncsPerSecond.toFixed(3)} fsync/s. ${directory}`);
   assert.ok(diagnostic||evidence.latency.withinTwoSecondsPercent>=99,'The declared dispatch target did not pass. Preserve this run and correct the measured cause.');

@@ -1,6 +1,6 @@
 # ADR 0031: share allocation route authority reads
 
-Date: 9 September 2026. Status: implemented; 17 command-journal checks passed. Complete repository verification passed all 204 checks; deployed qualification remains pending.
+Date: 9 September 2026. Status: implemented; 17 command-journal checks passed. Complete repository verification passed all 204 checks; preserved rollout and causal checks passed; full sustained qualification remains pending.
 
 The allocation inbox acquires its finite route set in stable order before taking the outbox admission budget. That ordering prevents the demonstrated mixed-zone deadlock described in [ADR 0021](0021-bounded-inbox-transactions.md). It used exclusive route locks even though allocation registration only reads route owner, epoch and state. An uncommitted allocation batch therefore blocked command authority reads in every zone, including commands for already committed, independent allocations. [ADR 0029](0029-share-command-route-authority-reads.md) had removed contention between command readers, but left this allocation-reader conflict in place.
 
@@ -17,3 +17,5 @@ Original before-log SHA-256: `f8c20de4354bcd841bafdfb70678f842d069b0ac7af4bdb834
 Original focused after-log SHA-256: `b5b5b89e61884728f3cae4536d178d7390b5c96bd2ba82dc6af46b874e6ab35f`.
 
 Complete offline verification of `fa494a0e147768c50e0311d94de5d030f65a8975` passed at **2026-09-09T06:24:51+02:00**: **204 checks in 25 classes**, zero failures/errors/skips, in **534 seconds**. Original log SHA-256: `7484fc7029df297db8571de84af5cfddaebad7ff7191b1c5a91d312ffcfc8a4b`. [Per-class evidence](../evidence/backend-checks.json) records the run. Deployed qualification remains a separate gate.
+
+Images `dd13096` passed preserved rollout `runtime-rollout-1788928132868` and causal verification `causal-trace-1788928380568`. Both products retain original HTTP trace IDs, all required domain and transport spans, and five single effects. The causal fixture now selects existing available stock before offering work; its preceding fixed-SKU shortage failure remains in the ledger. The refreshed dependency inventory records five packaged Java applications, 104 unique libraries, 105 npm entries and 13 pinned images. These deployed checks do not qualify A50.

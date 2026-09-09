@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {durableDispatchTiming} from './durable-dispatch-timing.mjs';
+import {traceReadback} from './trace-readback.mjs';
 
 const id='00000000-0000-4000-8000-000000000001',peer='00000000-0000-4000-8000-000000000002';
 const traceId='a'.repeat(32),traceparent=`00-${traceId}-${'b'.repeat(16)}-01`;
@@ -27,4 +28,24 @@ test('submillisecond transaction return is rounded conservatively at the deadlin
   const exact=span(id,2000);exact.endTimeUnixNano=String(BigInt(exact.endTimeUnixNano)+1n);
   const result=await durableDispatchTiming([movement()],contexts([id]),async()=>trace([exact]));
   assert.equal(result.p99Millis,2001);assert.equal(result.withinTwoSecondsPercent,0);
+});
+
+test('bounded readback waits for a missing and then partial trace without substituting its observation time',async()=>{
+  let at=0,requests=0;
+  const reader=traceReadback({now:()=>at,pause:async ms=>{at+=ms;},request:async()=>{
+    requests++;return new Response(JSON.stringify(requests===1?{}:trace(requests===2?[span(id,1800)]:[span(id,1800),span(peer,2300)])),{status:requests===1?404:200});
+  }});
+  const result=await durableDispatchTiming([movement(),movement(peer)],contexts([id,peer]),reader.read);
+  assert.equal(requests,3);assert.equal(at,2000);assert.equal(result.p99Millis,2300);assert.equal(result.withinTwoSecondsPercent,50);
+  assert.deepEqual(reader.observations.map(row=>row.complete),[false,false,true]);
+});
+test('per-trace and overall evidence deadlines cannot turn missing proof into a pass',async()=>{
+  let at=0,requests=0;
+  const reader=traceReadback({now:()=>at,pause:async ms=>{at+=ms;},request:async()=>{requests++;return new Response('{}',{status:404});}});
+  await assert.rejects(reader.read(traceId,[movement()]),/Timing proof unavailable/);assert.equal(at,60000);assert.equal(requests,60);
+  at=300000;await assert.rejects(reader.read(traceId,[movement()]),/Timing proof unavailable/);assert.equal(requests,60);
+});
+test('readback fails on a transport response outside the expected visibility states',async()=>{
+  const reader=traceReadback({request:async()=>new Response('{}',{status:500})});
+  await assert.rejects(reader.read(traceId,[movement()]),/HTTP 500/);
 });

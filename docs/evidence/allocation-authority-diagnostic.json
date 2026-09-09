@@ -1,0 +1,136 @@
+{
+  "run": "load-diagnostic-1788928452324",
+  "result": "verification-failed",
+  "qualification": "Thirty-second diagnostic, not A50 qualification; retrospective timing proof reported separately",
+  "driverSource": "6bb3b2c0131b601c6d5916df399c8c2a2702f66e",
+  "imageSource": "dd130962537e2a02f32a9164d3f4e31f1a0950af",
+  "startedAt": "2026-09-09T04:34:12.408Z",
+  "offeringEndedAt": "2026-09-09T04:35:04.699Z",
+  "originalFailure": "A required trace read returned HTTP 404 before qualification.",
+  "workload": {
+    "warmupSeconds": 10,
+    "measurementSeconds": 30,
+    "ordersPerSecond": 2,
+    "reservedLinesPerOrder": 2,
+    "receiptsPerSecond": 1,
+    "receiptMovements": 1,
+    "cratesPerReceipt": 2,
+    "classificationMix": "One nonzero classification per receipt, rotating REUSABLE / NEEDS_CLEANING / DAMAGED",
+    "concurrencyLimit": 32,
+    "externalAssets": "none",
+    "stockSelection": "Seeded round-robin across all compatible existing positive stock; skip exhausted items without any stock writes."
+  },
+  "journalTimestampLatency": {
+    "eligibleMovements": 150,
+    "excludedBlocked": 0,
+    "excludedDraining": 0,
+    "excludedUnknown": 0,
+    "taskEligibilityToDispatchP99Millis": 250,
+    "intentEligibilityToDispatchP99Millis": 552.313,
+    "taskWithinTwoSecondsPercent": 100,
+    "withinTwoSecondsPercent": 100,
+    "acceptanceP99Millis": 78,
+    "driverLatenessP99Millis": 23,
+    "movementCompletionP99Millis": 1393
+  },
+  "retrospectiveTiming": {
+    "basis": "Successful adapter HTTP command-journal domain span ending after transaction return; end rounded up and original eligibility rounded down to milliseconds.",
+    "movements": 200,
+    "measuredMovements": 150,
+    "traces": 120,
+    "withinTwoSecondsPercent": 100,
+    "p99Millis": 559,
+    "journalTimestampToReturnP99Millis": 11
+  },
+  "readbackRequests": 120,
+  "hostSamples": 95,
+  "databaseSamples": 95,
+  "processSamples": 19,
+  "hostCounters": {
+    "physicaldisk(_total)\\disk reads/sec": {
+      "min": 0,
+      "max": 3919.34654448547,
+      "p99": 3919.34654448547
+    },
+    "memory\\page reads/sec": {
+      "min": 0,
+      "max": 3774.586760053469,
+      "p99": 3774.586760053469
+    },
+    "memory\\pages input/sec": {
+      "min": 0,
+      "max": 69629.4563117925,
+      "p99": 69629.4563117925
+    },
+    "physicaldisk(_total)\\avg. disk sec/read": {
+      "min": 0,
+      "max": 0.003955666779661017,
+      "p99": 0.003955666779661017
+    },
+    "memory\\pages output/sec": {
+      "min": 0,
+      "max": 80133.91327406676,
+      "p99": 80133.91327406676
+    },
+    "physicaldisk(_total)\\disk writes/sec": {
+      "min": 10.887722538862487,
+      "max": 889.5985356114743,
+      "p99": 889.5985356114743
+    },
+    "memory\\available mbytes": {
+      "min": 2282,
+      "max": 3529,
+      "p99": 3529
+    },
+    "physicaldisk(_total)\\current disk queue length": {
+      "min": 0,
+      "max": 4,
+      "p99": 4
+    },
+    "physicaldisk(_total)\\avg. disk sec/write": {
+      "min": 0.00004052783505154639,
+      "max": 0.001646157833655706,
+      "p99": 0.001646157833655706
+    }
+  },
+  "databaseDeadlockDeltas": [
+    {
+      "database": "cutover_adapter",
+      "deadlocks": 0
+    },
+    {
+      "database": "cutover_core",
+      "deadlocks": 0
+    },
+    {
+      "database": "cutover_execution",
+      "deadlocks": 0
+    },
+    {
+      "database": "cutover_keycloak",
+      "deadlocks": 0
+    },
+    {
+      "database": "cutover_returns",
+      "deadlocks": 0
+    },
+    {
+      "database": "cutover_shadow",
+      "deadlocks": 0
+    }
+  ],
+  "originalSha256": {
+    "results": "87894f7707ada0366abb6d1960e6a4845b483477d9756ce3730c2e21b5210fb2",
+    "movements": "a302958d407a8f3514b6206645563eaad70e4a330ad2dce64c5dda99e99fdc56",
+    "boundedReadbackReplay": "f47088619b221d65ef414b5346177f7a5f6fff9d45038c1a532a4daf637ddc6f",
+    "host": "611e998d518c0eef142fbe761ea364ff1ee16f47d75b632ab67687e8505d0ef3",
+    "database": "01ebe504ed131088ae87df96bc0408a01dd04bcbbbbfb687983c3651df0c36e8",
+    "process": "ce0b3bc0847a8286910d462dcad68f13e01b92907cbfa671bbf813d862663ffb"
+  },
+  "limitations": [
+    "The original verification failure is preserved. No work was reoffered for retrospective timing.",
+    "This short run does not establish sustained performance or a controlled causal effect of the allocation-reader change.",
+    "Shared-host counters include unrelated activity; process I/O includes non-disk I/O and VM activity cannot be attributed to a container.",
+    "Samples can miss shorter events and add observer overhead."
+  ]
+}
