@@ -40,7 +40,12 @@ try {
   evidence.tracingProfile=tracingProfile();requireDomainTracing(evidence.tracingProfile);
   call('pwsh',['-NoProfile','-NonInteractive','-File',resolve(root,'scripts/forward.ps1'),'-Profile','demo','-Target','tempo','-Action','Start']);
   const bearer=await token();evidence.worldBefore=await simulatorRead('/sim/v1/equipment');
-  const order=await submit('orders',{sourceSystem:'scenario-driver',externalOrderRef:`${runId}-order`,storeId:'store-07',priority:5,lines:[{sku:'SKU-091',quantity:1},{sku:'SKU-092',quantity:1}]},bearer);
+  const zones=JSON.parse(query('adapter',"SELECT coalesce(jsonb_agg(zone_id ORDER BY zone_id),'[]') FROM zone_routes WHERE site_id='site-a' AND owner='execution-service' AND state='ACTIVE' AND zone_id IN ('ambient','chilled');"));
+  assert.ok(zones.length>0&&zones.every(zone=>['ambient','chilled'].includes(zone)),'The causal execution check requires an active execution-owned outbound zone.');
+  const zoneSql=zones.map(zone=>`'${zone}'`).join(',');
+  evidence.stockFixture=JSON.parse(query('core',`SELECT coalesce(jsonb_agg(row_to_json(t) ORDER BY position,zone,sku),'[]') FROM (SELECT s.sku,p.temperature_class AS zone,s.on_hand-s.reserved AS available,row_number() OVER (PARTITION BY p.temperature_class ORDER BY s.sku) AS position FROM stock s JOIN products p USING(site_id,sku) WHERE s.site_id='site-a' AND p.temperature_class IN (${zoneSql}) AND s.on_hand>s.reserved ORDER BY position,zone,sku LIMIT 2) t;`));
+  assert.equal(evidence.stockFixture.length,2,'The causal fixture requires two distinct available SKUs in execution-owned zones; prepare a seeded world before offering work.');
+  const order=await submit('orders',{sourceSystem:'scenario-driver',externalOrderRef:`${runId}-order`,storeId:'store-07',priority:5,lines:evidence.stockFixture.map(({sku})=>({sku,quantity:1}))},bearer);
   const receipt=await submit('return-receipts',{sourceSystem:'scenario-driver',externalReceiptRef:`${runId}-receipt`,counts:{REUSABLE:1,NEEDS_CLEANING:1,DAMAGED:1}},bearer);
   evidence.intake={order,receipt};let outbound,returned;
   await until(async()=>{
