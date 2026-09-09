@@ -1,6 +1,6 @@
 # ADR 0023: fair scheduler work selection
 
-Date: 8 September 2026. Status: implemented; all three focused owner regressions and the full 196-check repository verification passed; deployed performance qualification pending.
+Date: 8 September 2026. Status: implemented; all three focused owner regressions and the full 196-check repository verification passed. [ADR 0028](0028-bound-recorded-command-observation-turns.md) subsequently caps execution's fallback cohort at four and processes unrecorded work first; the legacy and returns selectors retain this decision. Deployed performance qualification remains separate.
 
 The subscription runtime passed real crash, overflow, mandatory-return and causal-trace checks, but `load-diagnostic-1788898990473` still missed the dispatch target: 63.667% of 600 measured movements within two seconds, original-eligibility p99 11,631.762 ms and task-created-stage p99 10,972 ms. All 650 total effects completed once and every application database recorded zero deadlocks. For the representative slow outbound movement, assignment followed original eligibility by about one second; the subsequent dispatch wait accounted for most of its 13-second delay. The transport change is therefore not presented as complete performance remediation.
 
